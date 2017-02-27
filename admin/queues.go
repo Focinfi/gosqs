@@ -1,13 +1,14 @@
 package admin
 
-import (
-	"github.com/Focinfi/sqs/queue"
-)
+import "github.com/Focinfi/sqs/queue"
 
-var queues = []queue.Queue{}
+// AddQueue adds a queue into root queues
+func AddQueue(name string, configs ...queue.Config) error {
+	if _, ok := defaultService.queues[name]; ok {
+		return ErrDuplicateQueue
+	}
 
-// AddQueue adds a queue into queues
-func AddQueue(name string, configs ...queue.Config) {
 	q := queue.New(name, configs...)
-	queues = append(queues, q)
+	defaultService.queues[name] = q
+	return nil
 }

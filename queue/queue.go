@@ -1,5 +1,9 @@
 package queue
 
+import (
+	"github.com/Focinfi/sqs/external"
+)
+
 // Queue contains name-message map
 type Queue struct {
 	Name     string
@@ -26,5 +30,5 @@ type Message struct {
 	*Queue
 	Content  interface{}
 	From     string
-	Recovers []string
+	Recovers []external.User
 }
