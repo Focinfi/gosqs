@@ -1,20 +1,17 @@
 package agent
 
-import (
-	"net/http"
-)
+import "github.com/gin-gonic/gin"
 
 // throttling protects our server from overload
-func throttling(rw http.ResponseWriter, req *http.Request) {
-
+func throttling(ctx *gin.Context) {
 }
 
 // parsing parses params in the req for the following middlewares
-func parsing(rw http.ResponseWriter, req *http.Request) {
+func parsing(ctx *gin.Context) {
 
 }
 
 // auth authenticates identity for the req
-func auth(rw http.ResponseWriter, req *http.Request) {
+func auth(ctx *gin.Context) {
 
 }

@@ -1,34 +1,37 @@
 package queue
 
-import (
-	"github.com/Focinfi/sqs/external"
-)
+import "fmt"
 
 // Queue contains name-message map
 type Queue struct {
-	Name     string
-	Messages []Message
 	*option
 }
 
 // New allocates and returns a new Queue, ready to serve
-func New(name string, configs ...Config) Queue {
+func New(configs ...Config) Queue {
 	opt := &option{}
 	for _, config := range configs {
 		config(opt)
 	}
 
 	return Queue{
-		Name:     name,
-		Messages: []Message{},
-		option:   opt,
+		option: opt,
 	}
 }
 
 // Message contains info
 type Message struct {
-	*Queue
-	Content  interface{}
-	From     string
-	Recovers []external.User
+	UserID    int64
+	QueueName string
+	Content   string
+}
+
+//Name returns name
+func (q Queue) Name() string {
+	return q.option.name
+}
+
+// ID returns userID the q belongs to
+func (q Queue) ID() string {
+	return fmt.Sprintf("%d", q.option.userID)
 }
