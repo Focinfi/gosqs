@@ -1,10 +1,14 @@
 package main
 
-func main() {
-	// New a service
+import "github.com/Focinfi/sqs/admin"
+import "github.com/Focinfi/sqs/models"
+import "github.com/Focinfi/sqs/external"
 
-	// service = admin.AddQueue(queue.SetSize(10))
-	// service.Start(":5546")
-	// listen registration of client and add save
-	// listen publishers, save and push it to all subscribers
+func main() {
+	queue := models.NewQueue(external.Root.ID(), "greeting")
+
+	if err := admin.AddQueue(queue); err != nil {
+		panic(err)
+	}
+	admin.Start(":5546")
 }

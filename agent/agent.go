@@ -28,22 +28,23 @@ func New(mp MessagePusher) *Agent {
 	return agent
 }
 
-type messageParam struct {
-	UserID  int64
-	Name    string
-	Content string
-}
-
 // ReceiveMessage serve message pushing via http
 func (agent *Agent) ReceiveMessage(ctx *gin.Context) {
+	type messageParam struct {
+		UserID    int64  `json:"userID"`
+		QueueName string `json:"queueName"`
+		Content   string `json:"content"`
+	}
+
 	params := &messageParam{}
 	if err := ctx.BindJSON(params); err != nil {
-		responseAndAbort(ctx, ErrWrongParam)
+		responseAndAbort(ctx, StatusWrongParam)
 		return
 	}
 
-	if err := agent.MessagePusher.PushMessage(params.UserID, params.Name, params.Content); err != nil {
-		responseAndAbort(ctx, ErrIsBusy(err))
+	err := agent.MessagePusher.PushMessage(params.UserID, params.QueueName, params.Content)
+	if err != nil {
+		responseAndAbort(ctx, StatusIsBusy(err))
 		return
 	}
 

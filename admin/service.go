@@ -1,6 +1,9 @@
 package admin
 
 import (
+	"log"
+	"net/http"
+
 	"github.com/Focinfi/sqs/agent"
 	"github.com/Focinfi/sqs/external"
 )
@@ -20,5 +23,5 @@ var defaultService = Service{
 
 // Start starts services
 func Start(address string) {
-
+	log.Fatal(http.ListenAndServe(address, defaultService.Agent))
 }

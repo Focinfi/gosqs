@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"github.com/Focinfi/sqs/queue"
+	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage"
 )
 
@@ -11,18 +11,19 @@ type queues struct {
 
 var defualtQueues = queues{Storage: storage.DefaultStorage}
 
-func (qs *queues) PushMessage(userID int64, name, content string) error {
-	msg := queue.Message{
+func (qs queues) PushMessage(userID int64, queueName, content string) error {
+	index := int64(1)
+	msg := &models.Message{
 		UserID:    userID,
-		QueueName: name,
+		QueueName: queueName,
 		Content:   content,
+		Index:     index,
 	}
 
-	return defaultStorage.AddMessage(msg)
+	return defualtQueues.AddMessage(msg)
 }
 
 // AddQueue adds a queue into root queues
-func AddQueue(name string, configs ...queue.Config) error {
-	q := queue.New(configs...)
+func AddQueue(q *models.Queue) error {
 	return defualtQueues.AddQueue(q)
 }

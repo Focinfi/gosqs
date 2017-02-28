@@ -12,3 +12,6 @@ type UserFunc func() int64
 func (f UserFunc) ID() int64 {
 	return f()
 }
+
+// Root for root user
+var Root = UserFunc(func() int64 { return 1 })
