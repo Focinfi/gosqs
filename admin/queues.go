@@ -5,14 +5,14 @@ import (
 	"github.com/Focinfi/sqs/storage"
 )
 
-type queues struct {
-	storage.Storage
+type database struct {
+	*storage.Storage
 }
 
-var defualtQueues = queues{Storage: storage.DefaultStorage}
+var db = database{Storage: storage.DefaultStorage}
 
-func (qs queues) PushMessage(userID int64, queueName, content string) error {
-	index := int64(1)
+func (d database) PushMessage(userID int64, queueName, content string) error {
+	index := messageIndex()
 	msg := &models.Message{
 		UserID:    userID,
 		QueueName: queueName,
@@ -20,10 +20,20 @@ func (qs queues) PushMessage(userID int64, queueName, content string) error {
 		Index:     index,
 	}
 
-	return defualtQueues.AddMessage(msg)
+	return d.AddMessage(msg)
+}
+
+func (d database) RegisterClient(userID int64, clientID int64, queueName string) error {
+	client := &models.Client{
+		ID:        clientID,
+		UserID:    userID,
+		QueueName: queueName,
+	}
+
+	return d.Client.Add(client)
 }
 
 // AddQueue adds a queue into root queues
 func AddQueue(q *models.Queue) error {
-	return defualtQueues.AddQueue(q)
+	return db.Queue.Add(q)
 }

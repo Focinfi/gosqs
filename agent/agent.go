@@ -11,47 +11,36 @@ type MessagePusher interface {
 	PushMessage(userID int64, name, content string) error
 }
 
+// ClientRegistrar register clients
+type ClientRegistrar interface {
+	RegisterClient(userID int64, clientID int64, queueName string) error
+}
+
+// QueueAdmin defines what a queue admin should do
+type QueueAdmin interface {
+	MessagePusher
+	ClientRegistrar
+}
+
 // Agent for receiving message and push them
 type Agent struct {
-	MessagePusher
 	http.Handler
+	QueueAdmin
 }
 
 // New allocates and returns a new Agent
-func New(mp MessagePusher) *Agent {
-	s := gin.Default()
-	agent := &Agent{Handler: s, MessagePusher: mp}
-
-	group := s.Group("/", throttling, parsing, auth)
-	group.POST("/message", agent.ReceiveMessage)
-
+func New(admin QueueAdmin) *Agent {
+	agent := &Agent{
+		QueueAdmin: admin,
+	}
+	agent.routing()
 	return agent
 }
 
-// ReceiveMessage serve message pushing via http
-func (agent *Agent) ReceiveMessage(ctx *gin.Context) {
-	type messageParam struct {
-		UserID    int64  `json:"userID"`
-		QueueName string `json:"queueName"`
-		Content   string `json:"content"`
-	}
-
-	params := &messageParam{}
-	if err := ctx.BindJSON(params); err != nil {
-		responseAndAbort(ctx, StatusWrongParam)
-		return
-	}
-
-	err := agent.MessagePusher.PushMessage(params.UserID, params.QueueName, params.Content)
-	if err != nil {
-		responseAndAbort(ctx, StatusIsBusy(err))
-		return
-	}
-
-	responseOK(ctx)
-}
-
-// StartDeliveryMessage deliveries messages to all online subsribers
-func (agent *Agent) StartDeliveryMessage() {
-
+func (agent *Agent) routing() {
+	s := gin.Default()
+	group := s.Group("/")
+	group.POST("/message", agent.ReceiveMessage)
+	group.POST("/register", agent.Register)
+	agent.Handler = s
 }

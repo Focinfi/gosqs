@@ -3,6 +3,8 @@ package agent
 import (
 	"net/http"
 
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,15 +18,25 @@ const (
 	okCode         = 1000
 	wrongParamCode = 1001
 	isBusyCode     = 1002
+	failedRegister = 1003
 )
 
 // StatusWrongParam for wrong param response
 var StatusWrongParam = &Status{Code: wrongParamCode}
 
-// StatusIsBusy for wrong param response
+// StatusIsBusy for internal error
 func StatusIsBusy(err error) *Status {
+	log.Printf("error: %v\n", err)
 	return &Status{
 		Code:    isBusyCode,
+		Message: "Service is busy, please try again later.",
+	}
+}
+
+// StatusBizError for biz logic error
+func StatusBizError(code int, err error) *Status {
+	return &Status{
+		Code:    code,
 		Message: err.Error(),
 	}
 }

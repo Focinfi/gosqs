@@ -18,7 +18,7 @@ var root = external.UserFunc(func() int64 { return 1 })
 
 // defaultService for initialization
 var defaultService = Service{
-	Agent: agent.New(defualtQueues),
+	Agent: agent.New(db),
 }
 
 // Start starts services
