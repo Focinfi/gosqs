@@ -8,11 +8,33 @@ type KV interface {
 	Remove(key string) error
 }
 
-type kv struct{}
+type kv struct {
+	data map[string]string
+}
 
-func (k kv) Get(key string) (string, bool)         { return "", false }
-func (k kv) Put(key string, value string) error    { return nil }
-func (k kv) Append(key string, value string) error { return nil }
-func (k kv) Remove(key string) error               { return nil }
+func (k *kv) Get(key string) (string, bool) {
+	value, ok := k.data[key]
+	return value, ok
+}
 
-var defaultKV = kv{}
+func (k *kv) Put(key string, value string) error {
+	k.data[key] = value
+	return nil
+}
+
+func (k *kv) Append(key string, value string) error {
+	oldVal, ok := k.Get(key)
+	if ok {
+		k.data[key] = oldVal + value
+	}
+
+	k.data[key] = value
+	return nil
+}
+
+func (k *kv) Remove(key string) error {
+	delete(k.data, key)
+	return nil
+}
+
+var defaultKV = &kv{}
