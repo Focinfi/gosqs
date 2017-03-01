@@ -1,9 +1,12 @@
 package storage
 
-import "github.com/Focinfi/sqs/models"
-import "fmt"
-import "github.com/Focinfi/sqs/errors"
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/models"
+)
 
 const messageKeyPrefix = "sqs.message"
 
