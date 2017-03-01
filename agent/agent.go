@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// QueueAdmin defines what a queue admin should do
-type QueueAdmin interface {
+// QueueService defines what a queue admin should do
+type QueueService interface {
 	PushMessage(userID int64, name, content string) error
 	RegisterClient(userID int64, clientID int64, queueName string) error
 }
@@ -15,13 +15,13 @@ type QueueAdmin interface {
 // Agent for receiving message and push them
 type Agent struct {
 	http.Handler
-	QueueAdmin
+	QueueService
 }
 
 // New allocates and returns a new Agent
-func New(admin QueueAdmin) *Agent {
+func New(admin QueueService) *Agent {
 	agent := &Agent{
-		QueueAdmin: admin,
+		QueueService: admin,
 	}
 	agent.routing()
 	return agent

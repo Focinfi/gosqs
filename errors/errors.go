@@ -7,6 +7,9 @@ import (
 // DuplicateQueue error for duplicate queue
 var DuplicateQueue = NewBizErr("duplicate queue")
 
+// DuplicateMessage error for duplicate message
+var DuplicateMessage = NewBizErr("duplicate message")
+
 // ErrUserNotFound error for unknown user
 var ErrUserNotFound = NewBizErr("user not found")
 
@@ -24,6 +27,11 @@ func DataLost(key string) error {
 // DataBroken returns a internal error for broken data
 func DataBroken(key string) error {
 	return NewInternalErr(fmt.Sprintf("data broken: key= %s", key))
+}
+
+// FailedEncoding returns a internal error for encoding error
+func FailedEncoding(data interface{}) error {
+	return NewInternalErr(fmt.Sprintf("failed encoding for data: %v", data))
 }
 
 // Biz detects the biz errors

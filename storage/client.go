@@ -4,7 +4,8 @@ import "github.com/Focinfi/sqs/models"
 
 // Client for storage of clients
 type Client struct {
-	db KV
+	store *Storage
+	db    KV
 }
 
 // One returns a client
@@ -26,6 +27,3 @@ func (client *Client) Add(c *models.Client) error {
 func (client *Client) Update(recentMessageIndex int64) error {
 	return nil
 }
-
-// DefaultClient default client
-var DefaultClient = &Client{db: defaultKV}

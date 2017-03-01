@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/external"
 	"github.com/Focinfi/sqs/models"
 )
 
-const queueKeyPrefix = "sqs.queue."
+const queueKeyPrefix = "sqs.queue"
 
 func queueListKey(userID int64) string {
-	return fmt.Sprintf("%s%d", queueKeyPrefix, userID)
+	return fmt.Sprintf("%s.%d", queueKeyPrefix, userID)
 }
 
 func queueKey(userID int64, queueName string) string {
@@ -21,7 +20,8 @@ func queueKey(userID int64, queueName string) string {
 
 // Queue stores data
 type Queue struct {
-	db KV
+	store *Storage
+	db    KV
 }
 
 // All returns queue map for userID
@@ -79,8 +79,8 @@ func (s *Queue) Add(q *models.Queue) error {
 		}
 	}
 
-	all = append(all, *q)
-	data, err := json.Marshal(all)
+	newAll := append(all, *q)
+	data, err := json.Marshal(newAll)
 	if err != nil {
 		return errors.NewInternalErr(err.Error())
 	}
@@ -123,13 +123,4 @@ func (s *Queue) Remove(userID int64, queueName string) error {
 	}
 
 	return nil
-}
-
-// DefaultQueue default
-var DefaultQueue = &Queue{
-	db: defaultKV,
-}
-
-func init() {
-	DefaultClient.db.Put(queueListKey(external.Root.ID()), "")
 }

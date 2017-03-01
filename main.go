@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/Focinfi/sqs/external"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/service"
@@ -14,6 +12,5 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(service.Queues(external.Root.ID()))
 	service.Start(":5546")
 }
