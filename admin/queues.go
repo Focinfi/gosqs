@@ -20,7 +20,7 @@ func (d database) PushMessage(userID int64, queueName, content string) error {
 		Index:     index,
 	}
 
-	return d.AddMessage(msg)
+	return d.Message.Add(msg)
 }
 
 func (d database) RegisterClient(userID int64, clientID int64, queueName string) error {

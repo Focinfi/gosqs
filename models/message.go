@@ -6,10 +6,10 @@ type Message struct {
 	QueueName string
 	Content   string
 	Index     int64
-	Recievers []int64
 }
 
-// AddReceiver adds reciever for message
-func (m *Message) AddReceiver(clientID int64) {
-	m.Recievers = append(m.Recievers, clientID)
+// MessageIndex for one entry of message index
+type MessageIndex struct {
+	Timestamp int64
+	Indexes   []int64
 }
