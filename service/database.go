@@ -1,4 +1,4 @@
-package admin
+package service
 
 import (
 	"github.com/Focinfi/sqs/models"
