@@ -37,3 +37,8 @@ func (d database) RegisterClient(userID int64, clientID int64, queueName string)
 func AddQueue(q *models.Queue) error {
 	return db.Queue.Add(q)
 }
+
+// Queues returns all queues
+func Queues(userID int64) ([]models.Queue, error) {
+	return db.Queue.All(userID)
+}

@@ -37,4 +37,4 @@ func (k *kv) Remove(key string) error {
 	return nil
 }
 
-var defaultKV = &kv{}
+var defaultKV = &kv{data: map[string]string{}}

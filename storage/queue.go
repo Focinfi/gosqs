@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/external"
 	"github.com/Focinfi/sqs/models"
 )
 
@@ -127,4 +128,8 @@ func (s *Queue) Remove(userID int64, queueName string) error {
 // DefaultQueue default
 var DefaultQueue = &Queue{
 	db: defaultKV,
+}
+
+func init() {
+	DefaultClient.db.Put(queueListKey(external.Root.ID()), "")
 }

@@ -6,20 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// MessagePusher push message
-type MessagePusher interface {
-	PushMessage(userID int64, name, content string) error
-}
-
-// ClientRegistrar register clients
-type ClientRegistrar interface {
-	RegisterClient(userID int64, clientID int64, queueName string) error
-}
-
 // QueueAdmin defines what a queue admin should do
 type QueueAdmin interface {
-	MessagePusher
-	ClientRegistrar
+	PushMessage(userID int64, name, content string) error
+	RegisterClient(userID int64, clientID int64, queueName string) error
 }
 
 // Agent for receiving message and push them
