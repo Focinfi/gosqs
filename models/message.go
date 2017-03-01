@@ -28,9 +28,14 @@ func GroupID(index int64) int64 {
 	return index / base
 }
 
-// GenIndex gen index for the time
-func GenIndex(timestamp int64) int64 {
-	return timestamp*base + rand.Int63n(1000000)
+// GenIndexRandom gen index for the time
+func GenIndexRandom(timestamp int64) int64 {
+	return GenIndex0(timestamp) + rand.Int63n(1000000)
+}
+
+// GenIndex0 gen index for the time, random index in n
+func GenIndex0(timestamp int64) int64 {
+	return timestamp * base
 }
 
 // MessageIndex for one entry of message index

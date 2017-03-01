@@ -18,25 +18,30 @@ func (d database) PushMessage(userID int64, queueName, content string) error {
 		UserID:    userID,
 		QueueName: queueName,
 		Content:   content,
-		Index:     models.GenIndex(time.Now().Unix()),
+		Index:     models.GenIndexRandom(time.Now().Unix()),
 	}
 
 	return d.Message.Add(msg)
 }
 
 func (d database) RegisterClient(userID int64, clientID int64, queueName string) error {
-	client := &models.Client{
-		ID:        clientID,
-		UserID:    userID,
-		QueueName: queueName,
+	_, err := d.Client.One(userID, clientID, queueName)
+	if err == nil {
+		return err
 	}
 
-	return d.Client.Add(client)
+	// save into cache
+	return nil
 }
 
 // AddQueue adds a queue into root queues
 func AddQueue(q *models.Queue) error {
 	return db.Queue.Add(q)
+}
+
+// AddClient adds cleint
+func AddClient(client *models.Client) error {
+	return db.Client.Add(client)
 }
 
 // Queues returns all queues

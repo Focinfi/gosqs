@@ -19,6 +19,9 @@ var QueueNotFound = NewBizErr("queue not found")
 // MessageNotFound error for unknown message
 var MessageNotFound = NewBizErr("message not found")
 
+// ClientNotFound error for unknown client
+var ClientNotFound = NewBizErr("client not found")
+
 // DataLost returns a internal error for losting data
 func DataLost(key string) error {
 	return NewInternalErr(fmt.Sprintf("data lost: key= %s", key))

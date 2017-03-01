@@ -15,3 +15,6 @@ func (f UserFunc) ID() int64 {
 
 // Root for root user
 var Root = UserFunc(func() int64 { return 1 })
+
+// TestClient for test client
+var TestClient = UserFunc(func() int64 { return 1 })
