@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 
+	"time"
+
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/models"
 )
@@ -45,6 +47,58 @@ func (s *Message) All(userID int64, queueName string, gorupID int64, filters ...
 func (s *Message) One(userID int64, queueName string, index int64) (string, bool) {
 	key := messageKey(userID, queueName, index)
 	return s.db.Get(key)
+}
+
+// Next for next message of current Message
+func (s *Message) Next(userID int64, queueName string, index int64) (*models.Message, error) {
+	_, ok := s.One(userID, queueName, index)
+	if !ok {
+		return nil, errors.MessageNotFound
+	}
+
+	groupID := models.GroupID(index)
+	nowGroupID := time.Now().Unix()
+	for {
+		// the message with
+		if nowGroupID <= groupID {
+			break
+		}
+		all, err := s.All(userID, queueName, groupID, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		// if this group id empty try the next
+		if len(all) == 0 {
+			groupID++
+		}
+
+		i := sort.Search(len(all), func(i int) bool { return all[i] > index })
+		if i < len(all) && all[i] == index {
+			// last one in the group with the id groupID
+			if i == len(all)-1 {
+				// try next group
+				groupID++
+				continue
+			}
+
+			// got the next message index
+			nextIdx := int64(i + 1)
+			message, ok := s.One(userID, queueName, nextIdx)
+			if !ok {
+				return nil, errors.DataLost(messageKey(userID, queueName, nextIdx))
+			}
+
+			return &models.Message{
+				UserID:    userID,
+				QueueName: queueName,
+				Index:     nextIdx,
+				Content:   message,
+			}, nil
+		}
+	}
+
+	return nil, nil
 }
 
 // Add adds a message

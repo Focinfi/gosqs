@@ -5,11 +5,6 @@ import (
 	"net/url"
 )
 
-// StartPushing start pushing message
-func (a *Agent) StartPushing() error {
-	return nil
-}
-
 // PushMessage push message to all clients
 func (a *Agent) PushMessage(addresses []string, message string) chan bool {
 	if len(addresses) == 0 || message == "" {
