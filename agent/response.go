@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"fmt"
 	"net/http"
 
 	"log"
@@ -21,6 +22,14 @@ func StatusIsBusy(err error) *Status {
 	return &Status{
 		Code:    errors.InternalErr,
 		Message: "Service is busy, please try again later.",
+	}
+}
+
+// StatusBadRequest for wrong param format status
+func StatusBadRequest(err error) *Status {
+	return &Status{
+		Code:    errors.ParamFormatErr,
+		Message: fmt.Sprintf("Wrong format of parameters, err: %v", err),
 	}
 }
 
@@ -57,5 +66,7 @@ func response(ctx *gin.Context, err error) {
 		responseJOSN(ctx, StatusIsBusy(internalErr), true)
 		return
 	}
+
+	responseJOSN(ctx, StatusBadRequest(err), true)
 	return
 }

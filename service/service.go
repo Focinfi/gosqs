@@ -16,12 +16,11 @@ type Service struct {
 // root for initialization
 var root = external.UserFunc(func() int64 { return 1 })
 
-// defaultService for initialization
-var defaultService = Service{
-	Agent: agent.New(db),
-}
-
 // Start starts services
 func Start(address string) {
+	var defaultService = Service{
+		Agent: agent.New(db, address),
+	}
+
 	log.Fatal(http.ListenAndServe(address, defaultService.Agent))
 }

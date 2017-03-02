@@ -3,7 +3,6 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
-
 	"sort"
 
 	"github.com/Focinfi/sqs/errors"
@@ -36,7 +35,7 @@ func (s *Message) All(userID int64, queueName string, gorupID int64, filters ...
 
 	list := []int64{}
 	if err := json.Unmarshal([]byte(all), &list); err != nil {
-		return nil, errors.DataBroken(key)
+		return nil, errors.DataBroken(key, err)
 	}
 
 	return list, nil

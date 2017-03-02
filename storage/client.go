@@ -1,9 +1,8 @@
 package storage
 
 import (
+	"encoding/json"
 	"fmt"
-
-	"strconv"
 
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/models"
@@ -22,30 +21,39 @@ type Client struct {
 }
 
 // One returns a client
-func (s *Client) One(userID int64, clientID int64, queueName string) (int64, error) {
+func (s *Client) One(userID int64, clientID int64, queueName string) (*models.Client, error) {
 	key := clientKey(userID, clientID, queueName)
-	index, ok := s.db.Get(key)
+	value, ok := s.db.Get(key)
 	if !ok {
-		return 0, errors.ClientNotFound
+		return nil, errors.ClientNotFound
 	}
 
-	i, err := strconv.ParseInt(index, 10, 64)
+	client := &models.Client{}
+	err := json.Unmarshal([]byte(value), client)
 	if err != nil {
-		return 0, errors.DataBroken(key)
+		return nil, errors.DataBroken(key, err)
 	}
 
-	return i, nil
+	return client, nil
 }
 
 // Add adds client
 func (s *Client) Add(c *models.Client) error {
-	_, err := s.One(c.UserID, c.ID, c.QueueName)
+	client, err := s.One(c.UserID, c.ID, c.QueueName)
 	if err != errors.ClientNotFound {
 		return err
 	}
+	if client != nil {
+		return errors.DuplicateClient
+	}
 
 	key := clientKey(c.UserID, c.ID, c.QueueName)
-	err = s.db.Put(key, fmt.Sprintf("%d", c.RecentMessageIndex))
+	data, err := json.Marshal(c)
+	if err != nil {
+		return errors.NewInternalErr(err.Error())
+	}
+
+	err = s.db.Put(key, string(data))
 	if err != nil {
 		return errors.NewInternalErr(err.Error())
 	}
@@ -55,17 +63,19 @@ func (s *Client) Add(c *models.Client) error {
 
 // Update updates the RecentMessageIndex for the client
 func (s *Client) Update(c *models.Client) error {
-	recentMessageIndex, err := s.One(c.UserID, c.ID, c.QueueName)
-	if err != errors.ClientNotFound {
+	fmt.Println(c)
+	_, err := s.One(c.UserID, c.ID, c.QueueName)
+	if err != nil {
 		return err
 	}
 
-	if c.RecentMessageIndex == recentMessageIndex {
-		return nil
+	key := clientKey(c.UserID, c.ID, c.QueueName)
+	data, err := json.Marshal(c)
+	if err != nil {
+		return errors.NewInternalErr(err.Error())
 	}
 
-	key := messageKey(c.UserID, c.QueueName, c.ID)
-	err = s.db.Put(key, fmt.Sprintf("%d", c.RecentMessageIndex))
+	err = s.db.Put(key, string(data))
 	if err != nil {
 		return errors.NewInternalErr(err.Error())
 	}

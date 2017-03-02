@@ -18,5 +18,4 @@ func init() {
 	DefaultStorage.Client = &Client{db: defaultKV, store: DefaultStorage}
 
 	DefaultStorage.Queue.db.Put(queueListKey(external.Root.ID()), "")
-
 }

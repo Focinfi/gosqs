@@ -39,7 +39,7 @@ func (s *Queue) All(userID int64) ([]models.Queue, error) {
 	}
 
 	if err := json.Unmarshal([]byte(val), &all); err != nil {
-		return nil, errors.DataBroken(key)
+		return nil, errors.DataBroken(key, err)
 	}
 
 	return all, nil

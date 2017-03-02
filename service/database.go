@@ -1,6 +1,10 @@
 package service
 
 import (
+	"time"
+
+	"github.com/Focinfi/sqs/config"
+	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage"
 )
@@ -11,7 +15,7 @@ type database struct {
 
 var db = database{Storage: storage.DefaultStorage}
 
-func (d database) PushMessage(userID int64, queueName, content string, index int64) error {
+func (d database) ReceivehMessage(userID int64, queueName, content string, index int64) error {
 	msg := &models.Message{
 		UserID:    userID,
 		QueueName: queueName,
@@ -22,14 +26,21 @@ func (d database) PushMessage(userID int64, queueName, content string, index int
 	return d.Message.Add(msg)
 }
 
-func (d database) RegisterClient(userID int64, clientID int64, queueName string) error {
-	_, err := d.Client.One(userID, clientID, queueName)
-	if err == nil {
+func (d database) RegisterClient(c *models.Client) error {
+	client, err := d.Client.One(c.UserID, c.ID, c.QueueName)
+	if err != nil {
 		return err
 	}
 
-	// save into cache
-	return nil
+	now := time.Now().Unix()
+	// the client had received message in clientControlTimeoutSecond, can not register for this node
+	if now-client.RecentReceivedAt < config.Config().ClientControlTimeoutSecond {
+		return errors.ClientHasAlreadyRegistered
+	}
+
+	c.RecentMessageIndex = client.RecentMessageIndex
+	c.RecentReceivedAt = now
+	return d.Client.Update(c)
 }
 
 // AddQueue adds a queue into root queues

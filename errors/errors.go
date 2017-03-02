@@ -5,19 +5,23 @@ import (
 )
 
 const (
+	// ParamFormatErr for wrong param format
+	ParamFormatErr = 998
 	// InternalErr for internal error code
 	InternalErr = 999
 	// NoErr for successful request
 	NoErr = 1000
 
 	// biz error code
-	duplicateQueue   = 1001
-	duplicateMessage = 1002
-	messageOutOfData = 1003
-	userNotFound     = 1004
-	queueNotFound    = 1005
-	messageNotFound  = 1006
-	clientNotFound   = 1007
+	duplicateQueue             = 1001
+	duplicateMessage           = 1002
+	messageOutOfData           = 1003
+	userNotFound               = 1004
+	queueNotFound              = 1005
+	messageNotFound            = 1006
+	clientNotFound             = 1007
+	duplicateClient            = 1008
+	clientHasAlreadyRegistered = 1009
 )
 
 // DuplicateQueue error for duplicate queue
@@ -25,6 +29,9 @@ var DuplicateQueue = NewBizErr("duplicate queue", duplicateMessage)
 
 // DuplicateMessage error for duplicate message
 var DuplicateMessage = NewBizErr("duplicate message", duplicateMessage)
+
+// DuplicateClient error for duplicate lient
+var DuplicateClient = NewBizErr("duplicate lient", duplicateClient)
 
 // MessageOutOfData erros for out-of-date message
 var MessageOutOfData = NewBizErr("message is out of date", messageOutOfData)
@@ -41,14 +48,17 @@ var MessageNotFound = NewBizErr("message not found", messageNotFound)
 // ClientNotFound error for unknown client
 var ClientNotFound = NewBizErr("client not found", clientNotFound)
 
+// ClientHasAlreadyRegistered error for client has already registered
+var ClientHasAlreadyRegistered = NewBizErr("client has already registered", clientHasAlreadyRegistered)
+
 // DataLost returns a internal error for losting data
 func DataLost(key string) error {
 	return NewInternalErr(fmt.Sprintf("data lost: key= %s", key))
 }
 
 // DataBroken returns a internal error for broken data
-func DataBroken(key string) error {
-	return NewInternalErr(fmt.Sprintf("data broken: key= %s", key))
+func DataBroken(key string, err error) error {
+	return NewInternalErr(fmt.Sprintf("data broken: key=%s, err: %s", key, err))
 }
 
 // FailedEncoding returns a internal error for encoding error
