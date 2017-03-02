@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"sort"
+
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/models"
 )
@@ -55,6 +57,15 @@ func (s *Message) Add(m *models.Message) error {
 	all, err := s.All(m.UserID, m.QueueName, m.GroupID())
 	if err != nil {
 		return err
+	}
+
+	less := func(i, j int) bool { return all[i] < all[j] }
+	if !sort.SliceIsSorted(all, less) {
+		sort.Slice(all, less)
+	}
+
+	if len(all) > 0 && all[len(all)-1] > m.Index {
+		return errors.MessageOutOfData
 	}
 
 	all = append(all, m.Index)

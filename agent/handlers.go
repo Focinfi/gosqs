@@ -12,17 +12,12 @@ func (agent *Agent) ReceiveMessage(ctx *gin.Context) {
 
 	params := &messageParam{}
 	if err := ctx.BindJSON(params); err != nil {
-		responseAndAbort(ctx, StatusWrongParam)
+		response(ctx, err)
 		return
 	}
 
 	err := agent.PushMessage(params.UserID, params.QueueName, params.Content)
-	if err != nil {
-		responseAndAbort(ctx, StatusIsBusy(err))
-		return
-	}
-
-	responseOK(ctx)
+	response(ctx, err)
 }
 
 // Register registers so can get the message
@@ -35,17 +30,12 @@ func (agent *Agent) Register(ctx *gin.Context) {
 
 	param := &registerParam{}
 	if err := ctx.BindJSON(param); err != nil {
-		responseAndAbort(ctx, StatusWrongParam)
+		response(ctx, err)
 		return
 	}
 
 	err := agent.RegisterClient(param.UserID, param.ClientID, param.QueueName)
-	if err != nil {
-		responseAndAbort(ctx, StatusBizError(failedRegister, err))
-		return
-	}
-
-	responseOK(ctx)
+	response(ctx, err)
 }
 
 // StartDeliveryMessage deliveries messages to all online subsribers

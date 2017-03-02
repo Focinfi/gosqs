@@ -4,23 +4,42 @@ import (
 	"fmt"
 )
 
+const (
+	// InternalErr for internal error code
+	InternalErr = 999
+	// NoErr for successful request
+	NoErr = 1000
+
+	// biz error code
+	duplicateQueue   = 1001
+	duplicateMessage = 1002
+	messageOutOfData = 1003
+	userNotFound     = 1004
+	queueNotFound    = 1005
+	messageNotFound  = 1006
+	clientNotFound   = 1007
+)
+
 // DuplicateQueue error for duplicate queue
-var DuplicateQueue = NewBizErr("duplicate queue")
+var DuplicateQueue = NewBizErr("duplicate queue", duplicateMessage)
 
 // DuplicateMessage error for duplicate message
-var DuplicateMessage = NewBizErr("duplicate message")
+var DuplicateMessage = NewBizErr("duplicate message", duplicateMessage)
 
-// ErrUserNotFound error for unknown user
-var ErrUserNotFound = NewBizErr("user not found")
+// MessageOutOfData erros for out-of-date message
+var MessageOutOfData = NewBizErr("message is out of date", messageOutOfData)
+
+// UserNotFound error for unknown user
+var UserNotFound = NewBizErr("user not found", userNotFound)
 
 // QueueNotFound error for unknown queue
-var QueueNotFound = NewBizErr("queue not found")
+var QueueNotFound = NewBizErr("queue not found", queueNotFound)
 
 // MessageNotFound error for unknown message
-var MessageNotFound = NewBizErr("message not found")
+var MessageNotFound = NewBizErr("message not found", messageNotFound)
 
 // ClientNotFound error for unknown client
-var ClientNotFound = NewBizErr("client not found")
+var ClientNotFound = NewBizErr("client not found", clientNotFound)
 
 // DataLost returns a internal error for losting data
 func DataLost(key string) error {
@@ -40,7 +59,7 @@ func FailedEncoding(data interface{}) error {
 // Biz detects the biz errors
 type Biz interface {
 	error
-	isBiz() bool
+	BizCode() int
 }
 
 // IsBiz for detecting if err is Biz
@@ -62,12 +81,14 @@ func IsInternal(err error) bool {
 }
 
 type bizErr struct {
+	code    int
 	message string
 }
 
 // NewBizErr returns a new bizErr
-func NewBizErr(message string) Biz {
+func NewBizErr(message string, code int) Biz {
 	return &bizErr{
+		code:    code,
 		message: message,
 	}
 }
@@ -76,8 +97,8 @@ func (err bizErr) Error() string {
 	return err.message
 }
 
-func (err bizErr) isBiz() bool {
-	return true
+func (err bizErr) BizCode() int {
+	return err.code
 }
 
 type internalErr struct {

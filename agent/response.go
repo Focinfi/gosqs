@@ -5,6 +5,7 @@ import (
 
 	"log"
 
+	"github.com/Focinfi/sqs/errors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,37 +15,19 @@ type Status struct {
 	Message string `json:"message"`
 }
 
-const (
-	okCode         = 1000
-	wrongParamCode = 1001
-	isBusyCode     = 1002
-	failedRegister = 1003
-)
-
-// StatusWrongParam for wrong param response
-var StatusWrongParam = &Status{Code: wrongParamCode}
-
 // StatusIsBusy for internal error
 func StatusIsBusy(err error) *Status {
 	log.Printf("error: %v\n", err)
 	return &Status{
-		Code:    isBusyCode,
+		Code:    errors.InternalErr,
 		Message: "Service is busy, please try again later.",
 	}
 }
 
-// StatusBizError for biz logic error
-func StatusBizError(code int, err error) *Status {
-	return &Status{
-		Code:    code,
-		Message: err.Error(),
-	}
-}
-
 // StatusOK for successful request
-var StatusOK = &Status{Code: okCode}
+var StatusOK = &Status{Code: errors.NoErr}
 
-func response(ctx *gin.Context, err *Status, isAbort bool) {
+func responseJOSN(ctx *gin.Context, err *Status, isAbort bool) {
 	ctx.JSON(http.StatusOK, err)
 	if isAbort {
 		ctx.Abort()
@@ -52,9 +35,27 @@ func response(ctx *gin.Context, err *Status, isAbort bool) {
 }
 
 func responseOK(ctx *gin.Context) {
-	response(ctx, StatusOK, true)
+	responseJOSN(ctx, StatusOK, true)
 }
 
 func responseAndAbort(ctx *gin.Context, err *Status) {
-	response(ctx, err, true)
+	responseJOSN(ctx, err, true)
+}
+
+func response(ctx *gin.Context, err error) {
+	if err == nil {
+		responseOK(ctx)
+		return
+	}
+
+	if bizErr, ok := err.(errors.Biz); ok {
+		responseJOSN(ctx, &Status{Code: bizErr.BizCode(), Message: bizErr.Error()}, true)
+		return
+	}
+
+	if internalErr, ok := err.(errors.Internal); ok {
+		responseJOSN(ctx, StatusIsBusy(internalErr), true)
+		return
+	}
+	return
 }

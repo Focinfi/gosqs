@@ -31,7 +31,7 @@ func (s *Queue) All(userID int64) ([]models.Queue, error) {
 
 	val, ok := s.db.Get(key)
 	if !ok {
-		return nil, errors.ErrUserNotFound
+		return nil, errors.UserNotFound
 	}
 
 	if val == "" {
