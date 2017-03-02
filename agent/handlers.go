@@ -38,8 +38,3 @@ func (agent *Agent) Register(ctx *gin.Context) {
 	err := agent.RegisterClient(param.UserID, param.ClientID, param.QueueName)
 	response(ctx, err)
 }
-
-// StartDeliveryMessage deliveries messages to all online subsribers
-func (agent *Agent) StartDeliveryMessage() {
-
-}
