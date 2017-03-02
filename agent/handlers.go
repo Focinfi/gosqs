@@ -28,10 +28,10 @@ func (a *Agent) ReceiveMessage(ctx *gin.Context) {
 // RegisterClient registers so can get the message
 func (a *Agent) RegisterClient(ctx *gin.Context) {
 	type registerParam struct {
-		UserID    int64  `json:"userID"`
-		ClientID  int64  `json:"clientID"`
-		QueueName string `json:"queueName"`
-		Address   string `json:"address"`
+		UserID    int64    `json:"userID"`
+		ClientID  int64    `json:"clientID"`
+		QueueName string   `json:"queueName"`
+		Addresses []string `json:"addresses"`
 	}
 
 	params := &registerParam{}
@@ -45,7 +45,7 @@ func (a *Agent) RegisterClient(ctx *gin.Context) {
 		ID:        params.ClientID,
 		QueueName: params.QueueName,
 		Publisher: a.Address,
-		Address:   params.Address,
+		Addresses: params.Addresses,
 	}
 
 	err := a.QueueService.RegisterClient(client)

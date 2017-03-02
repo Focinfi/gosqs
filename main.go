@@ -19,7 +19,7 @@ func main() {
 		ID:                 external.TestClient.ID(),
 		UserID:             external.Root.ID(),
 		QueueName:          greeting,
-		Address:            ":55466",
+		Addresses:          []string{":55466"},
 		RecentMessageIndex: models.GenIndex0(time.Now().Unix()),
 		RecentReceivedAt:   time.Now().Unix(),
 	}

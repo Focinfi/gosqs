@@ -13,9 +13,9 @@ type database struct {
 	*storage.Storage
 }
 
-var db = database{Storage: storage.DefaultStorage}
+var db = &database{Storage: storage.DefaultStorage}
 
-func (d database) ReceivehMessage(userID int64, queueName, content string, index int64) error {
+func (d *database) ReceivehMessage(userID int64, queueName, content string, index int64) error {
 	msg := &models.Message{
 		UserID:    userID,
 		QueueName: queueName,
@@ -26,7 +26,7 @@ func (d database) ReceivehMessage(userID int64, queueName, content string, index
 	return d.Message.Add(msg)
 }
 
-func (d database) RegisterClient(c *models.Client) error {
+func (d *database) RegisterClient(c *models.Client) error {
 	client, err := d.Client.One(c.UserID, c.ID, c.QueueName)
 	if err != nil {
 		return err

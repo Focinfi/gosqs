@@ -6,7 +6,7 @@ type Client struct {
 	UserID             int64  `json:"-"`
 	QueueName          string `json:"-"`
 	RecentMessageIndex int64
-	Address            string
+	Addresses          []string
 	Publisher          string
 	// RecentReceivedAt Unix timestamp(s)
 	RecentReceivedAt int64
