@@ -8,7 +8,7 @@ import (
 
 // QueueService defines what a queue admin should do
 type QueueService interface {
-	PushMessage(userID int64, name, content string) error
+	PushMessage(userID int64, name, content string, index int64) error
 	RegisterClient(userID int64, clientID int64, queueName string) error
 }
 

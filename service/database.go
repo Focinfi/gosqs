@@ -1,8 +1,6 @@
 package service
 
 import (
-	"time"
-
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage"
 )
@@ -13,12 +11,12 @@ type database struct {
 
 var db = database{Storage: storage.DefaultStorage}
 
-func (d database) PushMessage(userID int64, queueName, content string) error {
+func (d database) PushMessage(userID int64, queueName, content string, index int64) error {
 	msg := &models.Message{
 		UserID:    userID,
 		QueueName: queueName,
 		Content:   content,
-		Index:     models.GenIndexRandom(time.Now().Unix()),
+		Index:     index,
 	}
 
 	return d.Message.Add(msg)

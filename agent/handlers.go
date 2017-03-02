@@ -8,6 +8,7 @@ func (agent *Agent) ReceiveMessage(ctx *gin.Context) {
 		UserID    int64  `json:"userID"`
 		QueueName string `json:"queueName"`
 		Content   string `json:"content"`
+		Index     int64  `josn:"index"`
 	}
 
 	params := &messageParam{}
@@ -16,7 +17,7 @@ func (agent *Agent) ReceiveMessage(ctx *gin.Context) {
 		return
 	}
 
-	err := agent.PushMessage(params.UserID, params.QueueName, params.Content)
+	err := agent.PushMessage(params.UserID, params.QueueName, params.Content, params.Index)
 	response(ctx, err)
 }
 
