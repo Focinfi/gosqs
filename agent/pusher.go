@@ -3,6 +3,7 @@ package agent
 import (
 	"net/http"
 	"net/url"
+	"sync"
 )
 
 // PushMessage push message to all clients
@@ -12,14 +13,23 @@ func (a *Agent) PushMessage(addresses []string, message string) chan bool {
 	}
 
 	pushed := make(chan bool)
+	var lock sync.Mutex
+	var done bool
 	for _, address := range addresses {
 		addr := address
 		go func() {
 			resp, err := http.PostForm(addr, url.Values{"message": {message}})
 			if err == nil && resp.StatusCode == http.StatusOK {
+				if done {
+					return
+				}
+
+				lock.Lock()
+				done = true
+				lock.Unlock()
+
 				pushed <- true
 			}
-
 		}()
 	}
 
