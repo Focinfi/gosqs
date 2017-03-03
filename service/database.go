@@ -34,12 +34,12 @@ func (d *database) RegisterClient(c *models.Client) error {
 
 	now := time.Now().Unix()
 	// the client had received message in clientControlTimeoutSecond, can not register for this node
-	if now-client.RecentReceivedAt < config.Config().ClientControlTimeoutSecond {
+	if now-client.RecentPushedAt < config.Config().ClientControlTimeoutSecond {
 		return errors.ClientHasAlreadyRegistered
 	}
 
 	c.RecentMessageIndex = client.RecentMessageIndex
-	c.RecentReceivedAt = now
+	c.RecentPushedAt = now
 	return d.Client.Update(c)
 }
 

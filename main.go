@@ -21,7 +21,7 @@ func main() {
 		QueueName:          greeting,
 		Addresses:          []string{":55466"},
 		RecentMessageIndex: models.GenIndex0(time.Now().Unix()),
-		RecentReceivedAt:   time.Now().Unix(),
+		RecentPushedAt:     time.Now().Unix(),
 	}
 
 	if err := service.AddClient(client); err != nil {

@@ -8,6 +8,6 @@ type Client struct {
 	RecentMessageIndex int64
 	Addresses          []string
 	Publisher          string
-	// RecentReceivedAt Unix timestamp(s)
-	RecentReceivedAt int64
+	// RecentPushedAt Unix timestamp(s)
+	RecentPushedAt int64
 }

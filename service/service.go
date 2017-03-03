@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Focinfi/sqs/agent"
+	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/models"
 )
 
@@ -22,29 +23,32 @@ func (s *Service) ReceivehMessage(userID int64, queueName, content string, index
 
 // RegisterClient registers client
 func (s *Service) RegisterClient(c *models.Client) error {
-	if err := s.applyClient(c); err != nil {
-		return err
-	}
-
 	if err := s.database.RegisterClient(c); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-func (s *Service) applyClient(c *models.Client) error {
-	if err := s.Cache.AddClient(c); err != nil {
-		return err
-	}
-
-	return nil
+	return s.Cache.AddConsumer(c, config.Config().ClientDefaultPriority)
 }
 
 func (s *Service) startPushMessage() {
+	for i := 0; i < config.Config().MaxPushWorkCount; i++ {
+		go func() {
+			s.pushMessage()
+		}()
+	}
+}
+
+func (s *Service) pushMessage() {
 	for {
-		client := <-s.Cache.Client()
-		message, err := s.Message.Next(client.UserID, client.QueueName, client.RecentMessageIndex)
+		consumer := <-s.Cache.PopConsumer()
+		client := consumer.Client
+
+		// remove consumer if out of control
+		if consumer.Publisher != s.Agent.Address {
+			continue
+		}
+
+		message, err := s.Message.Next(consumer.UserID, consumer.QueueName, consumer.RecentMessageIndex)
 		if err != nil {
 			// log error to fix
 			log.Println(err)
@@ -53,11 +57,13 @@ func (s *Service) startPushMessage() {
 
 		// all messages has been pushed
 		if message == nil {
-			client.RecentReceivedAt = time.Now().Unix()
+			client.RecentPushedAt = time.Now().Unix()
 			if err := s.Client.Update(client); err != nil {
 				log.Println(err)
-				continue
 			}
+
+			s.Cache.PushConsumer(consumer)
+			continue
 		}
 
 		// push it the all client
@@ -65,16 +71,22 @@ func (s *Service) startPushMessage() {
 		go func() {
 			select {
 			case <-time.After(time.Second * 5):
-				client.RecentReceivedAt = time.Now().Unix()
+				client.RecentPushedAt = time.Now().Unix()
 				if err := s.Client.Update(client); err != nil {
 					log.Println(err)
 				}
+				consumer.Priority -= 2
+				s.Cache.PushConsumer(consumer)
+
 			case <-pushed:
 				client.RecentMessageIndex = message.Index
-				client.RecentReceivedAt = time.Now().Unix()
+				client.RecentPushedAt = time.Now().Unix()
 				if err := s.Client.Update(client); err != nil {
 					log.Println(err)
 				}
+
+				consumer.Priority--
+				s.Cache.PushConsumer(consumer)
 			}
 		}()
 	}
@@ -85,6 +97,6 @@ func Start(address string) {
 	var defaultService = &Service{database: db}
 	defaultService.Agent = agent.New(defaultService, address)
 
-	go defaultService.startPushMessage()
+	defaultService.startPushMessage()
 	log.Fatal(http.ListenAndServe(address, defaultService.Agent))
 }

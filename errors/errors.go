@@ -22,6 +22,7 @@ const (
 	clientNotFound             = 1007
 	duplicateClient            = 1008
 	clientHasAlreadyRegistered = 1009
+	serviceOverload            = 1010
 )
 
 // DuplicateQueue error for duplicate queue
@@ -50,6 +51,9 @@ var ClientNotFound = NewBizErr("client not found", clientNotFound)
 
 // ClientHasAlreadyRegistered error for client has already registered
 var ClientHasAlreadyRegistered = NewBizErr("client has already registered", clientHasAlreadyRegistered)
+
+// ServiceOverload error for service is overload
+var ServiceOverload = NewBizErr("service is overload", serviceOverload)
 
 // DataLost returns a internal error for losting data
 func DataLost(key string) error {
