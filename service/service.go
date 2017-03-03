@@ -32,9 +32,7 @@ func (s *Service) RegisterClient(c *models.Client) error {
 
 func (s *Service) startPushMessage() {
 	for i := 0; i < config.Config().MaxPushWorkCount; i++ {
-		go func() {
-			s.pushMessage()
-		}()
+		go s.pushMessage()
 	}
 }
 
@@ -68,27 +66,26 @@ func (s *Service) pushMessage() {
 
 		// push it the all client
 		pushed := s.PushMessage(client.Addresses, message.Content)
-		go func() {
-			select {
-			case <-time.After(time.Second * 5):
-				client.RecentPushedAt = time.Now().Unix()
-				if err := s.Client.Update(client); err != nil {
-					log.Println(err)
-				}
-				consumer.Priority -= 2
-				s.Cache.PushConsumer(consumer)
-
-			case <-pushed:
-				client.RecentMessageIndex = message.Index
-				client.RecentPushedAt = time.Now().Unix()
-				if err := s.Client.Update(client); err != nil {
-					log.Println(err)
-				}
-
-				consumer.Priority--
-				s.Cache.PushConsumer(consumer)
+		select {
+		case <-time.After(time.Second * 5):
+			client.RecentPushedAt = time.Now().Unix()
+			if err := s.Client.Update(client); err != nil {
+				log.Println(err)
 			}
-		}()
+
+			consumer.Priority -= 2
+			s.Cache.PushConsumer(consumer)
+
+		case <-pushed:
+			client.RecentMessageIndex = message.Index
+			client.RecentPushedAt = time.Now().Unix()
+			if err := s.Client.Update(client); err != nil {
+				log.Println(err)
+			}
+
+			consumer.Priority--
+			s.Cache.PushConsumer(consumer)
+		}
 	}
 }
 
