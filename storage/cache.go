@@ -2,6 +2,7 @@ package storage
 
 import (
 	"container/heap"
+	"fmt"
 
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
@@ -28,8 +29,12 @@ func (cache *Cache) AddConsumer(c *models.Client, priority int) error {
 func (cache *Cache) PopConsumer() <-chan *models.Consumer {
 	ch := make(chan *models.Consumer)
 	go func() {
-		for cache.consumers.Len() > 0 {
-			ch <- heap.Pop(cache.consumers).(*models.Consumer)
+		fmt.Println("SETUP POPCONSUMER")
+		for {
+			if cache.consumers.Len() > 0 {
+				fmt.Printf("POP_CONSUMER: %v\n", cache.consumers.Len())
+				ch <- heap.Pop(cache.consumers).(*models.Consumer)
+			}
 		}
 	}()
 
@@ -39,6 +44,7 @@ func (cache *Cache) PopConsumer() <-chan *models.Consumer {
 // PushConsumer push consumer into cache
 func (cache *Cache) PushConsumer(c *models.Consumer) error {
 	heap.Push(cache.consumers, c)
+	// fmt.Printf("CACHE: %#v\n", cache.consumers.Len())
 	return nil
 }
 

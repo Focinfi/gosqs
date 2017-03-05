@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -31,14 +32,17 @@ func (s *Service) RegisterClient(c *models.Client) error {
 }
 
 func (s *Service) startPushMessage() {
+	consumerChan := s.Cache.PopConsumer()
 	for i := 0; i < config.Config().MaxPushWorkCount; i++ {
-		go s.pushMessage()
+		go s.pushMessage(consumerChan)
 	}
 }
 
-func (s *Service) pushMessage() {
+func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 	for {
-		consumer := <-s.Cache.PopConsumer()
+		consumer := <-ch
+		fmt.Println("START PUSHMESSAGE")
+		fmt.Printf("CONSUMER: %#v\n", consumer)
 		client := consumer.Client
 
 		// remove consumer if out of control
@@ -46,10 +50,12 @@ func (s *Service) pushMessage() {
 			continue
 		}
 
+		fmt.Printf("%#v\n", consumer.Client)
 		message, err := s.Message.Next(consumer.UserID, consumer.QueueName, consumer.RecentMessageIndex)
 		if err != nil {
 			// log error to fix
 			log.Println(err)
+			s.Cache.PushConsumer(consumer)
 			continue
 		}
 
@@ -68,24 +74,18 @@ func (s *Service) pushMessage() {
 		pushed := s.PushMessage(client.Addresses, message.Content)
 		select {
 		case <-time.After(time.Second * 5):
-			client.RecentPushedAt = time.Now().Unix()
-			if err := s.Client.Update(client); err != nil {
-				log.Println(err)
-			}
-
 			consumer.Priority -= 2
-			s.Cache.PushConsumer(consumer)
 
 		case <-pushed:
-			client.RecentMessageIndex = message.Index
-			client.RecentPushedAt = time.Now().Unix()
-			if err := s.Client.Update(client); err != nil {
-				log.Println(err)
-			}
-
 			consumer.Priority--
-			s.Cache.PushConsumer(consumer)
 		}
+
+		client.RecentPushedAt = time.Now().Unix()
+		if err := s.Client.Update(client); err != nil {
+			log.Println(err)
+		}
+
+		s.Cache.PushConsumer(consumer)
 	}
 }
 
