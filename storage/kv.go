@@ -1,6 +1,7 @@
 package storage
 
 import "fmt"
+import "sync"
 
 // KV defines underlying key/value database
 type KV interface {
@@ -11,10 +12,14 @@ type KV interface {
 }
 
 type kv struct {
+	sync.RWMutex
 	data map[string]string
 }
 
 func (k *kv) Get(key string) (string, bool) {
+	k.RLock()
+	defer k.RUnlock()
+
 	value, ok := k.data[key]
 	return value, ok
 }
@@ -45,11 +50,17 @@ func (k *kv) Remove(key string) (err error) {
 }
 
 func (k *kv) put(key string, value string) error {
+	k.Lock()
+	defer k.Unlock()
+
 	k.data[key] = value
 	return nil
 }
 
 func (k *kv) append(key string, value string) error {
+	k.Lock()
+	defer k.Unlock()
+
 	oldVal, ok := k.Get(key)
 	if ok {
 		k.data[key] = oldVal + value
@@ -60,6 +71,9 @@ func (k *kv) append(key string, value string) error {
 }
 
 func (k *kv) remove(key string) error {
+	k.Lock()
+	defer k.Unlock()
+
 	delete(k.data, key)
 	return nil
 }

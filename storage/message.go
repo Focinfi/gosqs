@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"sort"
 
-	"time"
-
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/models"
 )
@@ -50,14 +48,12 @@ func (s *Message) One(userID int64, queueName string, index int64) (string, bool
 }
 
 // Next for next message of current Message
-func (s *Message) Next(userID int64, queueName string, index int64) (*models.Message, error) {
-	_, ok := s.One(userID, queueName, index)
-	if !ok {
-		return nil, errors.MessageNotFound
-	}
+func (s *Message) Next(userID int64, queueName string, index int64, timestamp int64) (*models.Message, error) {
+	orginID := models.GroupID(index)
+	groupID := orginID
+	nowGroupID := timestamp
+	fmt.Printf("GROUP_ID: %d, NOW_GORUP_ID:%d\n", groupID, nowGroupID)
 
-	groupID := models.GroupID(index)
-	nowGroupID := time.Now().Unix()
 	for {
 		// the message with
 		if nowGroupID <= groupID {
@@ -71,31 +67,41 @@ func (s *Message) Next(userID int64, queueName string, index int64) (*models.Mes
 		// if this group id empty try the next
 		if len(all) == 0 {
 			groupID++
+			continue
+		}
+		fmt.Printf("MESSAGE-ALL: %v\n", all)
+		var nextIdx int64
+		if index/models.BaseUnit == 0 || orginID < groupID {
+			nextIdx = all[0]
+		} else {
+			i := sort.Search(len(all), func(i int) bool { return all[i] >= index })
+			if i < len(all) && all[i] == index {
+				// last one in the group with the id groupID
+				if i == len(all)-1 {
+					// try next group
+					groupID++
+					continue
+				}
+
+				// got the next message index
+				nextIdx = all[i+1]
+			} else {
+				return nil, errors.DataLost(messageKey(userID, queueName, index))
+			}
 		}
 
-		i := sort.Search(len(all), func(i int) bool { return all[i] > index })
-		if i < len(all) && all[i] == index {
-			// last one in the group with the id groupID
-			if i == len(all)-1 {
-				// try next group
-				groupID++
-				continue
-			}
-
-			// got the next message index
-			nextIdx := int64(i + 1)
-			message, ok := s.One(userID, queueName, nextIdx)
-			if !ok {
-				return nil, errors.DataLost(messageKey(userID, queueName, nextIdx))
-			}
-
-			return &models.Message{
-				UserID:    userID,
-				QueueName: queueName,
-				Index:     nextIdx,
-				Content:   message,
-			}, nil
+		message, ok := s.One(userID, queueName, nextIdx)
+		if !ok {
+			return nil, errors.DataLost(messageKey(userID, queueName, nextIdx))
 		}
+
+		fmt.Printf("NEXT INDEX: %d\n", nextIdx)
+		return &models.Message{
+			UserID:    userID,
+			QueueName: queueName,
+			Index:     nextIdx,
+			Content:   message,
+		}, nil
 	}
 
 	return nil, nil

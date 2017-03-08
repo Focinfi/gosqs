@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"sync"
@@ -19,6 +20,7 @@ func (Agent) PushMessage(addresses []string, message string) chan bool {
 		addr := address
 		go func() {
 			resp, err := http.PostForm(addr, url.Values{"message": {message}})
+			fmt.Printf("RESP: %v, ERR: %v\n", resp, err)
 			if err == nil && resp.StatusCode == http.StatusOK {
 				if done {
 					return
@@ -28,8 +30,12 @@ func (Agent) PushMessage(addresses []string, message string) chan bool {
 				done = true
 				lock.Unlock()
 
+				fmt.Printf("DONE: %v\n", done)
+
 				pushed <- true
 			}
+
+			fmt.Printf("PUSH MSG ERROR: %v\n", err)
 		}()
 	}
 

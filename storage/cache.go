@@ -3,6 +3,7 @@ package storage
 import (
 	"container/heap"
 	"fmt"
+	"time"
 
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
@@ -22,7 +23,7 @@ func (cache *Cache) AddConsumer(c *models.Client, priority int) error {
 	}
 
 	consumer := models.NewConsumer(cache.consumers, c, priority)
-	return cache.PushConsumer(consumer)
+	return cache.PushConsumer(consumer, 0)
 }
 
 // PopConsumer returns a client ready to be pushed message
@@ -33,7 +34,9 @@ func (cache *Cache) PopConsumer() <-chan *models.Consumer {
 		for {
 			if cache.consumers.Len() > 0 {
 				fmt.Printf("POP_CONSUMER: %v\n", cache.consumers.Len())
-				ch <- heap.Pop(cache.consumers).(*models.Consumer)
+				c := heap.Pop(cache.consumers).(*models.Consumer)
+				fmt.Printf("POP_CONSUMER: Pushed=%v\n", c)
+				ch <- c
 			}
 		}
 	}()
@@ -42,9 +45,17 @@ func (cache *Cache) PopConsumer() <-chan *models.Consumer {
 }
 
 // PushConsumer push consumer into cache
-func (cache *Cache) PushConsumer(c *models.Consumer) error {
-	heap.Push(cache.consumers, c)
-	// fmt.Printf("CACHE: %#v\n", cache.consumers.Len())
+func (cache *Cache) PushConsumer(c *models.Consumer, after time.Duration) error {
+	fmt.Printf("CONSUMER-PUSH-BEFORE-LEN: %d\n", cache.consumers.Len())
+	if after > 0 {
+		time.AfterFunc(after, func() {
+			heap.Push(cache.consumers, c)
+		})
+	} else {
+		heap.Push(cache.consumers, c)
+	}
+
+	fmt.Printf("CONSUMER-PUSH-AFTER-LEN: %d\n", cache.consumers.Len())
 	return nil
 }
 

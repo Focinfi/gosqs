@@ -15,30 +15,32 @@ func main() {
 		panic(err)
 	}
 
+	now := time.Now().Unix()
+
 	clients := []*models.Client{
 		{
 			ID:                 external.TestClient.ID(),
 			UserID:             external.Root.ID(),
 			QueueName:          example.Greeting,
-			Addresses:          []string{":55466/greeting/1"},
-			RecentMessageIndex: models.GenIndex0(time.Now().Unix()),
-			RecentPushedAt:     time.Now().Unix(),
+			Addresses:          []string{"http://localhost:55466/greeting/1"},
+			RecentMessageIndex: models.GenIndex0(now),
+			RecentPushedAt:     now,
 		},
 		{
 			ID:                 external.TestClient.ID() + 1,
 			UserID:             external.Root.ID(),
 			QueueName:          example.Greeting,
-			Addresses:          []string{":55466/greeting/2"},
-			RecentMessageIndex: models.GenIndex0(time.Now().Unix()),
-			RecentPushedAt:     time.Now().Unix(),
+			Addresses:          []string{"http://localhost:55466/greeting/2"},
+			RecentMessageIndex: models.GenIndex0(now),
+			RecentPushedAt:     now,
 		},
 		{
 			ID:                 external.TestClient.ID() + 2,
 			UserID:             external.Root.ID(),
 			QueueName:          example.Greeting,
-			Addresses:          []string{":55466/greeting/3"},
-			RecentMessageIndex: models.GenIndex0(time.Now().Unix()),
-			RecentPushedAt:     time.Now().Unix(),
+			Addresses:          []string{"http://localhost:55466/greeting/3"},
+			RecentMessageIndex: models.GenIndex0(now),
+			RecentPushedAt:     now,
 		},
 	}
 

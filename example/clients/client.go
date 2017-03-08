@@ -11,12 +11,8 @@ import (
 func main() {
 	server := gin.Default()
 	handler := func(c *gin.Context) {
-		param := &struct {
-			Message string `json:"message"`
-		}{}
 
-		c.BindJSON(param)
-		fmt.Printf("%#v", param)
+		fmt.Printf("%#v\n", c.PostForm("message"))
 		c.String(http.StatusOK, "")
 	}
 

@@ -4,7 +4,7 @@ import (
 	"math/rand"
 )
 
-const base = int64(268435456) // 2 ** 28
+const BaseUnit = int64(268435456) // 2 ** 28
 
 // Message contains info
 type Message struct {
@@ -25,7 +25,7 @@ func (m Message) GroupID() int64 {
 
 // GroupID returns message group id based on index
 func GroupID(index int64) int64 {
-	return index / base
+	return index / BaseUnit
 }
 
 // GenIndexRandom gen index for the time
@@ -35,7 +35,7 @@ func GenIndexRandom(timestamp int64) int64 {
 
 // GenIndex0 gen index for the time, random index in n
 func GenIndex0(timestamp int64) int64 {
-	return timestamp * base
+	return timestamp * BaseUnit
 }
 
 // MessageIndex for one entry of message index

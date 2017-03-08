@@ -63,7 +63,7 @@ func (s *Client) Add(c *models.Client) error {
 
 // Update updates the RecentMessageIndex for the client
 func (s *Client) Update(c *models.Client) error {
-	fmt.Println(c)
+	fmt.Printf("TO UPDATE CLIENT: %#v\n", c)
 	_, err := s.One(c.UserID, c.ID, c.QueueName)
 	if err != nil {
 		return err

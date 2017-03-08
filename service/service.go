@@ -43,6 +43,7 @@ func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 		consumer := <-ch
 		fmt.Println("START PUSHMESSAGE")
 		fmt.Printf("CONSUMER: %#v\n", consumer)
+		now := time.Now().Unix()
 		client := consumer.Client
 
 		// remove consumer if out of control
@@ -50,34 +51,41 @@ func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 			continue
 		}
 
-		fmt.Printf("%#v\n", consumer.Client)
-		message, err := s.Message.Next(consumer.UserID, consumer.QueueName, consumer.RecentMessageIndex)
+		message, err := s.Message.Next(consumer.UserID, consumer.QueueName, consumer.RecentMessageIndex, now)
+		fmt.Printf("MESSAGE: %v, err: %v\n", message, err)
 		if err != nil {
 			// log error to fix
 			log.Println(err)
-			s.Cache.PushConsumer(consumer)
+			consumer.Priority -= 10
+			s.Cache.PushConsumer(consumer, time.Second)
 			continue
 		}
 
 		// all messages has been pushed
 		if message == nil {
-			client.RecentPushedAt = time.Now().Unix()
+			client.RecentPushedAt = now
+			if period := now - models.GroupID(client.RecentMessageIndex); period > 3 {
+				client.RecentMessageIndex = models.GenIndex0(now - 3)
+			}
 			if err := s.Client.Update(client); err != nil {
 				log.Println(err)
 			}
 
-			s.Cache.PushConsumer(consumer)
+			consumer.Priority--
+			s.Cache.PushConsumer(consumer, time.Second)
 			continue
 		}
 
 		// push it the all client
 		pushed := s.PushMessage(client.Addresses, message.Content)
+		after := time.Millisecond
 		select {
 		case <-time.After(time.Second * 5):
 			consumer.Priority -= 2
-
+			after = time.Second * time.Duration(5)
 		case <-pushed:
-			consumer.Priority--
+			fmt.Println("PUSHED")
+			consumer.Client.RecentMessageIndex = message.Index
 		}
 
 		client.RecentPushedAt = time.Now().Unix()
@@ -85,7 +93,7 @@ func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 			log.Println(err)
 		}
 
-		s.Cache.PushConsumer(consumer)
+		s.Cache.PushConsumer(consumer, after)
 	}
 }
 
