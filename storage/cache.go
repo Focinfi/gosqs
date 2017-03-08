@@ -23,6 +23,7 @@ func (cache *Cache) AddConsumer(c *models.Client, priority int) error {
 	}
 
 	consumer := models.NewConsumer(cache.consumers, c, priority)
+	fmt.Printf("AddConsumer: %#v", consumer.Client)
 	return cache.PushConsumer(consumer, 0)
 }
 
@@ -50,12 +51,12 @@ func (cache *Cache) PushConsumer(c *models.Consumer, after time.Duration) error 
 	if after > 0 {
 		time.AfterFunc(after, func() {
 			heap.Push(cache.consumers, c)
+			fmt.Printf("CONSUMER-PUSH-AFTER-LEN-After: %d\n", cache.consumers.Len())
 		})
 	} else {
 		heap.Push(cache.consumers, c)
+		fmt.Printf("CONSUMER-PUSH-AFTER-LEN: %d\n", cache.consumers.Len())
 	}
-
-	fmt.Printf("CONSUMER-PUSH-AFTER-LEN: %d\n", cache.consumers.Len())
 	return nil
 }
 

@@ -8,12 +8,6 @@ import (
 	"github.com/Focinfi/sqs/models"
 )
 
-const clientKeyPerfix = "sqs.client"
-
-func clientKey(userID, clientID int64, queueName string) string {
-	return fmt.Sprintf("%s.%d.%d.%s", clientKeyPerfix, userID, clientID, queueName)
-}
-
 // Client for storage of clients
 type Client struct {
 	store *Storage
@@ -22,7 +16,7 @@ type Client struct {
 
 // One returns a client
 func (s *Client) One(userID int64, clientID int64, queueName string) (*models.Client, error) {
-	key := clientKey(userID, clientID, queueName)
+	key := models.ClientKey(userID, clientID, queueName)
 	value, ok := s.db.Get(key)
 	if !ok {
 		return nil, errors.ClientNotFound
@@ -47,7 +41,7 @@ func (s *Client) Add(c *models.Client) error {
 		return errors.DuplicateClient
 	}
 
-	key := clientKey(c.UserID, c.ID, c.QueueName)
+	key := models.ClientKey(c.UserID, c.ID, c.QueueName)
 	data, err := json.Marshal(c)
 	if err != nil {
 		return errors.NewInternalErr(err.Error())
@@ -69,7 +63,7 @@ func (s *Client) Update(c *models.Client) error {
 		return err
 	}
 
-	key := clientKey(c.UserID, c.ID, c.QueueName)
+	key := models.ClientKey(c.UserID, c.ID, c.QueueName)
 	data, err := json.Marshal(c)
 	if err != nil {
 		return errors.NewInternalErr(err.Error())

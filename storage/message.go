@@ -9,16 +9,6 @@ import (
 	"github.com/Focinfi/sqs/models"
 )
 
-const messageKeyPrefix = "sqs.message"
-
-func messageListKey(userID int64, queueName string, gorupID int64) string {
-	return fmt.Sprintf("%s.%d.%s.%d", messageKeyPrefix, userID, queueName, gorupID)
-}
-
-func messageKey(userID int64, queueName string, index int64) string {
-	return fmt.Sprintf("%s.%d.%s.%d", messageKeyPrefix, userID, queueName, index)
-}
-
 // Message for message storage
 type Message struct {
 	store *Storage
@@ -27,7 +17,7 @@ type Message struct {
 
 // All returns all messages index list
 func (s *Message) All(userID int64, queueName string, gorupID int64, filters ...interface{}) ([]int64, error) {
-	key := messageListKey(userID, queueName, gorupID)
+	key := models.MessageListKey(userID, queueName, gorupID)
 	all, ok := s.db.Get(key)
 	if !ok {
 		all = "[]"
@@ -43,7 +33,7 @@ func (s *Message) All(userID int64, queueName string, gorupID int64, filters ...
 
 // One returns a message string
 func (s *Message) One(userID int64, queueName string, index int64) (string, bool) {
-	key := messageKey(userID, queueName, index)
+	key := models.MessageKey(userID, queueName, index)
 	return s.db.Get(key)
 }
 
@@ -86,13 +76,13 @@ func (s *Message) Next(userID int64, queueName string, index int64, timestamp in
 				// got the next message index
 				nextIdx = all[i+1]
 			} else {
-				return nil, errors.DataLost(messageKey(userID, queueName, index))
+				return nil, errors.DataLost(models.MessageKey(userID, queueName, index))
 			}
 		}
 
 		message, ok := s.One(userID, queueName, nextIdx)
 		if !ok {
-			return nil, errors.DataLost(messageKey(userID, queueName, nextIdx))
+			return nil, errors.DataLost(models.MessageKey(userID, queueName, nextIdx))
 		}
 
 		fmt.Printf("NEXT INDEX: %d\n", nextIdx)
@@ -133,12 +123,12 @@ func (s *Message) Add(m *models.Message) error {
 		return errors.FailedEncoding(all)
 	}
 
-	err = s.db.Put(messageListKey(m.UserID, m.QueueName, m.GroupID()), string(data))
+	err = s.db.Put(models.MessageListKey(m.UserID, m.QueueName, m.GroupID()), string(data))
 	if err != nil {
 		return errors.NewInternalErr(err.Error())
 	}
 
-	err = s.db.Put(messageKey(m.UserID, m.QueueName, m.Index), m.Content)
+	err = s.db.Put(models.MessageKey(m.UserID, m.QueueName, m.Index), m.Content)
 	if err != nil {
 		return errors.NewInternalErr(err.Error())
 	}

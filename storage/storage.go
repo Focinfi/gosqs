@@ -1,6 +1,9 @@
 package storage
 
-import "github.com/Focinfi/sqs/external"
+import (
+	"github.com/Focinfi/sqs/external"
+	"github.com/Focinfi/sqs/models"
+)
 
 // Storage defines storage
 type Storage struct {
@@ -19,5 +22,5 @@ func init() {
 	DefaultStorage.Client = &Client{db: defaultKV, store: DefaultStorage}
 	DefaultStorage.Cache = NewCache(DefaultStorage)
 
-	DefaultStorage.Queue.db.Put(queueListKey(external.Root.ID()), "")
+	DefaultStorage.Queue.db.Put(models.QueueListKey(external.Root.ID()), "")
 }

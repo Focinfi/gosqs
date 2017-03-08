@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Focinfi/sqs/config"
@@ -34,9 +35,11 @@ func (d *database) RegisterClient(c *models.Client) error {
 
 	now := time.Now().Unix()
 	// the client had received message in clientControlTimeoutSecond, can not register for this node
-	if now-client.RecentPushedAt < config.Config().ClientControlTimeoutSecond {
+	if c.Publisher != client.Publisher && now-client.RecentPushedAt < config.Config().ClientControlTimeoutSecond {
 		return errors.ClientHasAlreadyRegistered
 	}
+
+	fmt.Printf("RegisterClient: %v", c)
 
 	c.RecentMessageIndex = client.RecentMessageIndex
 	c.RecentPushedAt = now

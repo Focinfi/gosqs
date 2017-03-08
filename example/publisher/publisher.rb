@@ -18,9 +18,8 @@ base = 268435456
 #   )
 # end
 
-def message()
+def message(count)
   host = 'http://localhost:5546'
-  count = 1
   base = 268435456
   index = Time.now.to_i
   RestClient.post(
@@ -28,8 +27,8 @@ def message()
     {
       "userID" => 1,
       "queueName" => "greeting",
-      "content" => index.to_s,
-      "index" => index * base
+      "content" => "#{index}_#{count}",
+      "index" => index * base + count
     }.to_json,
     {content_type: :json, accept: :json}
   )
@@ -38,4 +37,4 @@ def message()
 end
 
 
-message()
+10.times {|i| message(i + 1) }
