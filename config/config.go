@@ -3,6 +3,8 @@ package config
 import (
 	"io"
 	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
 const (
@@ -81,7 +83,11 @@ func Config() Configuration {
 }
 
 func init() {
-	if e := os.Getenv("sqs-env"); e != "" {
+	if e := os.Getenv("SQS_ENV"); e != "" {
 		env = Envroinment(e)
+	}
+
+	if Env().IsProduction() {
+		gin.SetMode(gin.ReleaseMode)
 	}
 }
