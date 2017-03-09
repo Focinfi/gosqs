@@ -1,11 +1,11 @@
 package service
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage"
 )
@@ -39,7 +39,7 @@ func (d *database) RegisterClient(c *models.Client) error {
 		return errors.ClientHasAlreadyRegistered
 	}
 
-	fmt.Printf("RegisterClient: %v", c)
+	log.Biz.Printf("RegisterClient: %v", c)
 
 	c.RecentMessageIndex = client.RecentMessageIndex
 	c.RecentPushedAt = now

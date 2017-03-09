@@ -2,8 +2,9 @@ package models
 
 import (
 	"container/heap"
-	"fmt"
 	"sync"
+
+	"github.com/Focinfi/sqs/log"
 )
 
 var mux sync.RWMutex
@@ -17,7 +18,7 @@ type Consumer struct {
 
 // NewConsumer returns a new Consumer based on the client
 func NewConsumer(h heap.Interface, client *Client, priority int) *Consumer {
-	fmt.Printf("LEGTH: %d\n", h.Len())
+	log.Biz.Printf("LEGTH: %d\n", h.Len())
 	return &Consumer{
 		Client:   client,
 		Priority: priority,

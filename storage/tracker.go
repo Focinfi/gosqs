@@ -3,21 +3,23 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/Focinfi/sqs/log"
 )
 
 const startFormat = "-Start--%s-------\n"
 const endFormat = "-End----%s-------\n"
 
 func track(fn func(), a ...interface{}) {
-	fmt.Printf(startFormat, fmt.Sprint(a...))
+	log.Biz.Printf(startFormat, fmt.Sprint(a...))
 	fn()
-	fmt.Printf(endFormat, fmt.Sprint(a...))
+	log.Biz.Printf(endFormat, fmt.Sprint(a...))
 }
 
 func trackf(fn func(), format string, a ...interface{}) {
-	fmt.Printf(startFormat, fmt.Sprintf(format, a...))
+	log.Biz.Printf(startFormat, fmt.Sprintf(format, a...))
 	fn()
-	fmt.Printf(endFormat, fmt.Sprintf(format, a...))
+	log.Biz.Printf(endFormat, fmt.Sprintf(format, a...))
 }
 
 // JSONIndentFormat returns JOSN format with indent

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"io"
 	"os"
 )
 
@@ -10,20 +11,58 @@ const (
 	productionEnv = "production"
 )
 
+const (
+	test       = "test"
+	develop    = "develop"
+	production = "production"
+)
+
+// Envroinment for application envroinment
+type Envroinment string
+
+// IsProduction returns if the env equals to production
+func (e Envroinment) IsProduction() bool {
+	return e == production
+}
+
+// IsDevelop returns if the env equals to develop
+func (e Envroinment) IsDevelop() bool {
+	return e == develop
+}
+
+// IsTest returns if the env equals to develop
+func (e Envroinment) IsTest() bool {
+	return e == develop
+}
+
+var env = Envroinment(develop)
+
+// Env returns the env
+func Env() Envroinment {
+	return env
+}
+
 // Configuration defines configuration
 type Configuration struct {
 	ClientControlTimeoutSecond int64
 	ClientDefaultPriority      int
 	MaxConsumerSize            int
 	MaxPushWorkCount           int
+	LogOut                     io.Writer
+}
+
+func newDefaultConfig() Configuration {
+	return Configuration{
+		ClientControlTimeoutSecond: 3,
+		MaxConsumerSize:            10,
+		ClientDefaultPriority:      10,
+		MaxPushWorkCount:           4,
+		LogOut:                     os.Stdout,
+	}
 }
 
 // Config returns the Configuration based on envroinment
 func Config() Configuration {
-	env := os.Getenv("sqs-env")
-	if env == "" {
-		env = developEnv
-	}
 
 	switch env {
 	case productionEnv:
@@ -32,20 +71,17 @@ func Config() Configuration {
 			MaxConsumerSize:            1000000,
 			ClientDefaultPriority:      100,
 			MaxPushWorkCount:           16,
+			LogOut:                     os.Stdout,
 		}
 	case developEnv:
-		return Configuration{
-			ClientControlTimeoutSecond: 3,
-			MaxConsumerSize:            10,
-			ClientDefaultPriority:      10,
-			MaxPushWorkCount:           4,
-		}
+		return newDefaultConfig()
 	default:
-		return Configuration{
-			ClientControlTimeoutSecond: 3,
-			MaxConsumerSize:            10,
-			ClientDefaultPriority:      10,
-			MaxPushWorkCount:           4,
-		}
+		return newDefaultConfig()
+	}
+}
+
+func init() {
+	if e := os.Getenv("sqs-env"); e != "" {
+		env = Envroinment(e)
 	}
 }

@@ -1,13 +1,12 @@
 package service
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/Focinfi/sqs/agent"
 	"github.com/Focinfi/sqs/config"
+	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 )
 
@@ -41,8 +40,8 @@ func (s *Service) startPushMessage() {
 func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 	for {
 		consumer := <-ch
-		fmt.Println("START PUSHMESSAGE")
-		fmt.Printf("CONSUMER: %#v\n", consumer)
+		log.Biz.Println("START PUSHMESSAGE")
+		log.Biz.Printf("CONSUMER: %#v\n", consumer)
 		now := time.Now().Unix()
 		client := consumer.Client
 
@@ -52,10 +51,9 @@ func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 		}
 
 		message, err := s.Message.Next(consumer.UserID, consumer.QueueName, consumer.RecentMessageIndex, now)
-		fmt.Printf("MESSAGE: %v, err: %v\n", message, err)
+		log.Biz.Printf("MESSAGE: %v, err: %v\n", message, err)
 		if err != nil {
-			// log error to fix
-			log.Println(err)
+			log.DB.Errorln(err)
 			consumer.Priority -= 10
 			s.Cache.PushConsumer(consumer, time.Second)
 			continue
@@ -67,8 +65,10 @@ func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 			if period := now - models.GroupID(client.RecentMessageIndex); period > 3 {
 				client.RecentMessageIndex = models.GenIndex0(now - 3)
 			}
+			// failed to update client, should fix and give away the control of consumer
 			if err := s.Client.Update(client); err != nil {
-				log.Println(err)
+				log.DB.Errorln(err)
+				continue
 			}
 
 			consumer.Priority--
@@ -84,13 +84,15 @@ func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 			consumer.Priority -= 2
 			after = time.Second * time.Duration(5)
 		case <-pushed:
-			fmt.Println("PUSHED")
+			log.Biz.Println("PUSHED")
 			consumer.Client.RecentMessageIndex = message.Index
 		}
 
 		client.RecentPushedAt = time.Now().Unix()
+		// failed to update client, should fix and give away the control of consumer
 		if err := s.Client.Update(client); err != nil {
-			log.Println(err)
+			log.DB.Errorln(err)
+			continue
 		}
 
 		s.Cache.PushConsumer(consumer, after)
@@ -103,5 +105,5 @@ func Start(address string) {
 	defaultService.Agent = agent.New(defaultService, address)
 
 	defaultService.startPushMessage()
-	log.Fatal(http.ListenAndServe(address, defaultService.Agent))
+	log.Biz.Fatal(http.ListenAndServe(address, defaultService.Agent))
 }

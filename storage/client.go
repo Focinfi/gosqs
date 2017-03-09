@@ -2,9 +2,9 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 )
 
@@ -57,7 +57,7 @@ func (s *Client) Add(c *models.Client) error {
 
 // Update updates the RecentMessageIndex for the client
 func (s *Client) Update(c *models.Client) error {
-	fmt.Printf("TO UPDATE CLIENT: %#v\n", c)
+	log.Biz.Printf("TO UPDATE CLIENT: %#v\n", c)
 	_, err := s.One(c.UserID, c.ID, c.QueueName)
 	if err != nil {
 		return err

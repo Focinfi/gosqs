@@ -2,10 +2,10 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 	"sort"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 )
 
@@ -42,7 +42,7 @@ func (s *Message) Next(userID int64, queueName string, index int64, timestamp in
 	orginID := models.GroupID(index)
 	groupID := orginID
 	nowGroupID := timestamp
-	fmt.Printf("GROUP_ID: %d, NOW_GORUP_ID:%d\n", groupID, nowGroupID)
+	log.Biz.Printf("GROUP_ID: %d, NOW_GORUP_ID:%d\n", groupID, nowGroupID)
 
 	for {
 		// the message with
@@ -59,7 +59,7 @@ func (s *Message) Next(userID int64, queueName string, index int64, timestamp in
 			groupID++
 			continue
 		}
-		fmt.Printf("MESSAGE-ALL: %v\n", all)
+		log.Biz.Printf("MESSAGE-ALL: %v\n", all)
 		var nextIdx int64
 		if index/models.BaseUnit == 0 || orginID < groupID {
 			nextIdx = all[0]
@@ -85,7 +85,7 @@ func (s *Message) Next(userID int64, queueName string, index int64, timestamp in
 			return nil, errors.DataLost(models.MessageKey(userID, queueName, nextIdx))
 		}
 
-		fmt.Printf("NEXT INDEX: %d\n", nextIdx)
+		log.Biz.Printf("NEXT INDEX: %d\n", nextIdx)
 		return &models.Message{
 			UserID:    userID,
 			QueueName: queueName,
