@@ -22,5 +22,5 @@ func init() {
 	DefaultStorage.Client = &Client{db: defaultKV, store: DefaultStorage}
 	DefaultStorage.Cache = NewCache(DefaultStorage)
 
-	DefaultStorage.Queue.db.Put(models.QueueListKey(external.Root.ID()), "")
+	DefaultStorage.Queue.db.Put(models.QueueListKey(external.Root.ID()), "[]")
 }

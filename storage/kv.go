@@ -1,9 +1,6 @@
 package storage
 
-import (
-	"github.com/Focinfi/sqs/log"
-	"github.com/Focinfi/sqs/storage/etcd"
-)
+import "github.com/Focinfi/sqs/storage/memcached"
 
 // KV defines underlying key/value database
 type KV interface {
@@ -15,10 +12,11 @@ type KV interface {
 var defaultKV KV
 
 func init() {
-	kv, err := etcd.New()
-	if err != nil {
-		log.Internal.Panic(err)
-	}
+	// kv, err := etcd.New()
+	// if err != nil {
+	// 	log.Internal.Panic(err)
+	// }
 
-	defaultKV = kv
+	// defaultKV = kv
+	defaultKV, _ = memcached.New()
 }

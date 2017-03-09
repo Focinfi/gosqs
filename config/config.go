@@ -52,6 +52,7 @@ type Configuration struct {
 	MaxPushWorkCount           int
 	LogOut                     io.Writer
 	EtcdEndpoints              []string
+	MemcachedEndpoints         []string
 }
 
 func newDefaultConfig() Configuration {
@@ -62,6 +63,7 @@ func newDefaultConfig() Configuration {
 		MaxPushWorkCount:           4,
 		LogOut:                     os.Stdout,
 		EtcdEndpoints:              []string{"localhost:2379"},
+		MemcachedEndpoints:         []string{"localhost:11211"},
 	}
 }
 
