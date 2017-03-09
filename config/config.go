@@ -51,6 +51,7 @@ type Configuration struct {
 	MaxConsumerSize            int
 	MaxPushWorkCount           int
 	LogOut                     io.Writer
+	EtcdEndpoints              []string
 }
 
 func newDefaultConfig() Configuration {
@@ -60,6 +61,7 @@ func newDefaultConfig() Configuration {
 		ClientDefaultPriority:      10,
 		MaxPushWorkCount:           4,
 		LogOut:                     os.Stdout,
+		EtcdEndpoints:              []string{"localhost:2379"},
 	}
 }
 

@@ -1,4 +1,4 @@
-package storage
+package gomap
 
 import (
 	"encoding/json"
