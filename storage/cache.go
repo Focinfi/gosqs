@@ -3,6 +3,7 @@ package storage
 import (
 	"time"
 
+	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
@@ -17,7 +18,7 @@ type Cache struct {
 
 // PopConsumerChan returns a output Consumer channel
 func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
-	ch := make(chan models.Consumer)
+	ch := make(chan models.Consumer, config.Config().MaxPushWorkCount)
 	go func() {
 		log.Biz.Println("SETUP POPCONSUMER")
 		for {
@@ -31,7 +32,10 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 				continue
 			}
 
-			ch <- c
+			time.AfterFunc(time.Millisecond, func() {
+				ch <- c
+			})
+
 		}
 	}()
 
@@ -40,13 +44,13 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 
 // PushConsumerAt push consumer into cache
 func (cache *Cache) PushConsumerAt(c models.Consumer, after time.Duration) error {
-	if after > 0 {
-		time.AfterFunc(after, func() {
-			if err := cache.pl.Push(c); err != nil {
-				log.DB.Error(err)
-			}
-		})
-	}
+	// if after > 0 {
+	// 	time.AfterFunc(after, func() {
+	// 		if err := cache.pl.Push(c); err != nil {
+	// 			log.DB.Error(err)
+	// 		}
+	// 	})
+	// }
 
 	return cache.pl.Push(c)
 }

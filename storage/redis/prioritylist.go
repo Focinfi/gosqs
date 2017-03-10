@@ -2,9 +2,10 @@ package redis
 
 import (
 	"fmt"
-	"sync"
 
 	"encoding/json"
+
+	"math/rand"
 
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
@@ -13,14 +14,13 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-var mux sync.RWMutex
+var base = rand.Int()
 var index = 0
 
 // PriorityList for priority consumers useing redis
 type PriorityList struct {
-	key    string
-	locked map[string]bool
-	db     *redis.Client
+	key string
+	db  *redis.Client
 }
 
 // Push pushes the c into the pl
@@ -29,55 +29,29 @@ func (pl *PriorityList) Push(c models.Consumer) error {
 		return err
 	}
 
-	// release lock
-	mux.Lock()
-	defer mux.Unlock()
-	key := c.Client().Key()
-	if _, ok := pl.locked[key]; ok {
-		delete(pl.locked, key)
-	}
-
 	return nil
 }
 
 // Pop returns the consumer with the highest Score
 // if locked it will try the next-highest-score consumer
-func (pl *PriorityList) Pop() (models.Consumer, error) {
-	//  get the highest-score consumer
-	log.Biz.Debugln("POP-redis")
-	heighest, err := pl.ZHeighest()
-	if err != nil {
-		return nil, err
+func (pl *PriorityList) Pop() (consumer models.Consumer, err error) {
+	for pl.db.ZCard(pl.key).Val() > 0 {
+		consumer, err = pl.ZHeighest()
+		if err != nil {
+			return nil, err
+		}
+
+		key, err := json.Marshal(consumer)
+		if err != nil {
+			return nil, errors.NewInternalErr(err.Error())
+		}
+
+		if res := pl.db.ZRem(pl.key, string(key)); res.Val() > 0 {
+			return consumer, nil
+		}
 	}
 
-	// lock the map
-	mux.RLock()
-	// check if locked
-	if _, ok := pl.locked[heighest.Client().Key()]; ok {
-		// unlock read
-		mux.RUnlock()
-		return nil, errors.NoConsumer
-	}
-	// unlock read
-	mux.RUnlock()
-
-	// get the lowest-score consumer
-	lowest, err := pl.ZLowest()
-	if err != nil {
-		return nil, err
-	}
-
-	// set the heighest score smaller than the lowest to simulate the removing
-	heighest.IncPriority(-1 * (heighest.Priority() - lowest.Priority()))
-	if err := pl.ZAdd(heighest); err != nil {
-		return nil, err
-	}
-
-	// lock the heighest
-	mux.Lock()
-	defer mux.Unlock()
-	pl.locked[heighest.Client().Key()] = true
-	return heighest, nil
+	return nil, errors.NoConsumer
 }
 
 // ZAdd add c using redis.ZAdd
@@ -139,9 +113,6 @@ func New() (*PriorityList, error) {
 		return nil, err
 	}
 
-	mux.Lock()
-	defer mux.Unlock()
-
-	key := fmt.Sprintf("sqs.pl.%d", index+1)
-	return &PriorityList{db: client, key: key, locked: map[string]bool{}}, nil
+	key := fmt.Sprintf("sqs.pl.%d", base+index+1)
+	return &PriorityList{db: client, key: key}, nil
 }

@@ -43,7 +43,7 @@ func (s *Service) pushMessage(ch <-chan models.Consumer) {
 	for {
 		consumer := <-ch
 		log.Biz.Println("START PUSHMESSAGE")
-		log.Biz.Printf("CONSUMER: %#v\n", consumer.Client())
+		log.Biz.Printf("CONSUMER: %#v\n", consumer)
 		now := time.Now().Unix()
 		client := consumer.Client()
 
