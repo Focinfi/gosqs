@@ -53,6 +53,8 @@ type Configuration struct {
 	LogOut                     io.Writer
 	EtcdEndpoints              []string
 	MemcachedEndpoints         []string
+	RedisAdrr                  string
+	RedisPwd                   string
 }
 
 func newDefaultConfig() Configuration {
@@ -64,6 +66,8 @@ func newDefaultConfig() Configuration {
 		LogOut:                     os.Stdout,
 		EtcdEndpoints:              []string{"localhost:2379"},
 		MemcachedEndpoints:         []string{"localhost:11211"},
+		RedisAdrr:                  "localhost:6379",
+		RedisPwd:                   "",
 	}
 }
 

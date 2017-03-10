@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -48,6 +49,9 @@ var MessageNotFound = NewBizErr("message not found", messageNotFound)
 
 // ClientNotFound error for unknown client
 var ClientNotFound = NewBizErr("client not found", clientNotFound)
+
+// NoConsumer error for no consumer
+var NoConsumer = New("cosumer queue is empty")
 
 // ClientHasAlreadyRegistered error for client has already registered
 var ClientHasAlreadyRegistered = NewBizErr("client has already registered", clientHasAlreadyRegistered)
@@ -132,4 +136,9 @@ func (err internalErr) Error() string {
 
 func (err internalErr) isInternal() bool {
 	return true
+}
+
+// New returns a new error with the message
+func New(message string) error {
+	return errors.New(message)
 }

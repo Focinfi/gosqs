@@ -4,9 +4,9 @@ import "fmt"
 
 // Client for client model
 type Client struct {
-	ID                 int64  `json:"-"`
-	UserID             int64  `json:"-"`
-	QueueName          string `json:"-"`
+	ID                 int64
+	UserID             int64
+	QueueName          string
 	RecentMessageIndex int64
 	Addresses          []string
 	Publisher          string

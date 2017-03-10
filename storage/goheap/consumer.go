@@ -30,6 +30,11 @@ func (c *Consumer) IncPriority(p int) {
 	c.priority += p
 }
 
+// Priority returns the priority for the c
+func (c *Consumer) Priority() int {
+	return c.priority
+}
+
 // NewConsumer returns a new Consumer based on the client
 func NewConsumer(client *models.Client, priority int) *Consumer {
 	return &Consumer{

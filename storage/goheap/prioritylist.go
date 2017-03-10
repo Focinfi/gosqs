@@ -3,6 +3,7 @@ package goheap
 import (
 	"container/heap"
 
+	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/models"
 )
 
@@ -19,15 +20,16 @@ func New() *PriorityList {
 }
 
 // Pop returns the Consumer with the highest priority
-func (p *PriorityList) Pop() models.Consumer {
+func (p *PriorityList) Pop() (models.Consumer, error) {
 	if p.consumers.Len() > 0 {
-		return heap.Pop(p.consumers).(*Consumer)
+		return heap.Pop(p.consumers).(*Consumer), nil
 	}
 
-	return nil
+	return nil, errors.NoConsumer
 }
 
 // Push pushes the Consumer in
-func (p *PriorityList) Push(consumer models.Consumer) {
+func (p *PriorityList) Push(consumer models.Consumer) error {
 	heap.Push(p.consumers, consumer)
+	return nil
 }

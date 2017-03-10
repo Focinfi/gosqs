@@ -43,18 +43,15 @@ func (s *Service) pushMessage(ch <-chan models.Consumer) {
 	for {
 		consumer := <-ch
 		log.Biz.Println("START PUSHMESSAGE")
-		log.Biz.Printf("CONSUMER: %#v\n", consumer)
+		log.Biz.Printf("CONSUMER: %#v\n", consumer.Client())
 		now := time.Now().Unix()
 		client := consumer.Client()
 
 		if c, err := s.Client.One(client.UserID, client.ID, client.QueueName); err != nil {
 			log.DB.Error(err)
 			s.Cache.PushConsumerAt(consumer, time.Millisecond)
-
-			// remove consumer if out of control
-			if client.Publisher != c.Publisher {
-				continue
-			}
+		} else if client.Publisher != c.Publisher { // remove consumer if out of control
+			continue
 		}
 
 		message, err := s.Message.Next(client.UserID, client.QueueName, client.RecentMessageIndex, now)

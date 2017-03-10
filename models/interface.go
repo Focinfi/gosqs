@@ -4,13 +4,14 @@ package models
 type Consumer interface {
 	Client() (client *Client)
 	SetClient(client *Client)
+	Priority() (p int)
 	IncPriority(p int)
 }
 
 // PriorityList defines as priority list
 type PriorityList interface {
-	Push(item Consumer)
-	Pop() (item Consumer)
+	Push(item Consumer) error
+	Pop() (item Consumer, err error)
 }
 
 // KV defines underlying key/value database
