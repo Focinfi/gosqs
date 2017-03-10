@@ -8,6 +8,7 @@ import (
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/storage"
 )
 
 // Service for one user info
@@ -27,35 +28,41 @@ func (s *Service) RegisterClient(c *models.Client) error {
 		return err
 	}
 
-	return s.Cache.AddConsumer(c, config.Config().ClientDefaultPriority)
+	consumer := storage.NewConsumer(c, config.Config().ClientDefaultPriority)
+	return s.Cache.PushConsumerAt(consumer, 0)
 }
 
 func (s *Service) startPushMessage() {
-	consumerChan := s.Cache.PopConsumer()
+	consumerChan := s.Cache.PopConsumerChan()
 	for i := 0; i < config.Config().MaxPushWorkCount; i++ {
 		go s.pushMessage(consumerChan)
 	}
 }
 
-func (s *Service) pushMessage(ch <-chan *models.Consumer) {
+func (s *Service) pushMessage(ch <-chan models.Consumer) {
 	for {
 		consumer := <-ch
 		log.Biz.Println("START PUSHMESSAGE")
 		log.Biz.Printf("CONSUMER: %#v\n", consumer)
 		now := time.Now().Unix()
-		client := consumer.Client
+		client := consumer.Client()
 
-		// remove consumer if out of control
-		if consumer.Publisher != s.Agent.Address {
-			continue
+		if c, err := s.Client.One(client.UserID, client.ID, client.QueueName); err != nil {
+			log.DB.Error(err)
+			s.Cache.PushConsumerAt(consumer, time.Millisecond)
+
+			// remove consumer if out of control
+			if client.Publisher != c.Publisher {
+				continue
+			}
 		}
 
-		message, err := s.Message.Next(consumer.UserID, consumer.QueueName, consumer.RecentMessageIndex, now)
+		message, err := s.Message.Next(client.UserID, client.QueueName, client.RecentMessageIndex, now)
 		log.Biz.Printf("MESSAGE: %v, err: %v\n", message, err)
 		if err != nil {
 			log.DB.Errorln(err)
-			consumer.Priority -= 10
-			s.Cache.PushConsumer(consumer, time.Second)
+			consumer.IncPriority(-10)
+			s.Cache.PushConsumerAt(consumer, time.Second)
 			continue
 		}
 
@@ -71,8 +78,8 @@ func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 				continue
 			}
 
-			consumer.Priority--
-			s.Cache.PushConsumer(consumer, time.Second)
+			consumer.IncPriority(-1)
+			s.Cache.PushConsumerAt(consumer, time.Second)
 			continue
 		}
 
@@ -81,21 +88,21 @@ func (s *Service) pushMessage(ch <-chan *models.Consumer) {
 		after := time.Millisecond
 		select {
 		case <-time.After(time.Second * 5):
-			consumer.Priority -= 2
+			consumer.IncPriority(-2)
 			after = time.Second * time.Duration(5)
 		case <-pushed:
 			log.Biz.Println("PUSHED")
-			consumer.Client.RecentMessageIndex = message.Index
+			consumer.Client().RecentMessageIndex = message.Index
+			client.RecentPushedAt = time.Now().Unix()
 		}
 
-		client.RecentPushedAt = time.Now().Unix()
 		// failed to update client, should fix and give away the control of consumer
 		if err := s.Client.Update(client); err != nil {
 			log.DB.Errorln(err)
 			continue
 		}
 
-		s.Cache.PushConsumer(consumer, after)
+		s.Cache.PushConsumerAt(consumer, after)
 	}
 }
 

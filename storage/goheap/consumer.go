@@ -1,27 +1,40 @@
-package models
+package goheap
 
 import (
-	"container/heap"
 	"sync"
 
-	"github.com/Focinfi/sqs/log"
+	"github.com/Focinfi/sqs/models"
 )
 
 var mux sync.RWMutex
 
 // Consumer for a consumer pointing to a client ready to receive messages
 type Consumer struct {
-	*Client
-	Priority int
+	client   *models.Client
+	priority int
 	index    int
 }
 
+// Client returns the client
+func (c *Consumer) Client() *models.Client {
+	return c.client
+}
+
+// SetClient set the client
+func (c *Consumer) SetClient(client *models.Client) {
+	c.client = client
+}
+
+// IncPriority set the priority
+func (c *Consumer) IncPriority(p int) {
+	c.priority += p
+}
+
 // NewConsumer returns a new Consumer based on the client
-func NewConsumer(h heap.Interface, client *Client, priority int) *Consumer {
-	log.Biz.Printf("LEGTH: %d\n", h.Len())
+func NewConsumer(client *models.Client, priority int) *Consumer {
 	return &Consumer{
-		Client:   client,
-		Priority: priority,
+		client:   client,
+		priority: priority,
 	}
 }
 
@@ -40,7 +53,7 @@ func (pq PriorityConsumer) Less(i, j int) bool {
 	// We want Pop to give us the highest, not lowest, priority so we use greater than here.
 	mux.RLock()
 	defer mux.RUnlock()
-	return pq[i].Priority > pq[j].Priority
+	return pq[i].priority > pq[j].priority
 }
 
 // Swap swaps the Consumer indexed with i and j

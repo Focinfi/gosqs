@@ -12,7 +12,7 @@ import (
 // Message for message storage
 type Message struct {
 	store *Storage
-	db    KV
+	db    models.KV
 }
 
 // All returns all messages index list

@@ -1,15 +1,11 @@
 package storage
 
-import "github.com/Focinfi/sqs/storage/memcached"
+import (
+	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/storage/memcached"
+)
 
-// KV defines underlying key/value database
-type KV interface {
-	Get(key string) (string, bool)
-	Put(key string, value string) error
-	Delete(key string) error
-}
-
-var defaultKV KV
+var defaultKV models.KV
 
 func init() {
 	// kv, err := etcd.New()

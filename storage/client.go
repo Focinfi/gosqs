@@ -11,7 +11,7 @@ import (
 // Client for storage of clients
 type Client struct {
 	store *Storage
-	db    KV
+	db    models.KV
 }
 
 // One returns a client

@@ -10,7 +10,7 @@ import (
 // Queue stores data
 type Queue struct {
 	store *Storage
-	db    KV
+	db    models.KV
 }
 
 // All returns queue map for userID

@@ -1,42 +1,27 @@
 package storage
 
 import (
-	"container/heap"
 	"time"
 
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/storage/goheap"
 )
 
 // Cache is for temporary data storage
 type Cache struct {
-	store     *Storage
-	consumers heap.Interface
+	store *Storage
+	pl    models.PriorityList
 }
 
-// AddConsumer add or refresh client ready to be pushed message
-func (cache *Cache) AddConsumer(c *models.Client, priority int) error {
-	if cache.consumers.Len() >= config.Config().MaxConsumerSize {
-		return errors.ServiceOverload
-	}
-
-	consumer := models.NewConsumer(cache.consumers, c, priority)
-	log.Biz.Printf("AddConsumer: %#v", consumer.Client)
-	return cache.PushConsumer(consumer, 0)
-}
-
-// PopConsumer returns a client ready to be pushed message
-func (cache *Cache) PopConsumer() <-chan *models.Consumer {
-	ch := make(chan *models.Consumer)
+// PopConsumerChan returns a output Consumer channel
+func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
+	ch := make(chan models.Consumer)
 	go func() {
 		log.Biz.Println("SETUP POPCONSUMER")
 		for {
-			if cache.consumers.Len() > 0 {
-				log.Biz.Printf("POP_CONSUMER: %v\n", cache.consumers.Len())
-				c := heap.Pop(cache.consumers).(*models.Consumer)
-				log.Biz.Printf("POP_CONSUMER: Pushed=%v\n", c)
+			c := cache.pl.Pop()
+			if c != nil {
 				ch <- c
 			}
 		}
@@ -45,17 +30,14 @@ func (cache *Cache) PopConsumer() <-chan *models.Consumer {
 	return ch
 }
 
-// PushConsumer push consumer into cache
-func (cache *Cache) PushConsumer(c *models.Consumer, after time.Duration) error {
-	log.Biz.Printf("CONSUMER-PUSH-BEFORE-LEN: %d\n", cache.consumers.Len())
+// PushConsumerAt push consumer into cache
+func (cache *Cache) PushConsumerAt(c models.Consumer, after time.Duration) error {
 	if after > 0 {
 		time.AfterFunc(after, func() {
-			heap.Push(cache.consumers, c)
-			log.Biz.Printf("CONSUMER-PUSH-AFTER-LEN-After: %d\n", cache.consumers.Len())
+			cache.pl.Push(c)
 		})
 	} else {
-		heap.Push(cache.consumers, c)
-		log.Biz.Printf("CONSUMER-PUSH-AFTER-LEN: %d\n", cache.consumers.Len())
+		cache.pl.Push(c)
 	}
 	return nil
 }
@@ -63,7 +45,12 @@ func (cache *Cache) PushConsumer(c *models.Consumer, after time.Duration) error 
 // NewCache returns a new cache
 func NewCache(s *Storage) *Cache {
 	return &Cache{
-		store:     s,
-		consumers: &models.PriorityConsumer{},
+		store: s,
+		pl:    goheap.New(),
 	}
+}
+
+// NewConsumer returns a new Consumer based on the client
+func NewConsumer(client *models.Client, priority int) models.Consumer {
+	return goheap.NewConsumer(client, priority)
 }
