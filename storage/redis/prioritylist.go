@@ -1,10 +1,8 @@
 package redis
 
 import (
-	"fmt"
-
 	"encoding/json"
-
+	"fmt"
 	"math/rand"
 
 	"github.com/Focinfi/sqs/config"

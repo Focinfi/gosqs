@@ -2,9 +2,8 @@ package agent
 
 import (
 	"fmt"
-	"net/http"
-
 	"log"
+	"net/http"
 
 	"github.com/Focinfi/sqs/errors"
 	"github.com/gin-gonic/gin"

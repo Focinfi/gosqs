@@ -1,9 +1,8 @@
 package etcd
 
 import (
-	"time"
-
 	"context"
+	"time"
 
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/log"

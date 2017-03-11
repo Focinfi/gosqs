@@ -2,9 +2,8 @@ package storage
 
 import (
 	"fmt"
-	"time"
-
 	"math/rand"
+	"time"
 
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
