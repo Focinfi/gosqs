@@ -39,10 +39,14 @@ func (d *database) RegisterClient(c *models.Client) error {
 		return errors.ClientHasAlreadyRegistered
 	}
 
-	log.Biz.Printf("RegisterClient: %v", c)
-
 	c.RecentMessageIndex = client.RecentMessageIndex
 	c.RecentPushedAt = now
+	c.RecentReceivedAt = client.RecentReceivedAt
+	if c.RecentReceivedAt == 0 {
+		c.RecentReceivedAt = now
+	}
+	log.Biz.Printf("RegisterClient: %v", c)
+
 	return d.Client.Update(c)
 }
 

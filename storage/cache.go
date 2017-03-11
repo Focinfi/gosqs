@@ -1,7 +1,10 @@
 package storage
 
 import (
+	"fmt"
 	"time"
+
+	"math/rand"
 
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
@@ -32,7 +35,9 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 				continue
 			}
 
-			time.AfterFunc(time.Millisecond, func() {
+			after := float64(time.Now().Unix() - c.Client().RecentReceivedAt)
+			fmt.Printf("AFTER: %#v, REC_AT: %#v\n", after, c.Client().RecentReceivedAt)
+			time.AfterFunc(time.Millisecond*100*time.Duration(rand.Float64()*float64(after)), func() {
 				ch <- c
 			})
 
@@ -42,16 +47,8 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 	return ch
 }
 
-// PushConsumerAt push consumer into cache
-func (cache *Cache) PushConsumerAt(c models.Consumer, after time.Duration) error {
-	// if after > 0 {
-	// 	time.AfterFunc(after, func() {
-	// 		if err := cache.pl.Push(c); err != nil {
-	// 			log.DB.Error(err)
-	// 		}
-	// 	})
-	// }
-
+// PushConsumer pushes the c into cache
+func (cache *Cache) PushConsumer(c models.Consumer) error {
 	return cache.pl.Push(c)
 }
 

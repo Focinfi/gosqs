@@ -11,7 +11,8 @@ type Client struct {
 	Addresses          []string
 	Publisher          string
 	// RecentPushedAt Unix timestamp(s)
-	RecentPushedAt int64
+	RecentPushedAt   int64
+	RecentReceivedAt int64
 }
 
 // ClientKeyPerfix for prefix storage key

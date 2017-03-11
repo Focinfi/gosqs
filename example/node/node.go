@@ -25,6 +25,7 @@ func main() {
 			Addresses:          []string{"http://localhost:55466/greeting/1"},
 			RecentMessageIndex: models.GenIndex0(now),
 			RecentPushedAt:     now,
+			RecentReceivedAt:   now,
 		},
 		{
 			ID:                 external.TestClient.ID() + 1,
@@ -33,6 +34,7 @@ func main() {
 			Addresses:          []string{"http://localhost:55466/greeting/2"},
 			RecentMessageIndex: models.GenIndex0(now),
 			RecentPushedAt:     now,
+			RecentReceivedAt:   now,
 		},
 		{
 			ID:                 external.TestClient.ID() + 2,
@@ -41,6 +43,7 @@ func main() {
 			Addresses:          []string{"http://localhost:55466/greeting/3"},
 			RecentMessageIndex: models.GenIndex0(now),
 			RecentPushedAt:     now,
+			RecentReceivedAt:   now,
 		},
 	}
 
