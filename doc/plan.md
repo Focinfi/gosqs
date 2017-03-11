@@ -1,29 +1,12 @@
-### SQS
+## Plan
 
-Build a simple queue service.
-
-### Design
-
-1. Simple
-1. Distributed
-2. Most-at-once Delivery
-3. Ordered Message
-4. Horizontal Scaling
-
-### Status
-
-Basic implementation.
-
-### Plan
-
-#### Consumer Lopp Rule
+### Consumer Lopp Rule
 
 Add new-message subscribtion for the consumer which has been waiting for long time.
+  1. [ ]Design the value of the "long time".
+  2. [ ]Using etcd for subscribtion.
 
-1. [ ]Design the value of the "long time".
-2. [ ]Using etcd for subscribtion.
-
-#### Message Storage
+### Message Storage
 
 1. [ ]Search distributed reliable K/V db.
 
@@ -33,17 +16,17 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 
 1. [ ]Batch messages addation?
 
-#### ID generator
+### ID generator
 
 1. [ ]Maybe use etcd?
 
 
-#### Client SDK
+### Client SDK
 
 1. [ ]Replace HTTP with TCP? 
 2. [ ]Inergrate `ID generator` into SDK.
 
-#### Testing
+### Testing
 
 1. [ ]Use interface mock.
 2. [ ]Build benthmark.
