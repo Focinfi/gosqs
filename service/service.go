@@ -6,6 +6,7 @@ import (
 
 	"github.com/Focinfi/sqs/agent"
 	"github.com/Focinfi/sqs/config"
+	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage"
@@ -24,12 +25,16 @@ func (s *Service) ReceivehMessage(userID int64, queueName, content string, index
 
 // RegisterClient registers client
 func (s *Service) RegisterClient(c *models.Client) error {
-	if err := s.database.RegisterClient(c); err != nil {
+	isNewClient, err := s.database.RegisterClient(c)
+
+	if err != nil {
 		return err
+	} else if isNewClient {
+		consumer := storage.NewConsumer(c, config.Config().ClientDefaultPriority)
+		return s.Cache.PushConsumer(consumer)
 	}
 
-	consumer := storage.NewConsumer(c, config.Config().ClientDefaultPriority)
-	return s.Cache.PushConsumer(consumer)
+	return nil
 }
 
 func (s *Service) startPushMessage() {
@@ -47,12 +52,24 @@ func (s *Service) pushMessage(ch <-chan models.Consumer) {
 		now := time.Now().Unix()
 		client := consumer.Client()
 
-		if c, err := s.Client.One(client.UserID, client.ID, client.QueueName); err != nil {
-			log.DB.Error(err)
-			s.Cache.PushConsumer(consumer)
-		} else if client.Publisher != c.Publisher { // remove consumer if out of control
+		c, err := s.Client.One(client.UserID, client.ID, client.QueueName)
+		// client is removed, discard this consumer
+		if err == errors.ClientNotFound {
 			continue
 		}
+
+		if err != nil {
+			log.DB.Error(err)
+			s.Cache.PushConsumer(consumer)
+		}
+
+		// remove consumer if out of control
+		if client.Publisher != c.Publisher {
+			continue
+		}
+
+		// update client with c
+		*client = *c
 
 		message, err := s.Message.Next(client.UserID, client.QueueName, client.RecentMessageIndex, now)
 		log.Biz.Printf("MESSAGE: %v, err: %v\n", message, err)

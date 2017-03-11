@@ -27,16 +27,19 @@ func (d *database) ReceivehMessage(userID int64, queueName, content string, inde
 	return d.Message.Add(msg)
 }
 
-func (d *database) RegisterClient(c *models.Client) error {
+func (d *database) RegisterClient(c *models.Client) (isNewClient bool, err error) {
 	client, err := d.Client.One(c.UserID, c.ID, c.QueueName)
 	if err != nil {
-		return err
+		return
 	}
+
+	isNewClient = c.Publisher != client.Publisher
 
 	now := time.Now().Unix()
 	// the client had received message in clientControlTimeoutSecond, can not register for this node
-	if c.Publisher != client.Publisher && now-client.RecentPushedAt < config.Config().ClientControlTimeoutSecond {
-		return errors.ClientHasAlreadyRegistered
+	if isNewClient && now-client.RecentPushedAt < config.Config().ClientControlTimeoutSecond {
+		err = errors.ClientHasAlreadyRegistered
+		return
 	}
 
 	c.RecentMessageIndex = client.RecentMessageIndex
@@ -47,7 +50,8 @@ func (d *database) RegisterClient(c *models.Client) error {
 	}
 	log.Biz.Printf("RegisterClient: %v", c)
 
-	return d.Client.Update(c)
+	err = d.Client.Update(c)
+	return
 }
 
 // AddQueue adds a queue into root queues
