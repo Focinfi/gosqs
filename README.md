@@ -30,9 +30,11 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 
 1. [ ] Design new message group rule, maybe 100items/group?
 
-1. [ ] Add message id into group must hold a RWLock, try etcd relative api.
+1. [ ] Add message id into group must hold a RWLock, try etcd relative api(Compare And Swap?).
 
 1. [ ] Batch messages addation?
+
+1. [ ] Compact and put the cold data(Message and Group) into disk?
 
 #### ID generator
 
@@ -41,10 +43,29 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 
 #### Client SDK
 
-1. [ ] Replace HTTP with TCP? 
+1. [ ] Replace HTTP with TCP?
+
 2. [ ] Inergrate `ID generator` into SDK.
 
 #### Testing
 
 1. [ ] Use interface mock.
+
 2. [ ] Build benthmark.
+
+#### Load Balancing
+1. [ ] Build center/master to collect the all nodes/service status
+
+  1. Node <=> Database
+  2. Consumer <=> Node
+
+2. [ ] Shard the key in Database?
+
+#### Admin page
+1. [ ] System health monitoring.
+
+1. [ ] User management, `acess_key`, `api_key`.
+
+1. [ ] Agent auth.
+
+1. [ ] Flow control.
