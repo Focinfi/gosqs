@@ -40,6 +40,7 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 
 			// retry in a random time
 			if after < int64(config.Config().MaxRetryConsumerSeconds) {
+				rand.Seed(time.Now().UnixNano())
 				waitTime := time.Millisecond * 100 * time.Duration(rand.Float64()*float64(after))
 				time.AfterFunc(waitTime, func() {
 					ch <- c
