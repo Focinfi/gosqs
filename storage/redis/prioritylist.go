@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
@@ -17,9 +18,10 @@ var index = 0
 
 // PriorityList for priority consumers useing redis
 type PriorityList struct {
-	plKey  string
-	setKey string
-	db     *redis.Client
+	plKey         string
+	setKey        string
+	pushedChanMap map[int64]chan bool
+	db            *redis.Client
 }
 
 // Push pushes the c into the pl
@@ -37,29 +39,64 @@ func (pl *PriorityList) Push(c models.Consumer) error {
 		return err
 	}
 
+	go func() {
+		// broadcast push notification
+		for k := range pl.pushedChanMap {
+			pl.pushedChanMap[k] <- true
+		}
+	}()
+
 	return nil
 }
 
 // Pop returns the consumer with the highest Score
 // if locked it will try the next-highest-score consumer
-func (pl *PriorityList) Pop() (consumer models.Consumer, err error) {
-	for pl.db.ZCard(pl.plKey).Val() > 0 {
-		consumer, err = pl.ZHeighest()
+func (pl *PriorityList) Pop() (models.Consumer, error) {
+	now := time.Now().UnixNano()
+	pushedChan := make(chan bool)
+	pl.pushedChanMap[now] = pushedChan
+	defer delete(pl.pushedChanMap, now)
+
+	for {
+		if pl.db.ZCard(pl.plKey).Val() == 0 {
+			select {
+			case <-time.After(time.Second):
+			case <-pushedChan:
+			}
+		}
+
+		consumer, err := pl.pop()
+		// pl is empty
+		if err == errors.NoConsumer {
+			continue
+		}
+
+		// db error
 		if err != nil {
 			return nil, err
 		}
 
-		key, err := json.Marshal(consumer)
-		if err != nil {
-			return nil, errors.NewInternalErr(err.Error())
-		}
+		// poped
+		log.DB.Debugln("POPED")
+		return consumer, nil
+	}
+}
 
-		if res := pl.db.ZRem(pl.plKey, string(key)); res.Val() > 0 {
-			return consumer, nil
-		}
+func (pl *PriorityList) pop() (models.Consumer, error) {
+	consumer, err := pl.ZHeighest()
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, errors.NoConsumer
+	key, err := json.Marshal(consumer)
+	if err != nil {
+		return nil, errors.NewInternalErr(err.Error())
+	}
+
+	if res := pl.db.ZRem(pl.plKey, string(key)); res.Val() > 0 {
+		return consumer, nil
+	}
+	return nil, nil
 }
 
 // Remove removes the c
@@ -129,8 +166,9 @@ func New() (*PriorityList, error) {
 	id := base + index + 1
 
 	return &PriorityList{
-		db:     client,
-		plKey:  fmt.Sprintf("sqs.pl.%d", id),
-		setKey: fmt.Sprintf("sqs.set.%d", id),
+		db:            client,
+		plKey:         fmt.Sprintf("sqs.pl.%d", id),
+		setKey:        fmt.Sprintf("sqs.set.%d", id),
+		pushedChanMap: make(map[int64]chan bool),
 	}, nil
 }

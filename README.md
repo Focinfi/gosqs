@@ -22,7 +22,7 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 
 1. [x] Design the value of the "long time".
 2. [x] Use etcd watcher for subscribtion.
-3. [ ] Use redis watcher to reduce loop times of Pop.
+3. [x] Use golang channel to reduce loop times of Pop.
 
 #### Message Storage
 
