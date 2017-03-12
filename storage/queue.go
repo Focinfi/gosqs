@@ -2,8 +2,12 @@ package storage
 
 import (
 	"encoding/json"
+	"fmt"
+
+	"strconv"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 )
 
@@ -77,6 +81,29 @@ func (s *Queue) Add(q *models.Queue) error {
 	err = s.db.Put(models.QueueListKey(q.UserID), string(data))
 	if err != nil {
 		return errors.NewInternalErr(err.Error())
+	}
+
+	return nil
+}
+
+// UpdateRecentMessageGroupID updates the groupID of one queue
+func (s *Queue) UpdateRecentMessageGroupID(userID int64, queueName string, groupID int64) error {
+	k := models.QueueKey(userID, queueName)
+	groupIDVal := fmt.Sprintf("%d", groupID)
+
+	oldVal, ok := s.db.Get(k)
+	if !ok {
+		return s.db.Put(k, fmt.Sprintf("%d", groupID))
+	}
+
+	id, err := strconv.ParseInt(oldVal, 10, 64)
+	if err != nil {
+		log.DB.Error(errors.DataBroken(k, err))
+		return s.db.Put(k, groupIDVal)
+	}
+
+	if groupID > id {
+		return s.db.Put(k, groupIDVal)
 	}
 
 	return nil

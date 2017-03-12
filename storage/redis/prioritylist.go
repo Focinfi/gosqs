@@ -17,12 +17,22 @@ var index = 0
 
 // PriorityList for priority consumers useing redis
 type PriorityList struct {
-	key string
-	db  *redis.Client
+	plKey  string
+	setKey string
+	db     *redis.Client
 }
 
 // Push pushes the c into the pl
 func (pl *PriorityList) Push(c models.Consumer) error {
+	pushedRes := pl.db.SIsMember(pl.setKey, c.Client().Key())
+	if err := pushedRes.Err(); err != nil {
+		return nil
+	}
+
+	if pushedRes.Val() {
+		return nil
+	}
+
 	if err := pl.ZAdd(c); err != nil {
 		return err
 	}
@@ -33,7 +43,7 @@ func (pl *PriorityList) Push(c models.Consumer) error {
 // Pop returns the consumer with the highest Score
 // if locked it will try the next-highest-score consumer
 func (pl *PriorityList) Pop() (consumer models.Consumer, err error) {
-	for pl.db.ZCard(pl.key).Val() > 0 {
+	for pl.db.ZCard(pl.plKey).Val() > 0 {
 		consumer, err = pl.ZHeighest()
 		if err != nil {
 			return nil, err
@@ -44,12 +54,17 @@ func (pl *PriorityList) Pop() (consumer models.Consumer, err error) {
 			return nil, errors.NewInternalErr(err.Error())
 		}
 
-		if res := pl.db.ZRem(pl.key, string(key)); res.Val() > 0 {
+		if res := pl.db.ZRem(pl.plKey, string(key)); res.Val() > 0 {
 			return consumer, nil
 		}
 	}
 
 	return nil, errors.NoConsumer
+}
+
+// Remove removes the c
+func (pl *PriorityList) Remove(c models.Consumer) error {
+	return pl.db.SRem(pl.setKey, c.Client().Key()).Err()
 }
 
 // ZAdd add c using redis.ZAdd
@@ -59,7 +74,7 @@ func (pl *PriorityList) ZAdd(c models.Consumer) error {
 		return errors.NewInternalErr(err.Error())
 	}
 
-	res := pl.db.ZAdd(pl.key, redis.Z{Member: string(b), Score: float64(c.Priority())})
+	res := pl.db.ZAdd(pl.plKey, redis.Z{Member: string(b), Score: float64(c.Priority())})
 	if err := res.Err(); err != nil {
 		log.DB.Error(err)
 		return err
@@ -80,7 +95,7 @@ func (pl *PriorityList) ZLowest() (models.Consumer, error) {
 
 // ZTop returns the highest-score(top=-1) or lowest-score(top=0)
 func (pl *PriorityList) zTop(top int64) (models.Consumer, error) {
-	res := pl.db.ZRange(pl.key, top, top)
+	res := pl.db.ZRange(pl.plKey, top, top)
 	if err := res.Err(); err != nil {
 		return nil, err
 	}
@@ -92,7 +107,7 @@ func (pl *PriorityList) zTop(top int64) (models.Consumer, error) {
 	consumer := &Consumer{}
 	err := json.Unmarshal([]byte(res.Val()[0]), consumer)
 	if err != nil {
-		return nil, errors.DataBroken(pl.key, err)
+		return nil, errors.DataBroken(pl.plKey, err)
 	}
 
 	return consumer, nil
@@ -111,6 +126,11 @@ func New() (*PriorityList, error) {
 		return nil, err
 	}
 
-	key := fmt.Sprintf("sqs.pl.%d", base+index+1)
-	return &PriorityList{db: client, key: key}, nil
+	id := base + index + 1
+
+	return &PriorityList{
+		db:     client,
+		plKey:  fmt.Sprintf("sqs.pl.%d", id),
+		setKey: fmt.Sprintf("sqs.set.%d", id),
+	}, nil
 }

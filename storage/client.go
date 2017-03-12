@@ -31,16 +31,8 @@ func (s *Client) One(userID int64, clientID int64, queueName string) (*models.Cl
 	return client, nil
 }
 
-// Add adds client
+// Add adds or update client
 func (s *Client) Add(c *models.Client) error {
-	client, err := s.One(c.UserID, c.ID, c.QueueName)
-	if err != errors.ClientNotFound {
-		return err
-	}
-	if client != nil {
-		return errors.DuplicateClient
-	}
-
 	key := models.ClientKey(c.UserID, c.ID, c.QueueName)
 	data, err := json.Marshal(c)
 	if err != nil {

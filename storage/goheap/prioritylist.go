@@ -4,6 +4,7 @@ import (
 	"container/heap"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 )
 
@@ -31,5 +32,12 @@ func (p *PriorityList) Pop() (models.Consumer, error) {
 // Push pushes the Consumer in
 func (p *PriorityList) Push(consumer models.Consumer) error {
 	heap.Push(p.consumers, consumer)
+	log.DB.Infof("Consumers: %#v\n", p.consumers)
+	return nil
+}
+
+// Remove removes the consumer
+func (p *PriorityList) Remove(consumer models.Consumer) error {
+	// TODO: add map into PriorityList
 	return nil
 }

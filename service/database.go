@@ -24,22 +24,33 @@ func (d *database) ReceivehMessage(userID int64, queueName, content string, inde
 		Index:     index,
 	}
 
-	return d.Message.Add(msg)
-}
-
-func (d *database) RegisterClient(c *models.Client) (isNewClient bool, err error) {
-	client, err := d.Client.One(c.UserID, c.ID, c.QueueName)
-	if err != nil {
-		return
+	if err := d.Message.Add(msg); err != nil {
+		return err
 	}
 
-	isNewClient = c.Publisher != client.Publisher
+	// try to update recent message index in background
+	time.AfterFunc(time.Second, func() {
+		err := d.Queue.UpdateRecentMessageGroupID(userID, queueName, models.GroupID(index))
+		if err != nil {
+			log.DB.Error(err)
+		}
+	})
+
+	return nil
+}
+
+func (d *database) RegisterClient(c *models.Client) (err error) {
+	client, err := d.Client.One(c.UserID, c.ID, c.QueueName)
+	if err != nil {
+		return err
+	}
 
 	now := time.Now().Unix()
+
 	// the client had received message in clientControlTimeoutSecond, can not register for this node
-	if isNewClient && now-client.RecentPushedAt < config.Config().ClientControlTimeoutSecond {
-		err = errors.ClientHasAlreadyRegistered
-		return
+	if c.Publisher != client.Publisher &&
+		now-client.RecentPushedAt < config.Config().ClientControlTimeoutSecond {
+		return errors.ClientHasAlreadyRegistered
 	}
 
 	c.RecentMessageIndex = client.RecentMessageIndex
@@ -50,8 +61,7 @@ func (d *database) RegisterClient(c *models.Client) (isNewClient bool, err error
 	}
 	log.Biz.Printf("RegisterClient: %v", c)
 
-	err = d.Client.Update(c)
-	return
+	return d.Client.Update(c)
 }
 
 // AddQueue adds a queue into root queues

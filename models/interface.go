@@ -12,6 +12,7 @@ type Consumer interface {
 type PriorityList interface {
 	Push(item Consumer) error
 	Pop() (item Consumer, err error)
+	Remove(item Consumer) error
 }
 
 // KV defines underlying key/value database

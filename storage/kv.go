@@ -21,10 +21,9 @@ func init() {
 
 	// memcahed
 	// kv, err := memcached.New()
-
-	if err != nil {
-		log.DB.Panic(err)
-	}
+	// if err != nil {
+	// 	log.DB.Panic(err)
+	// }
 
 	defaultKV = kv
 }

@@ -50,6 +50,7 @@ type Configuration struct {
 	ClientDefaultPriority      int
 	MaxConsumerSize            int
 	MaxPushWorkCount           int
+	MaxRetryConsumerSeconds    int
 	LogOut                     io.Writer
 	EtcdEndpoints              []string
 	MemcachedEndpoints         []string
@@ -68,6 +69,7 @@ func newDefaultConfig() Configuration {
 		MemcachedEndpoints:         []string{"localhost:11211"},
 		RedisAdrr:                  "localhost:6379",
 		RedisPwd:                   "",
+		MaxRetryConsumerSeconds:    3,
 	}
 }
 
@@ -79,6 +81,7 @@ func Config() Configuration {
 		return Configuration{
 			ClientControlTimeoutSecond: 300,
 			MaxConsumerSize:            1000000,
+			MaxRetryConsumerSeconds:    10,
 			ClientDefaultPriority:      100,
 			MaxPushWorkCount:           16,
 			LogOut:                     os.Stdout,

@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -9,13 +8,15 @@ import (
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/storage/etcd"
 	"github.com/Focinfi/sqs/storage/redis"
 )
 
 // Cache is for temporary data storage
 type Cache struct {
-	store *Storage
-	pl    models.PriorityList
+	store   *Storage
+	pl      models.PriorityList
+	watcher models.Watcher
 }
 
 // PopConsumerChan returns a output Consumer channel
@@ -34,12 +35,34 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 				continue
 			}
 
-			after := float64(time.Now().Unix() - c.Client().RecentReceivedAt)
-			fmt.Printf("AFTER: %#v, REC_AT: %#v\n", after, c.Client().RecentReceivedAt)
-			time.AfterFunc(time.Millisecond*100*time.Duration(rand.Float64()*float64(after)), func() {
+			after := time.Now().Unix() - c.Client().RecentReceivedAt
+			log.Biz.Printf("AFTER: %#v, REC_AT: %#v\n", after, c.Client().RecentReceivedAt)
+
+			if after > int64(config.Config().MaxRetryConsumerSeconds) {
+				key := models.QueueKey(c.Client().UserID, c.Client().QueueName)
+				watchChan := cache.watcher.Watch(key)
+				timeout := time.Second * time.Duration(config.Config().MaxRetryConsumerSeconds*2)
+				go func() {
+					select {
+					case <-time.After(timeout):
+					case change := <-watchChan:
+						if change == "" {
+							log.DB.Info("watcher faild for key: %s\n", key)
+						}
+					}
+
+					ch <- c
+					log.Biz.Infoln("Pop Consumer")
+				}()
+
+				continue
+			}
+
+			// retry in a random time
+			waitTime := time.Millisecond * 100 * time.Duration(rand.Float64()*float64(after))
+			time.AfterFunc(waitTime, func() {
 				ch <- c
 			})
-
 		}
 	}()
 
@@ -49,6 +72,11 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 // PushConsumer pushes the c into cache
 func (cache *Cache) PushConsumer(c models.Consumer) error {
 	return cache.pl.Push(c)
+}
+
+// RemoveConsumer removes consumer
+func (cache *Cache) RemoveConsumer(c models.Consumer) error {
+	return cache.pl.Remove(c)
 }
 
 // NewCache returns a new cache
@@ -63,9 +91,16 @@ func NewCache(s *Storage) *Cache {
 		log.DB.Panic(err)
 	}
 
+	// watcher
+	watcher, err := etcd.NewWatcher()
+	if err != nil {
+		log.DB.Panic(err)
+	}
+
 	return &Cache{
-		store: s,
-		pl:    pl,
+		store:   s,
+		pl:      pl,
+		watcher: watcher,
 	}
 }
 

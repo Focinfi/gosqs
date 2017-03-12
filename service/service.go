@@ -25,16 +25,14 @@ func (s *Service) ReceivehMessage(userID int64, queueName, content string, index
 
 // RegisterClient registers client
 func (s *Service) RegisterClient(c *models.Client) error {
-	isNewClient, err := s.database.RegisterClient(c)
+	err := s.database.RegisterClient(c)
 
 	if err != nil {
 		return err
-	} else if isNewClient {
-		consumer := storage.NewConsumer(c, config.Config().ClientDefaultPriority)
-		return s.Cache.PushConsumer(consumer)
 	}
 
-	return nil
+	consumer := storage.NewConsumer(c, config.Config().ClientDefaultPriority)
+	return s.Cache.PushConsumer(consumer)
 }
 
 func (s *Service) startPushMessage() {
@@ -55,6 +53,9 @@ func (s *Service) pushMessage(ch <-chan models.Consumer) {
 		c, err := s.Client.One(client.UserID, client.ID, client.QueueName)
 		// client is removed, discard this consumer
 		if err == errors.ClientNotFound {
+			if err := s.Cache.RemoveConsumer(consumer); err != nil {
+				log.DB.Error(err)
+			}
 			continue
 		}
 
@@ -65,6 +66,9 @@ func (s *Service) pushMessage(ch <-chan models.Consumer) {
 
 		// remove consumer if out of control
 		if client.Publisher != c.Publisher {
+			if err := s.Cache.RemoveConsumer(consumer); err != nil {
+				log.DB.Error(err)
+			}
 			continue
 		}
 

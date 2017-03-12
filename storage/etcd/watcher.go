@@ -3,6 +3,7 @@ package etcd
 import (
 	"context"
 
+	"github.com/Focinfi/sqs/log"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 )
@@ -20,12 +21,13 @@ func (w *Watcher) Watch(key string) <-chan string {
 
 	go func() {
 		res := <-watchChan
+		log.DB.Infof("watchChan: %#v, %#v\n", res, res.Events)
 		if res.Canceled {
 			ch <- ""
 			return
 		}
 
-		for i := len(res.Events); i >= 0; i-- {
+		for i := len(res.Events) - 1; i >= 0; i-- {
 			event := res.Events[i]
 			switch event.Type {
 			case mvccpb.DELETE:
@@ -45,8 +47,7 @@ func (w *Watcher) Watch(key string) <-chan string {
 
 // Close closes the watch channel
 func (w *Watcher) Close() error {
-
-	return nil
+	return w.agent.Close()
 }
 
 // NewWatcher returns a new watcher
