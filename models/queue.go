@@ -25,5 +25,10 @@ func QueueListKey(userID int64) string {
 
 // QueueKey for queue storage key
 func QueueKey(userID int64, queueName string) string {
-	return fmt.Sprintf("%s%d.%s", queueKeyPrefix, userID, queueName)
+	return fmt.Sprintf("%s.%d.%s", queueKeyPrefix, userID, queueName)
+}
+
+// OueueRecentMessageGroupIDKey for queue
+func OueueRecentMessageGroupIDKey(userID int64, queueName string) string {
+	return fmt.Sprintf("%s.%d.%s", queueKeyPrefix, userID, queueName)
 }

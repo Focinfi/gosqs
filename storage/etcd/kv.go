@@ -2,9 +2,7 @@ package etcd
 
 import (
 	"context"
-	"time"
 
-	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/log"
 	"github.com/coreos/etcd/clientv3"
 )
@@ -48,12 +46,9 @@ func (kv *KV) Delete(key string) error {
 	return err
 }
 
-// New returns a new EtcdKV
-func New() (*KV, error) {
-	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   config.Config().EtcdEndpoints,
-		DialTimeout: 5 * time.Second,
-	})
+// NewKV returns a new EtcdKV
+func NewKV() (*KV, error) {
+	cli, err := New()
 
 	if err != nil {
 		return nil, err

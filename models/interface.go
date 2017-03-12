@@ -20,3 +20,9 @@ type KV interface {
 	Put(key string, value string) error
 	Delete(key string) error
 }
+
+// Watcher defines a wacther
+type Watcher interface {
+	Watch(key string) (value <-chan string)
+	Close() error
+}
