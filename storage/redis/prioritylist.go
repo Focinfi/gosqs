@@ -59,6 +59,7 @@ func (pl *PriorityList) Pop() (models.Consumer, error) {
 
 	for {
 		if pl.db.ZCard(pl.plKey).Val() == 0 {
+			log.Biz.Infoln("TRY POP")
 			select {
 			case <-time.After(time.Second):
 			case <-pushedChan:
@@ -77,7 +78,6 @@ func (pl *PriorityList) Pop() (models.Consumer, error) {
 		}
 
 		// poped
-		log.DB.Debugln("POPED")
 		return consumer, nil
 	}
 }
