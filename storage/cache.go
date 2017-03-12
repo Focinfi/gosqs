@@ -38,35 +38,42 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 			after := time.Now().Unix() - c.Client().RecentReceivedAt
 			log.Biz.Printf("AFTER: %#v, REC_AT: %#v\n", after, c.Client().RecentReceivedAt)
 
-			if after > int64(config.Config().MaxRetryConsumerSeconds) {
-				key := models.QueueKey(c.Client().UserID, c.Client().QueueName)
-				watchChan := cache.watcher.Watch(key)
-				timeout := time.Second * time.Duration(config.Config().MaxRetryConsumerSeconds*2)
-				go func() {
-					select {
-					case <-time.After(timeout):
-					case change := <-watchChan:
-						if change == "" {
-							log.DB.Info("watcher faild for key: %s\n", key)
-						}
-					}
-
+			// retry in a random time
+			if after < int64(config.Config().MaxRetryConsumerSeconds) {
+				waitTime := time.Millisecond * 100 * time.Duration(rand.Float64()*float64(after))
+				time.AfterFunc(waitTime, func() {
 					ch <- c
-					log.Biz.Infoln("Pop Consumer")
-				}()
+				})
 
 				continue
 			}
 
-			// retry in a random time
-			waitTime := time.Millisecond * 100 * time.Duration(rand.Float64()*float64(after))
-			time.AfterFunc(waitTime, func() {
+			// watch the changed
+			key := models.QueueKey(c.Client().UserID, c.Client().QueueName)
+			watchChan := cache.watcher.Watch(key)
+			timeout := time.Second * time.Duration(config.Config().MaxRetryConsumerSeconds*2)
+			go func() {
+				select {
+				case <-time.After(timeout):
+				case change := <-watchChan:
+					if change == "" {
+						log.DB.Infof("watcher faild for key: %s\n", key)
+					}
+				}
+
 				ch <- c
-			})
+				log.Biz.Infoln("Pop Consumer")
+			}()
+
 		}
 	}()
 
 	return ch
+}
+
+// AddConsumer adds c into pl
+func (cache *Cache) AddConsumer(c models.Consumer) error {
+	return cache.pl.Add(c)
 }
 
 // PushConsumer pushes the c into cache

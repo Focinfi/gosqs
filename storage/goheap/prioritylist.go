@@ -29,6 +29,11 @@ func (p *PriorityList) Pop() (models.Consumer, error) {
 	return nil, errors.NoConsumer
 }
 
+// Add adds consumer
+func (p *PriorityList) Add(consumer models.Consumer) error {
+	return p.Push(consumer)
+}
+
 // Push pushes the Consumer in
 func (p *PriorityList) Push(consumer models.Consumer) error {
 	heap.Push(p.consumers, consumer)

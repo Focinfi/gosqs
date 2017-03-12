@@ -13,7 +13,6 @@ import (
 	"gopkg.in/redis.v5"
 )
 
-var base = rand.Int()
 var index = 0
 
 // PriorityList for priority consumers useing redis
@@ -24,17 +23,33 @@ type PriorityList struct {
 	db            *redis.Client
 }
 
-// Push pushes the c into the pl
-func (pl *PriorityList) Push(c models.Consumer) error {
-	pushedRes := pl.db.SIsMember(pl.setKey, c.Client().Key())
+// Add adds c into pl
+func (pl *PriorityList) Add(c models.Consumer) error {
+	key := c.Client().Key()
+	pushedRes := pl.db.SIsMember(pl.setKey, key)
+
 	if err := pushedRes.Err(); err != nil {
 		return nil
 	}
+
+	log.Biz.Infof("ADD: key: %s, member: %s, %#v\n", pl.setKey, key, pushedRes.Val())
 
 	if pushedRes.Val() {
 		return nil
 	}
 
+	// SAdd add c into set
+	saddRes := pl.db.SAdd(pl.setKey, c.Client().Key())
+	if err := saddRes.Err(); err != nil {
+		return err
+	}
+
+	return pl.Push(c)
+}
+
+// Push pushes the c into the pl
+func (pl *PriorityList) Push(c models.Consumer) error {
+	// ZAdd add c into pl
 	if err := pl.ZAdd(c); err != nil {
 		return err
 	}
@@ -50,7 +65,6 @@ func (pl *PriorityList) Push(c models.Consumer) error {
 }
 
 // Pop returns the consumer with the highest Score
-// if locked it will try the next-highest-score consumer
 func (pl *PriorityList) Pop() (models.Consumer, error) {
 	now := time.Now().UnixNano()
 	pushedChan := make(chan bool)
@@ -163,12 +177,16 @@ func New() (*PriorityList, error) {
 		return nil, err
 	}
 
-	id := base + index + 1
+	rand.Seed(time.Now().UnixNano())
+	id := rand.Int() + index + 1
 
-	return &PriorityList{
+	pl := &PriorityList{
 		db:            client,
 		plKey:         fmt.Sprintf("sqs.pl.%d", id),
 		setKey:        fmt.Sprintf("sqs.set.%d", id),
 		pushedChanMap: make(map[int64]chan bool),
-	}, nil
+	}
+
+	log.Biz.Infof("%#v\n", pl)
+	return pl, nil
 }

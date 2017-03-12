@@ -47,7 +47,7 @@ func (w *Watcher) Watch(key string) <-chan string {
 
 // Close closes the watch channel
 func (w *Watcher) Close() error {
-	return w.agent.Close()
+	return w.agent.Watcher.Close()
 }
 
 // NewWatcher returns a new watcher

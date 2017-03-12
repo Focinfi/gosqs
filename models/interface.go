@@ -10,6 +10,7 @@ type Consumer interface {
 
 // PriorityList defines as priority list
 type PriorityList interface {
+	Add(item Consumer) error
 	Push(item Consumer) error
 	Pop() (item Consumer, err error)
 	Remove(item Consumer) error

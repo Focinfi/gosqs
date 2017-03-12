@@ -93,7 +93,7 @@ func (s *Queue) UpdateRecentMessageGroupID(userID int64, queueName string, group
 
 	oldVal, ok := s.db.Get(k)
 	if !ok {
-		return s.db.Put(k, fmt.Sprintf("%d", groupID))
+		return s.db.Put(k, groupIDVal)
 	}
 
 	id, err := strconv.ParseInt(oldVal, 10, 64)

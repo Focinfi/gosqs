@@ -18,7 +18,7 @@ func init() {
 	logrus.SetOutput(config.Config().LogOut)
 
 	// Biz
-	Biz.Level = logrus.InfoLevel
+	Biz.Level = logrus.DebugLevel
 	Biz.Out = os.Stdout
 }
 

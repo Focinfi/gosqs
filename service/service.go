@@ -32,7 +32,7 @@ func (s *Service) RegisterClient(c *models.Client) error {
 	}
 
 	consumer := storage.NewConsumer(c, config.Config().ClientDefaultPriority)
-	return s.Cache.PushConsumer(consumer)
+	return s.Cache.AddConsumer(consumer)
 }
 
 func (s *Service) startPushMessage() {
