@@ -28,9 +28,13 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 
 1. [ ] Search distributed reliable K/V db.
 
-1. [ ] Design new message group rule, maybe 100items/group?
+1. [ ] Time-based Group or ID Generator?
+  
+  1. Design new message group rule, maybe 100items/group?
 
-1. [ ] Add message id into group must hold a RWLock, try etcd relative api(Compare And Swap?).
+  1. Add message id into group must hold a RWLock, try etcd relative api(Compare And Swap?).
+
+  1. Maybe more dependency on databse.
 
 1. [ ] Batch messages addation?
 

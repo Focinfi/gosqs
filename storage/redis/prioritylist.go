@@ -139,11 +139,6 @@ func (pl *PriorityList) ZHeighest() (models.Consumer, error) {
 	return pl.zTop(-1)
 }
 
-// ZLowest returns the lowest-score consumer
-func (pl *PriorityList) ZLowest() (models.Consumer, error) {
-	return pl.zTop(-1)
-}
-
 // ZTop returns the highest-score(top=-1) or lowest-score(top=0)
 func (pl *PriorityList) zTop(top int64) (models.Consumer, error) {
 	res := pl.db.ZRange(pl.plKey, top, top)
