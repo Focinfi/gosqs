@@ -14,16 +14,18 @@ const (
 	NoErr = 1000
 
 	// biz error code
-	duplicateQueue             = 1001
-	duplicateMessage           = 1002
-	messageOutOfData           = 1003
-	userNotFound               = 1004
-	queueNotFound              = 1005
-	messageNotFound            = 1006
-	clientNotFound             = 1007
-	duplicateClient            = 1008
-	clientHasAlreadyRegistered = 1009
-	serviceOverload            = 1010
+	duplicateQueue              = 1001
+	duplicateMessage            = 1002
+	messageOutOfData            = 1003
+	userNotFound                = 1004
+	queueNotFound               = 1005
+	messageNotFound             = 1006
+	clientNotFound              = 1007
+	duplicateClient             = 1008
+	clientHasAlreadyRegistered  = 1009
+	serviceOverload             = 1010
+	applyMessageIDRangeOversize = 1011
+	messageIndexOutOfRange      = 1012
 )
 
 // DuplicateQueue error for duplicate queue
@@ -35,8 +37,11 @@ var DuplicateMessage = NewBizErr("duplicate message", duplicateMessage)
 // DuplicateClient error for duplicate lient
 var DuplicateClient = NewBizErr("duplicate lient", duplicateClient)
 
-// MessageOutOfData erros for out-of-date message
-var MessageOutOfData = NewBizErr("message is out of date", messageOutOfData)
+// MessageOutOfDate error for out-of-date message
+var MessageOutOfDate = NewBizErr("message is out of date", messageOutOfData)
+
+// MessageIndexOutOfRange error for out-of-range message index
+var MessageIndexOutOfRange = NewBizErr("message index is out of range", messageIndexOutOfRange)
 
 // UserNotFound error for unknown user
 var UserNotFound = NewBizErr("user not found", userNotFound)
@@ -49,6 +54,9 @@ var MessageNotFound = NewBizErr("message not found", messageNotFound)
 
 // ClientNotFound error for unknown client
 var ClientNotFound = NewBizErr("client not found", clientNotFound)
+
+// ApplyMessageIDRangeOversize error for oversize message id range application
+var ApplyMessageIDRangeOversize = NewBizErr("apply message id range oversize", applyMessageIDRangeOversize)
 
 // NoConsumer error for no consumer
 var NoConsumer = New("cosumer queue is empty")

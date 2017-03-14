@@ -18,9 +18,18 @@ type Service struct {
 	*agent.Agent
 }
 
-// ReceivehMessage receives message
-func (s *Service) ReceivehMessage(userID int64, queueName, content string, index int64) error {
-	return s.database.ReceivehMessage(userID, queueName, content, index)
+// ReceiveMessage receives message
+func (s *Service) ReceiveMessage(userID int64, queueName, content string, index int64) error {
+	maxID, err := s.Queue.MessageMaxID(userID, queueName)
+	if err != nil {
+		return err
+	}
+
+	if index > maxID {
+		return errors.MessageIndexOutOfRange
+	}
+
+	return s.database.ReceiveMessage(userID, queueName, content, index)
 }
 
 // RegisterClient registers client
@@ -33,6 +42,15 @@ func (s *Service) RegisterClient(c *models.Client) error {
 
 	consumer := storage.NewConsumer(c, config.Config().ClientDefaultPriority)
 	return s.Cache.AddConsumer(consumer)
+}
+
+// ApplyMessageIDRange tries to apply a range a free message id
+func (s *Service) ApplyMessageIDRange(userID int64, queueName string, size int) (maxID int64, err error) {
+	if size > config.Config().MaxMessgeIDRangeSize {
+		return -1, errors.ApplyMessageIDRangeOversize
+	}
+
+	return s.Queue.ApplyMessageIDRange(userID, queueName, size)
 }
 
 func (s *Service) startPushMessage() {
@@ -75,7 +93,16 @@ func (s *Service) pushMessage(ch <-chan models.Consumer) {
 		// update client with c
 		*client = *c
 
-		message, err := s.Message.Next(client.UserID, client.QueueName, client.RecentMessageIndex, now)
+		maxID, err := s.Queue.MessageMaxID(client.UserID, client.QueueName)
+		// failed to get maxID, push it back for next turn
+		if err != nil {
+			log.DB.Error(err)
+			s.Cache.PushConsumer(consumer)
+			continue
+		}
+		log.Biz.Infoln(maxID)
+
+		message, err := s.Message.Next(client.UserID, client.QueueName, client.RecentMessageIndex, maxID)
 		log.Biz.Printf("MESSAGE: %v, err: %v\n", message, err)
 		if err != nil {
 			log.DB.Errorln(err)
@@ -87,9 +114,6 @@ func (s *Service) pushMessage(ch <-chan models.Consumer) {
 		// all messages has been pushed
 		if message == nil {
 			client.RecentPushedAt = now
-			if period := now - models.GroupID(client.RecentMessageIndex); period > 3 {
-				client.RecentMessageIndex = models.GenIndex0(now - 3)
-			}
 			// failed to update client, should fix and give away the control of consumer
 			if err := s.Client.Update(client); err != nil {
 				log.DB.Errorln(err)

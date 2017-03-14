@@ -8,7 +8,6 @@ import (
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/storage/etcd"
 	"github.com/Focinfi/sqs/storage/redis"
 )
 
@@ -50,13 +49,14 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 			}
 
 			// watch the changed
-			key := models.QueueKey(c.Client().UserID, c.Client().QueueName)
+			key := models.QueueRecentMessageIDKey(c.Client().UserID, c.Client().QueueName)
 			watchChan := cache.watcher.Watch(key)
 			timeout := time.Second * time.Duration(config.Config().MaxRetryConsumerSeconds*2)
 			go func() {
 				select {
 				case <-time.After(timeout):
 				case change := <-watchChan:
+					log.Biz.Infoln("NOTIFICATION: ", change)
 					if change == "" {
 						log.DB.Infof("watcher faild for key: %s\n", key)
 					}
@@ -85,31 +85,6 @@ func (cache *Cache) PushConsumer(c models.Consumer) error {
 // RemoveConsumer removes consumer
 func (cache *Cache) RemoveConsumer(c models.Consumer) error {
 	return cache.pl.Remove(c)
-}
-
-// NewCache returns a new cache
-func NewCache(s *Storage) *Cache {
-	var pl models.PriorityList
-
-	// goheap
-	// pl = goheap.New()
-
-	pl, err := redis.New()
-	if err != nil {
-		log.DB.Panic(err)
-	}
-
-	// watcher
-	watcher, err := etcd.NewWatcher()
-	if err != nil {
-		log.DB.Panic(err)
-	}
-
-	return &Cache{
-		store:   s,
-		pl:      pl,
-		watcher: watcher,
-	}
 }
 
 // NewConsumer returns a new Consumer based on the client

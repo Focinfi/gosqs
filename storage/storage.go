@@ -17,10 +17,10 @@ type Storage struct {
 var DefaultStorage = &Storage{}
 
 func init() {
-	DefaultStorage.Queue = &Queue{db: defaultKV, store: DefaultStorage}
-	DefaultStorage.Message = &Message{db: defaultKV, store: DefaultStorage}
-	DefaultStorage.Client = &Client{db: defaultKV, store: DefaultStorage}
-	DefaultStorage.Cache = NewCache(DefaultStorage)
+	DefaultStorage.Queue = &Queue{db: etcdKV, store: DefaultStorage, inc: etcdIncrementer}
+	DefaultStorage.Message = &Message{db: memcachedKV, store: DefaultStorage}
+	DefaultStorage.Client = &Client{db: etcdKV, store: DefaultStorage}
+	DefaultStorage.Cache = &Cache{pl: redisPriorityList, watcher: etcdWatcher, store: DefaultStorage}
 
 	DefaultStorage.Queue.db.Put(models.QueueListKey(external.Root.ID()), "[]")
 }

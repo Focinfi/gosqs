@@ -54,14 +54,18 @@ func (pl *PriorityList) Push(c models.Consumer) error {
 		return err
 	}
 
-	go func() {
-		// broadcast push notification
-		for k := range pl.pushedChanMap {
-			pl.pushedChanMap[k] <- true
-		}
-	}()
+	// broadcast push notification
+	go pl.broadcastPushEvent()
 
 	return nil
+}
+
+func (pl *PriorityList) broadcastPushEvent() {
+	for k := range pl.pushedChanMap {
+		go func(i int64) {
+			pl.pushedChanMap[i] <- true
+		}(k)
+	}
 }
 
 // Pop returns the consumer with the highest Score

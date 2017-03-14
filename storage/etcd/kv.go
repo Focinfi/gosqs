@@ -46,6 +46,11 @@ func (kv *KV) Delete(key string) error {
 	return err
 }
 
+// Txn calls kv.db.Txn
+func (kv *KV) Txn(ctx context.Context) clientv3.Txn {
+	return kv.db.Txn(ctx)
+}
+
 // NewKV returns a new EtcdKV
 func NewKV() (*KV, error) {
 	cli, err := New()
