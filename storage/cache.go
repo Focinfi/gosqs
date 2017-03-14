@@ -8,7 +8,6 @@ import (
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/storage/etcd"
 	"github.com/Focinfi/sqs/storage/redis"
 )
 
@@ -85,31 +84,6 @@ func (cache *Cache) PushConsumer(c models.Consumer) error {
 // RemoveConsumer removes consumer
 func (cache *Cache) RemoveConsumer(c models.Consumer) error {
 	return cache.pl.Remove(c)
-}
-
-// NewCache returns a new cache
-func NewCache(s *Storage) *Cache {
-	var pl models.PriorityList
-
-	// goheap
-	// pl = goheap.New()
-
-	pl, err := redis.New()
-	if err != nil {
-		panic(err)
-	}
-
-	// watcher
-	watcher, err := etcd.NewWatcher()
-	if err != nil {
-		panic(err)
-	}
-
-	return &Cache{
-		store:   s,
-		pl:      pl,
-		watcher: watcher,
-	}
 }
 
 // NewConsumer returns a new Consumer based on the client

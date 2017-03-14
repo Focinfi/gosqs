@@ -3,41 +3,56 @@ package storage
 import (
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage/etcd"
+	"github.com/Focinfi/sqs/storage/gomap"
+	"github.com/Focinfi/sqs/storage/memcached"
+	"github.com/Focinfi/sqs/storage/redis"
 )
 
 var defaultKV models.KV
 var defaultIncrementer models.Incrementer
-
-func initKV() {
-	var kv models.KV
-	// etcd
-	kv, err := etcd.NewKV()
-	if err != nil {
-		panic(err)
-	}
-
-	// goma
-	// kv = gomap.New()
-
-	// memcahed
-	// kv, err := memcached.New()
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	defaultKV = kv
-}
-
-func initIncrementer() {
-	incrementer, err := etcd.NewIncrementer()
-	if err != nil {
-		panic(err)
-	}
-
-	defaultIncrementer = incrementer
-}
+var etcdIncrementer models.Incrementer
+var etcdKV models.KV
+var etcdWatcher models.Watcher
+var memcachedKV models.KV
+var redisPriorityList models.PriorityList
 
 func init() {
-	initKV()
-	initIncrementer()
+	// gomap
+	defaultKV = gomap.New()
+
+	// etcd kv
+	if kv, err := etcd.NewKV(); err != nil {
+		panic(err)
+	} else {
+		etcdKV = kv
+	}
+
+	// etcd watcher
+	if watcher, err := etcd.NewWatcher(); err != nil {
+		panic(err)
+	} else {
+		etcdWatcher = watcher
+	}
+
+	// etcd incrementer
+	if incrementer, err := etcd.NewIncrementer(); err != nil {
+		panic(err)
+	} else {
+		etcdIncrementer = incrementer
+		defaultIncrementer = incrementer
+	}
+
+	// memcahed
+	if kv, err := memcached.New(); err != nil {
+		panic(err)
+	} else {
+		memcachedKV = kv
+	}
+
+	// redis
+	if pl, err := redis.New(); err != nil {
+		panic(err)
+	} else {
+		redisPriorityList = pl
+	}
 }
