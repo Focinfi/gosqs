@@ -17,7 +17,7 @@ type Storage struct {
 var DefaultStorage = &Storage{}
 
 func init() {
-	DefaultStorage.Queue = &Queue{db: defaultKV, store: DefaultStorage}
+	DefaultStorage.Queue = &Queue{db: defaultKV, store: DefaultStorage, inc: defaultIncrementer}
 	DefaultStorage.Message = &Message{db: defaultKV, store: DefaultStorage}
 	DefaultStorage.Client = &Client{db: defaultKV, store: DefaultStorage}
 	DefaultStorage.Cache = NewCache(DefaultStorage)

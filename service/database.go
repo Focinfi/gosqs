@@ -16,7 +16,7 @@ type database struct {
 
 var db = &database{Storage: storage.DefaultStorage}
 
-func (d *database) ReceivehMessage(userID int64, queueName, content string, index int64) error {
+func (d *database) ReceiveMessage(userID int64, queueName, content string, index int64) error {
 	msg := &models.Message{
 		UserID:    userID,
 		QueueName: queueName,
@@ -66,7 +66,11 @@ func (d *database) RegisterClient(c *models.Client) (err error) {
 
 // AddQueue adds a queue into root queues
 func AddQueue(q *models.Queue) error {
-	return db.Queue.Add(q)
+	if err := db.Queue.Add(q); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // AddClient adds cleint

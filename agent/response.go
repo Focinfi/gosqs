@@ -11,8 +11,9 @@ import (
 
 // Status contains info of a failed request
 type Status struct {
-	Code    int    `json:"code,string"`
-	Message string `json:"message"`
+	Code    int         `json:"code,string"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
 
 // StatusIsBusy for internal error
@@ -35,8 +36,8 @@ func StatusBadRequest(err error) *Status {
 // StatusOK for successful request
 var StatusOK = &Status{Code: errors.NoErr}
 
-func responseJOSN(ctx *gin.Context, err *Status, isAbort bool) {
-	ctx.JSON(http.StatusOK, err)
+func responseJOSN(ctx *gin.Context, status *Status, isAbort bool) {
+	ctx.JSON(http.StatusOK, status)
 	if isAbort {
 		ctx.Abort()
 	}
@@ -46,11 +47,15 @@ func responseOK(ctx *gin.Context) {
 	responseJOSN(ctx, StatusOK, true)
 }
 
+func responseOKData(ctx *gin.Context, data interface{}) {
+	responseJOSN(ctx, &Status{Code: errors.NoErr, Data: data}, true)
+}
+
 func responseAndAbort(ctx *gin.Context, err *Status) {
 	responseJOSN(ctx, err, true)
 }
 
-func response(ctx *gin.Context, err error) {
+func responseErr(ctx *gin.Context, err error) {
 	if err == nil {
 		responseOK(ctx)
 		return

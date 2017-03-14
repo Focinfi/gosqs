@@ -9,8 +9,9 @@ import (
 
 // QueueService defines what a queue admin should do
 type QueueService interface {
-	ReceivehMessage(userID int64, name, content string, index int64) error
+	ReceiveMessage(userID int64, queueName, content string, index int64) error
 	RegisterClient(client *models.Client) error
+	ApplyMessageIDRange(userID int64, queueName string, size int) (maxID int64, err error)
 }
 
 // Agent for receiving message and push them
@@ -35,5 +36,6 @@ func (agent *Agent) routing() {
 	group := s.Group("/")
 	group.POST("/message", agent.ReceiveMessage)
 	group.POST("/register", agent.RegisterClient)
+	group.PUT("/messageID", agent.ApplyMessageIDRange)
 	agent.Handler = s
 }

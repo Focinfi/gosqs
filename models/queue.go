@@ -27,3 +27,8 @@ func QueueListKey(userID int64) string {
 func QueueKey(userID int64, queueName string) string {
 	return fmt.Sprintf("%s.%d.%s", queueKeyPrefix, userID, queueName)
 }
+
+// QueueMaxIDKey for record the max id has been distributed
+func QueueMaxIDKey(userID int64, queueName string) string {
+	return fmt.Sprintf("%s.maxId.%d.%s", queueKeyPrefix, userID, queueName)
+}

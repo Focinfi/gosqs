@@ -15,6 +15,7 @@ import (
 type Queue struct {
 	store *Storage
 	db    models.KV
+	inc   models.Incrementer
 }
 
 // All returns queue map for userID
@@ -139,4 +140,10 @@ func (s *Queue) Remove(userID int64, queueName string) error {
 	}
 
 	return nil
+}
+
+// ApplyMessageIDRange try to apply message id range
+func (s *Queue) ApplyMessageIDRange(userID int64, queueName string, size int) (int64, error) {
+	key := models.QueueMaxIDKey(userID, queueName)
+	return s.inc.Increment(key, size)
 }

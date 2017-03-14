@@ -14,16 +14,17 @@ const (
 	NoErr = 1000
 
 	// biz error code
-	duplicateQueue             = 1001
-	duplicateMessage           = 1002
-	messageOutOfData           = 1003
-	userNotFound               = 1004
-	queueNotFound              = 1005
-	messageNotFound            = 1006
-	clientNotFound             = 1007
-	duplicateClient            = 1008
-	clientHasAlreadyRegistered = 1009
-	serviceOverload            = 1010
+	duplicateQueue              = 1001
+	duplicateMessage            = 1002
+	messageOutOfData            = 1003
+	userNotFound                = 1004
+	queueNotFound               = 1005
+	messageNotFound             = 1006
+	clientNotFound              = 1007
+	duplicateClient             = 1008
+	clientHasAlreadyRegistered  = 1009
+	serviceOverload             = 1010
+	applyMessageIDRangeOversize = 1011
 )
 
 // DuplicateQueue error for duplicate queue
@@ -49,6 +50,9 @@ var MessageNotFound = NewBizErr("message not found", messageNotFound)
 
 // ClientNotFound error for unknown client
 var ClientNotFound = NewBizErr("client not found", clientNotFound)
+
+// ApplyMessageIDRangeOversize error for oversize message id range application
+var ApplyMessageIDRangeOversize = NewBizErr("apply message id range oversize", applyMessageIDRangeOversize)
 
 // NoConsumer error for no consumer
 var NoConsumer = New("cosumer queue is empty")

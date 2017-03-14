@@ -33,7 +33,20 @@ def message(count)
   count += 1
 end
 
+def apply_message_id_range(size = 10)
+  host = 'http://localhost:5546'
+  res = RestClient.put(
+    "#{host}/messageID",
+    {
+      "userID" => 1,
+      "queueName" => "greeting",
+      "size" => size
+    }.to_json,
+    {content_type: :json, accept: :json}
+  )
 
+  puts res.body
+end
 
 task :m do
   10.times {|i| message(i + 1) }
@@ -41,4 +54,8 @@ end
 
 task :r do
   register()
+end
+
+task :a do
+  apply_message_id_range(10)
 end

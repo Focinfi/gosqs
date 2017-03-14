@@ -56,6 +56,7 @@ type Configuration struct {
 	MemcachedEndpoints         []string
 	RedisAdrr                  string
 	RedisPwd                   string
+	MaxMessgeIDRangeSize       int
 }
 
 func newDefaultConfig() Configuration {
@@ -70,6 +71,7 @@ func newDefaultConfig() Configuration {
 		RedisAdrr:                  "localhost:6379",
 		RedisPwd:                   "",
 		MaxRetryConsumerSeconds:    3,
+		MaxMessgeIDRangeSize:       10,
 	}
 }
 
@@ -85,6 +87,7 @@ func Config() Configuration {
 			ClientDefaultPriority:      100,
 			MaxPushWorkCount:           16,
 			LogOut:                     os.Stdout,
+			MaxMessgeIDRangeSize:       100,
 		}
 	case developEnv:
 		return newDefaultConfig()

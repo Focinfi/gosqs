@@ -18,9 +18,9 @@ type Service struct {
 	*agent.Agent
 }
 
-// ReceivehMessage receives message
-func (s *Service) ReceivehMessage(userID int64, queueName, content string, index int64) error {
-	return s.database.ReceivehMessage(userID, queueName, content, index)
+// ReceiveMessage receives message
+func (s *Service) ReceiveMessage(userID int64, queueName, content string, index int64) error {
+	return s.database.ReceiveMessage(userID, queueName, content, index)
 }
 
 // RegisterClient registers client
@@ -33,6 +33,15 @@ func (s *Service) RegisterClient(c *models.Client) error {
 
 	consumer := storage.NewConsumer(c, config.Config().ClientDefaultPriority)
 	return s.Cache.AddConsumer(consumer)
+}
+
+// ApplyMessageIDRange tries to apply a range a free message id
+func (s *Service) ApplyMessageIDRange(userID int64, queueName string, size int) (maxID int64, err error) {
+	if size > config.Config().MaxMessgeIDRangeSize {
+		return -1, errors.ApplyMessageIDRangeOversize
+	}
+
+	return s.Queue.ApplyMessageIDRange(userID, queueName, size)
 }
 
 func (s *Service) startPushMessage() {

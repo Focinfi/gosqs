@@ -96,13 +96,13 @@ func NewCache(s *Storage) *Cache {
 
 	pl, err := redis.New()
 	if err != nil {
-		log.DB.Panic(err)
+		panic(err)
 	}
 
 	// watcher
 	watcher, err := etcd.NewWatcher()
 	if err != nil {
-		log.DB.Panic(err)
+		panic(err)
 	}
 
 	return &Cache{

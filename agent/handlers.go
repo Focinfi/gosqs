@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -17,12 +18,12 @@ func (a *Agent) ReceiveMessage(ctx *gin.Context) {
 
 	params := &messageParam{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		response(ctx, err)
+		responseErr(ctx, err)
 		return
 	}
 
-	err := a.ReceivehMessage(params.UserID, params.QueueName, params.Content, params.Index)
-	response(ctx, err)
+	err := a.QueueService.ReceiveMessage(params.UserID, params.QueueName, params.Content, params.Index)
+	responseErr(ctx, err)
 }
 
 // RegisterClient registers so can get the message
@@ -36,7 +37,7 @@ func (a *Agent) RegisterClient(ctx *gin.Context) {
 
 	params := &registerParam{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		response(ctx, err)
+		responseErr(ctx, err)
 		return
 	}
 
@@ -49,5 +50,36 @@ func (a *Agent) RegisterClient(ctx *gin.Context) {
 	}
 
 	err := a.QueueService.RegisterClient(client)
-	response(ctx, err)
+	responseErr(ctx, err)
+}
+
+// ApplyMessageIDRange try to apply the message id range for a queue
+func (a *Agent) ApplyMessageIDRange(ctx *gin.Context) {
+	var params = struct {
+		UserID    int64  `json:"userID"`
+		QueueName string `json:"queueName"`
+		Size      int    `json:"size"`
+	}{}
+
+	if err := binding.JSON.Bind(ctx.Request, &params); err != nil {
+		log.Biz.Infoln(err)
+		responseErr(ctx, err)
+		return
+	}
+
+	maxID, err := a.QueueService.ApplyMessageIDRange(params.UserID, params.QueueName, params.Size)
+	if err != nil {
+		responseErr(ctx, err)
+		return
+	}
+
+	var res = struct {
+		MessageIDBegin int64 `json:"messageIDBegin"`
+		MessageIDEnd   int64 `json:"messageIDEnd"`
+	}{
+		MessageIDBegin: maxID - int64(params.Size-1),
+		MessageIDEnd:   maxID,
+	}
+
+	responseOKData(ctx, res)
 }

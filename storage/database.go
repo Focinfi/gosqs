@@ -1,19 +1,19 @@
 package storage
 
 import (
-	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage/etcd"
 )
 
 var defaultKV models.KV
+var defaultIncrementer models.Incrementer
 
-func init() {
+func initKV() {
 	var kv models.KV
 	// etcd
 	kv, err := etcd.NewKV()
 	if err != nil {
-		log.Internal.Panic(err)
+		panic(err)
 	}
 
 	// goma
@@ -22,8 +22,22 @@ func init() {
 	// memcahed
 	// kv, err := memcached.New()
 	// if err != nil {
-	// 	log.DB.Panic(err)
+	// 	panic(err)
 	// }
 
 	defaultKV = kv
+}
+
+func initIncrementer() {
+	incrementer, err := etcd.NewIncrementer()
+	if err != nil {
+		panic(err)
+	}
+
+	defaultIncrementer = incrementer
+}
+
+func init() {
+	initKV()
+	initIncrementer()
 }
