@@ -24,6 +24,10 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 2. [x] Use etcd watcher for subscribtion.
 3. [x] Use golang channel to reduce loop times of Pop.
 
+#### ID generator 
+
+[x] Use etcd
+
 #### Message Storage
 
 1. [ ] Search distributed reliable K/V db.
@@ -41,11 +45,6 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 1. [ ] Batch messages addation?
 
 1. [ ] Compact and put the cold data(Message and Group) into disk?
-
-#### ID generator
-
-1. [ ] Maybe use etcd?
-
 
 #### Client SDK
 
