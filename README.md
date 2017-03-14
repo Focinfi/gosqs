@@ -28,13 +28,15 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 
 1. [ ] Search distributed reliable K/V db.
 
-1. [ ] Time-based Group or ID Generator?
+    1. [x] Meta data(queue, client), distributed and reliable, use **etcd**
+
+    3. [x] Single Machine consumer cache, high performance, use **reids**
+
+    2. [ ] Message storage, no change, distributed and high performance, use *groupcahe + mongodb*?
+
+1. [x] Time-based Group or ID Generator?
   
-  1. Design new message group rule, maybe 100items/group?
-
-  1. Add message id into group must hold a RWLock, try etcd relative api(Compare And Swap?).
-
-  1. Maybe more dependency on databse.
+    Use etcd to generator message ID.  
 
 1. [ ] Batch messages addation?
 
@@ -60,8 +62,8 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 #### Load Balancing
 1. [ ] Build center/master to collect the all nodes/service status
 
-  1. Node <=> Database
-  2. Consumer <=> Node
+    1. Node <=> Database
+    2. Consumer <=> Node
 
 2. [ ] Shard the key in Database?
 
