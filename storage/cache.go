@@ -49,13 +49,14 @@ func (cache *Cache) PopConsumerChan() <-chan models.Consumer {
 			}
 
 			// watch the changed
-			key := models.QueueKey(c.Client().UserID, c.Client().QueueName)
+			key := models.QueueRecentMessageIDKey(c.Client().UserID, c.Client().QueueName)
 			watchChan := cache.watcher.Watch(key)
 			timeout := time.Second * time.Duration(config.Config().MaxRetryConsumerSeconds*2)
 			go func() {
 				select {
 				case <-time.After(timeout):
 				case change := <-watchChan:
+					log.Biz.Infoln("NOTIFICATION: ", change)
 					if change == "" {
 						log.DB.Infof("watcher faild for key: %s\n", key)
 					}

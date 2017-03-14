@@ -23,8 +23,8 @@ func QueueListKey(userID int64) string {
 	return fmt.Sprintf("%s.%d", queueKeyPrefix, userID)
 }
 
-// QueueKey for queue storage key, the value is the almost recent message group id
-func QueueKey(userID int64, queueName string) string {
+// QueueRecentMessageIDKey for queue storage key, the value is the almost recent message group id
+func QueueRecentMessageIDKey(userID int64, queueName string) string {
 	return fmt.Sprintf("%s.%d.%s", queueKeyPrefix, userID, queueName)
 }
 

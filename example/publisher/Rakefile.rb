@@ -15,22 +15,20 @@ def register(user_id = 1, client_id = 1)
   )
 end
 
-def message(count)
+def message(index)
   host = 'http://localhost:5546'
   base = 268435456
-  index = Time.now.to_i
-  RestClient.post(
+  res = RestClient.post(
     "#{host}/message",
     {
       "userID" => 1,
       "queueName" => "greeting",
-      "content" => "#{index}_#{count}",
-      "index" => index * base + count
+      "content" => "#{index}",
+      "index" => index
     }.to_json,
     {content_type: :json, accept: :json}
   )
-
-  count += 1
+  puts index, JSON.parse(res.body)
 end
 
 def apply_message_id_range(size = 10)
@@ -45,11 +43,17 @@ def apply_message_id_range(size = 10)
     {content_type: :json, accept: :json}
   )
 
-  puts res.body
+  
+  data = JSON.parse(res.body)["data"]
+  first = data["messageIDBegin"]
+  last = data["messageIDEnd"]
+  (first..last)
 end
 
 task :m do
-  10.times {|i| message(i + 1) }
+  apply_message_id_range.each do |id|
+    message(id)
+  end
 end
 
 task :r do
@@ -57,5 +61,5 @@ task :r do
 end
 
 task :a do
-  apply_message_id_range(10)
+  apply_message_id_range()
 end

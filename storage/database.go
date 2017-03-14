@@ -10,11 +10,11 @@ import (
 
 var defaultKV models.KV
 var defaultIncrementer models.Incrementer
-var etcdIncrementer models.Incrementer
-var etcdKV models.KV
-var etcdWatcher models.Watcher
-var memcachedKV models.KV
-var redisPriorityList models.PriorityList
+var etcdIncrementer *etcd.Incrementer
+var etcdKV *etcd.KV
+var etcdWatcher *etcd.Watcher
+var memcachedKV *memcached.KV
+var redisPriorityList *redis.PriorityList
 
 func init() {
 	// gomap
@@ -35,7 +35,7 @@ func init() {
 	}
 
 	// etcd incrementer
-	if incrementer, err := etcd.NewIncrementer(); err != nil {
+	if incrementer, err := etcd.NewIncrementer(etcdKV); err != nil {
 		panic(err)
 	} else {
 		etcdIncrementer = incrementer

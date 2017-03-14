@@ -2,13 +2,11 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
-
-	"strconv"
 
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/util"
 )
 
 // Queue stores data
@@ -87,24 +85,25 @@ func (s *Queue) Add(q *models.Queue) error {
 	return nil
 }
 
-// UpdateRecentMessageGroupID updates the groupID of one queue
-func (s *Queue) UpdateRecentMessageGroupID(userID int64, queueName string, groupID int64) error {
-	k := models.QueueKey(userID, queueName)
-	groupIDVal := fmt.Sprintf("%d", groupID)
+// UpdateRecentMessageID updates the almost recent message id of one queue
+func (s *Queue) UpdateRecentMessageID(userID int64, queueName string, newID int64) error {
+	k := models.QueueRecentMessageIDKey(userID, queueName)
+	newIDVal := util.Int64toa(newID)
 
-	oldVal, ok := s.db.Get(k)
+	curIDVal, ok := s.db.Get(k)
 	if !ok {
-		return s.db.Put(k, groupIDVal)
+		return s.db.Put(k, newIDVal)
 	}
 
-	id, err := strconv.ParseInt(oldVal, 10, 64)
+	curID, err := util.ParseInt64(curIDVal)
 	if err != nil {
 		log.DB.Error(errors.DataBroken(k, err))
-		return s.db.Put(k, groupIDVal)
+		return s.db.Put(k, newIDVal)
 	}
 
-	if groupID > id {
-		return s.db.Put(k, groupIDVal)
+	log.Biz.Infoln("UpdateMessageID: ", curID, newID)
+	if newID > curID {
+		return s.db.Put(k, newIDVal)
 	}
 
 	return nil
@@ -146,4 +145,20 @@ func (s *Queue) Remove(userID int64, queueName string) error {
 func (s *Queue) ApplyMessageIDRange(userID int64, queueName string, size int) (int64, error) {
 	key := models.QueueMaxIDKey(userID, queueName)
 	return s.inc.Increment(key, size)
+}
+
+// MessageMaxID get the max id for the queue
+func (s *Queue) MessageMaxID(userID int64, queueName string) (int64, error) {
+	key := models.QueueMaxIDKey(userID, queueName)
+	val, ok := s.db.Get(key)
+	if !ok {
+		return -1, errors.DataLost(key)
+	}
+
+	maxID, err := util.ParseInt64(val)
+	if err != nil {
+		return -1, errors.DataBroken(key, err)
+	}
+
+	return maxID, nil
 }

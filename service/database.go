@@ -30,7 +30,7 @@ func (d *database) ReceiveMessage(userID int64, queueName, content string, index
 
 	// try to update recent message index in background
 	time.AfterFunc(time.Second, func() {
-		err := d.Queue.UpdateRecentMessageGroupID(userID, queueName, models.GroupID(index))
+		err := d.Queue.UpdateRecentMessageID(userID, queueName, index)
 		if err != nil {
 			log.DB.Error(err)
 		}
@@ -75,6 +75,12 @@ func AddQueue(q *models.Queue) error {
 
 // AddClient adds cleint
 func AddClient(client *models.Client) error {
+	maxID, err := db.Queue.MessageMaxID(client.UserID, client.QueueName)
+	if err != nil {
+		return err
+	}
+
+	client.RecentMessageIndex = maxID
 	return db.Client.Add(client)
 }
 

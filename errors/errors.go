@@ -25,6 +25,7 @@ const (
 	clientHasAlreadyRegistered  = 1009
 	serviceOverload             = 1010
 	applyMessageIDRangeOversize = 1011
+	messageIndexOutOfRange      = 1012
 )
 
 // DuplicateQueue error for duplicate queue
@@ -36,8 +37,11 @@ var DuplicateMessage = NewBizErr("duplicate message", duplicateMessage)
 // DuplicateClient error for duplicate lient
 var DuplicateClient = NewBizErr("duplicate lient", duplicateClient)
 
-// MessageOutOfData erros for out-of-date message
-var MessageOutOfData = NewBizErr("message is out of date", messageOutOfData)
+// MessageOutOfDate error for out-of-date message
+var MessageOutOfDate = NewBizErr("message is out of date", messageOutOfData)
+
+// MessageIndexOutOfRange error for out-of-range message index
+var MessageIndexOutOfRange = NewBizErr("message index is out of range", messageIndexOutOfRange)
 
 // UserNotFound error for unknown user
 var UserNotFound = NewBizErr("user not found", userNotFound)

@@ -2,11 +2,11 @@ package etcd
 
 import (
 	"context"
-	"strconv"
 
 	"fmt"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/util"
 	"github.com/coreos/etcd/clientv3"
 )
 
@@ -34,7 +34,7 @@ func (inc *Incrementer) Increment(key string, size int) (int64, error) {
 		return int64(size), nil
 	}
 
-	curID, err := strconv.ParseInt(curIDVal, 10, 64)
+	curID, err := util.ParseInt64(curIDVal)
 	if err != nil {
 		return -1, errors.DataBroken(key, err)
 	}
@@ -55,11 +55,6 @@ func (inc *Incrementer) Increment(key string, size int) (int64, error) {
 }
 
 // NewIncrementer returns a new Incrementer
-func NewIncrementer() (*Incrementer, error) {
-	db, err := NewKV()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Incrementer{db: db}, nil
+func NewIncrementer(kv *KV) (*Incrementer, error) {
+	return &Incrementer{db: kv}, nil
 }

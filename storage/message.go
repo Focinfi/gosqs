@@ -2,8 +2,8 @@ package storage
 
 import (
 	"encoding/json"
-	"sort"
 
+	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
@@ -38,63 +38,38 @@ func (s *Message) One(userID int64, queueName string, index int64) (string, bool
 }
 
 // Next for next message of current Message
-func (s *Message) Next(userID int64, queueName string, index int64, timestamp int64) (*models.Message, error) {
-	orginID := models.GroupID(index)
-	groupID := orginID
-	nowGroupID := timestamp
-	log.Biz.Printf("GROUP_ID: %d, NOW_GORUP_ID:%d\n", groupID, nowGroupID)
+func (s *Message) Next(userID int64, queueName string, index int64, maxIdx int64) (*models.Message, error) {
+	log.Biz.Infoln("NEXT: ", userID, queueName, index, maxIdx)
+	nextIdx := index + 1
+	upperIdx := maxIdx + int64(config.Config().MaxTryMessageCount)
+	var message string
 
-	for {
-		// the message with
-		if nowGroupID <= groupID {
-			break
-		}
-		all, err := s.All(userID, queueName, groupID, nil)
-		if err != nil {
-			return nil, err
-		}
+	for nextIdx <= upperIdx {
+		mVal, ok := s.One(userID, queueName, nextIdx)
+		log.Biz.Infoln("mVal", mVal, ok)
 
-		// if this group id empty try the next
-		if len(all) == 0 {
-			groupID++
-			continue
-		}
-		log.Biz.Printf("MESSAGE-ALL: %v\n", all)
-		var nextIdx int64
-		if index/models.BaseUnit == 0 || orginID < groupID {
-			nextIdx = all[0]
-		} else {
-			i := sort.Search(len(all), func(i int) bool { return all[i] >= index })
-			if i < len(all) && all[i] == index {
-				// last one in the group with the id groupID
-				if i == len(all)-1 {
-					// try next group
-					groupID++
-					continue
-				}
-
-				// got the next message index
-				nextIdx = all[i+1]
-			} else {
+		if ok {
+			if mVal == "" {
 				return nil, errors.DataLost(models.MessageKey(userID, queueName, index))
 			}
+			message = mVal
+			break
 		}
 
-		message, ok := s.One(userID, queueName, nextIdx)
-		if !ok {
-			return nil, errors.DataLost(models.MessageKey(userID, queueName, nextIdx))
-		}
-
-		log.Biz.Printf("NEXT INDEX: %d\n", nextIdx)
-		return &models.Message{
-			UserID:    userID,
-			QueueName: queueName,
-			Index:     nextIdx,
-			Content:   message,
-		}, nil
+		nextIdx++
 	}
 
-	return nil, nil
+	// next is nil
+	if nextIdx > upperIdx {
+		return nil, nil
+	}
+
+	return &models.Message{
+		UserID:    userID,
+		QueueName: queueName,
+		Index:     nextIdx,
+		Content:   message,
+	}, nil
 }
 
 // Add adds a message
@@ -103,32 +78,7 @@ func (s *Message) Add(m *models.Message) error {
 		return errors.DuplicateMessage
 	}
 
-	all, err := s.All(m.UserID, m.QueueName, m.GroupID())
-	if err != nil {
-		return err
-	}
-
-	less := func(i, j int) bool { return all[i] < all[j] }
-	if !sort.SliceIsSorted(all, less) {
-		sort.Slice(all, less)
-	}
-
-	if len(all) > 0 && all[len(all)-1] > m.Index {
-		return errors.MessageOutOfData
-	}
-
-	all = append(all, m.Index)
-	data, err := json.Marshal(all)
-	if err != nil {
-		return errors.FailedEncoding(all)
-	}
-
-	err = s.db.Put(models.MessageListKey(m.UserID, m.QueueName, m.GroupID()), string(data))
-	if err != nil {
-		return errors.NewInternalErr(err.Error())
-	}
-
-	err = s.db.Put(models.MessageKey(m.UserID, m.QueueName, m.Index), m.Content)
+	err := s.db.Put(models.MessageKey(m.UserID, m.QueueName, m.Index), m.Content)
 	if err != nil {
 		return errors.NewInternalErr(err.Error())
 	}

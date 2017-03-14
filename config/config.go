@@ -57,6 +57,7 @@ type Configuration struct {
 	RedisAdrr                  string
 	RedisPwd                   string
 	MaxMessgeIDRangeSize       int
+	MaxTryMessageCount         int
 }
 
 func newDefaultConfig() Configuration {
@@ -72,6 +73,7 @@ func newDefaultConfig() Configuration {
 		RedisPwd:                   "",
 		MaxRetryConsumerSeconds:    3,
 		MaxMessgeIDRangeSize:       10,
+		MaxTryMessageCount:         3,
 	}
 }
 
@@ -88,6 +90,7 @@ func Config() Configuration {
 			MaxPushWorkCount:           16,
 			LogOut:                     os.Stdout,
 			MaxMessgeIDRangeSize:       100,
+			MaxTryMessageCount:         10,
 		}
 	case developEnv:
 		return newDefaultConfig()
