@@ -4,20 +4,19 @@ import (
 	"context"
 
 	"github.com/Focinfi/sqs/log"
-	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 )
 
 // Watcher watches a key
 type Watcher struct {
-	agent *clientv3.Client
+	kv *KV
 }
 
 // Watch watches a key
 func (w *Watcher) Watch(key string) <-chan string {
 	ch := make(chan string)
 
-	watchChan := w.agent.Watch(context.Background(), key)
+	watchChan := w.kv.db.Watch(context.Background(), key)
 
 	go func() {
 		res := <-watchChan
@@ -47,15 +46,10 @@ func (w *Watcher) Watch(key string) <-chan string {
 
 // Close closes the watch channel
 func (w *Watcher) Close() error {
-	return w.agent.Watcher.Close()
+	return w.kv.db.Watcher.Close()
 }
 
 // NewWatcher returns a new watcher
-func NewWatcher() (*Watcher, error) {
-	cli, err := New()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Watcher{agent: cli}, nil
+func NewWatcher(kv *KV) *Watcher {
+	return &Watcher{kv: kv}
 }

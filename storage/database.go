@@ -28,19 +28,11 @@ func init() {
 	}
 
 	// etcd watcher
-	if watcher, err := etcd.NewWatcher(); err != nil {
-		panic(err)
-	} else {
-		etcdWatcher = watcher
-	}
+	etcdWatcher = etcd.NewWatcher(etcdKV)
 
 	// etcd incrementer
-	if incrementer, err := etcd.NewIncrementer(etcdKV); err != nil {
-		panic(err)
-	} else {
-		etcdIncrementer = incrementer
-		defaultIncrementer = incrementer
-	}
+	etcdIncrementer = etcd.NewIncrementer(etcdKV)
+	defaultIncrementer = etcdIncrementer
 
 	// memcahed
 	if kv, err := memcached.New(); err != nil {
