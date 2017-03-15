@@ -26,7 +26,7 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 
 #### ID generator 
 
-[x] Use etcd
+1. [x] Use etcd
 
 #### Message Storage
 
@@ -38,9 +38,7 @@ Add new-message subscribtion for the consumer which has been waiting for long ti
 
     2. [ ] Message storage, no change, distributed and high performance, use *groupcahe + mongodb*?
 
-1. [x] Time-based Group or ID Generator?
-  
-    Use etcd to generator message ID.  
+1. [x] Time-based Group or ID Generator? Use etcd to generator message ID.  
 
 1. [ ] Batch messages addation?
 
