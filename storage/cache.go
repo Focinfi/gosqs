@@ -89,6 +89,5 @@ func (cache *Cache) RemoveConsumer(c models.Consumer) error {
 
 // NewConsumer returns a new Consumer based on the client
 func NewConsumer(client *models.Client, priority int) models.Consumer {
-	// return goheap.NewConsumer(client, priority)
 	return redis.NewConsumer(client, priority)
 }

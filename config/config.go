@@ -4,6 +4,8 @@ import (
 	"io"
 	"os"
 
+	"time"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -58,6 +60,8 @@ type Configuration struct {
 	RedisPwd                   string
 	MaxMessgeIDRangeSize       int
 	MaxTryMessageCount         int
+	OncekvMetaRefreshPeroid    time.Duration
+	IdealKVResponseDuration    time.Duration
 }
 
 func newDefaultConfig() Configuration {
@@ -74,6 +78,8 @@ func newDefaultConfig() Configuration {
 		MaxRetryConsumerSeconds:    3,
 		MaxMessgeIDRangeSize:       10,
 		MaxTryMessageCount:         3,
+		OncekvMetaRefreshPeroid:    time.Second,
+		IdealKVResponseDuration:    time.Millisecond * 50,
 	}
 }
 
@@ -91,6 +97,8 @@ func Config() Configuration {
 			LogOut:                     os.Stdout,
 			MaxMessgeIDRangeSize:       100,
 			MaxTryMessageCount:         10,
+			OncekvMetaRefreshPeroid:    time.Second,
+			IdealKVResponseDuration:    time.Millisecond * 50,
 		}
 	case developEnv:
 		return newDefaultConfig()

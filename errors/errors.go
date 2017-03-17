@@ -67,6 +67,11 @@ var ClientHasAlreadyRegistered = NewBizErr("client has already registered", clie
 // ServiceOverload error for service is overload
 var ServiceOverload = NewBizErr("service is overload", serviceOverload)
 
+// DBQueryTimeout returns a Internal for a db query
+func DBQueryTimeout(db, key string) Internal {
+	return NewInternalErr(fmt.Sprintf("db: %s, key: %s, query timeout", db, key))
+}
+
 // DataLost returns a internal error for losting data
 func DataLost(key string) error {
 	return NewInternalErr(fmt.Sprintf("data lost: key= %s", key))

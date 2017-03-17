@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/util"
+	"github.com/Focinfi/sqs/util/strconvutil"
 	"github.com/coreos/etcd/clientv3"
 )
 
@@ -34,7 +34,7 @@ func (inc *Incrementer) Increment(key string, size int) (int64, error) {
 		return int64(size), nil
 	}
 
-	curID, err := util.ParseInt64(curIDVal)
+	curID, err := strconvutil.ParseInt64(curIDVal)
 	if err != nil {
 		return -1, errors.DataBroken(key, err)
 	}

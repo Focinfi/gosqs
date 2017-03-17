@@ -4,7 +4,7 @@ import (
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage/etcd"
 	"github.com/Focinfi/sqs/storage/gomap"
-	"github.com/Focinfi/sqs/storage/memcached"
+	"github.com/Focinfi/sqs/storage/oncekv"
 	"github.com/Focinfi/sqs/storage/redis"
 )
 
@@ -13,7 +13,8 @@ var defaultIncrementer models.Incrementer
 var etcdIncrementer *etcd.Incrementer
 var etcdKV *etcd.KV
 var etcdWatcher *etcd.Watcher
-var memcachedKV *memcached.KV
+var mapKV *gomap.KV
+var onceKV *oncekv.KV
 var redisPriorityList *redis.PriorityList
 
 func init() {
@@ -34,11 +35,13 @@ func init() {
 	etcdIncrementer = etcd.NewIncrementer(etcdKV)
 	defaultIncrementer = etcdIncrementer
 
-	// memcahed
-	if kv, err := memcached.New(); err != nil {
+	// mapkv
+	mapKV = gomap.New()
+
+	if kv, err := oncekv.NewKV(); err != nil {
 		panic(err)
 	} else {
-		memcachedKV = kv
+		onceKV = kv
 	}
 
 	// redis

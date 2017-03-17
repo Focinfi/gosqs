@@ -6,7 +6,7 @@ import (
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/util"
+	"github.com/Focinfi/sqs/util/strconvutil"
 )
 
 // Queue stores data
@@ -88,14 +88,14 @@ func (s *Queue) Add(q *models.Queue) error {
 // UpdateRecentMessageID updates the almost recent message id of one queue
 func (s *Queue) UpdateRecentMessageID(userID int64, queueName string, newID int64) error {
 	k := models.QueueRecentMessageIDKey(userID, queueName)
-	newIDVal := util.Int64toa(newID)
+	newIDVal := strconvutil.Int64toa(newID)
 
 	curIDVal, ok := s.db.Get(k)
 	if !ok {
 		return s.db.Put(k, newIDVal)
 	}
 
-	curID, err := util.ParseInt64(curIDVal)
+	curID, err := strconvutil.ParseInt64(curIDVal)
 	if err != nil {
 		log.DB.Error(errors.DataBroken(k, err))
 		return s.db.Put(k, newIDVal)
@@ -155,7 +155,7 @@ func (s *Queue) MessageMaxID(userID int64, queueName string) (int64, error) {
 		return -1, errors.DataLost(key)
 	}
 
-	maxID, err := util.ParseInt64(val)
+	maxID, err := strconvutil.ParseInt64(val)
 	if err != nil {
 		return -1, errors.DataBroken(key, err)
 	}
