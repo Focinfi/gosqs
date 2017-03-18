@@ -140,6 +140,13 @@ type internalErr struct {
 	message string
 }
 
+// NewInternalWrap returns a new internalErr
+func NewInternalWrap(err error) Internal {
+	return &internalErr{
+		message: err.Error(),
+	}
+}
+
 // NewInternalErrorf returns a new internalErr
 func NewInternalErrorf(format string, a ...interface{}) Internal {
 	return &internalErr{
