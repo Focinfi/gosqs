@@ -26,6 +26,7 @@ const (
 	serviceOverload             = 1010
 	applyMessageIDRangeOversize = 1011
 	messageIndexOutOfRange      = 1012
+	dataNotFound                = 1013
 )
 
 // DuplicateQueue error for duplicate queue
@@ -67,24 +68,27 @@ var ClientHasAlreadyRegistered = NewBizErr("client has already registered", clie
 // ServiceOverload error for service is overload
 var ServiceOverload = NewBizErr("service is overload", serviceOverload)
 
+// DBNotFound error for data not fouond
+var DBNotFound = NewBizErr("data is not found", dataNotFound)
+
 // DBQueryTimeout returns a Internal for a db query
 func DBQueryTimeout(db, key string) Internal {
-	return NewInternalErr(fmt.Sprintf("db: %s, key: %s, query timeout", db, key))
+	return NewInternalErrorf(fmt.Sprintf("db: %s, key: %s, query timeout", db, key))
 }
 
 // DataLost returns a internal error for losting data
 func DataLost(key string) error {
-	return NewInternalErr(fmt.Sprintf("data lost: key= %s", key))
+	return NewInternalErrorf(fmt.Sprintf("data lost: key= %s", key))
 }
 
 // DataBroken returns a internal error for broken data
 func DataBroken(key string, err error) error {
-	return NewInternalErr(fmt.Sprintf("data broken: key=%s, err: %s", key, err))
+	return NewInternalErrorf(fmt.Sprintf("data broken: key=%s, err: %s", key, err))
 }
 
 // FailedEncoding returns a internal error for encoding error
 func FailedEncoding(data interface{}) error {
-	return NewInternalErr(fmt.Sprintf("failed encoding for data: %v", data))
+	return NewInternalErrorf(fmt.Sprintf("failed encoding for data: %v", data))
 }
 
 // Biz detects the biz errors
@@ -136,10 +140,10 @@ type internalErr struct {
 	message string
 }
 
-// NewInternalErr returns a new internalErr
-func NewInternalErr(message string) Internal {
+// NewInternalErrorf returns a new internalErr
+func NewInternalErrorf(format string, a ...interface{}) Internal {
 	return &internalErr{
-		message: message,
+		message: fmt.Sprintf(format, a...),
 	}
 }
 

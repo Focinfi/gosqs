@@ -3,6 +3,8 @@ package gomap
 import (
 	"fmt"
 	"sync"
+
+	"github.com/Focinfi/sqs/errors"
 )
 
 // KV use a map as a K/V database
@@ -17,12 +19,16 @@ func New() *KV {
 }
 
 // Get gets the value and existence for the key
-func (k *KV) Get(key string) (string, bool) {
+func (k *KV) Get(key string) (string, error) {
 	k.RLock()
 	defer k.RUnlock()
 
 	value, ok := k.data[key]
-	return value, ok
+	if !ok {
+		return "", errors.DBNotFound
+	}
+
+	return value, nil
 }
 
 // Put puts the value for the key
@@ -65,8 +71,8 @@ func (k *KV) append(key string, value string) error {
 	k.Lock()
 	defer k.Unlock()
 
-	oldVal, ok := k.Get(key)
-	if ok {
+	oldVal, err := k.Get(key)
+	if err == errors.DBNotFound {
 		k.data[key] = oldVal + value
 	}
 

@@ -78,6 +78,8 @@ func (c *Client) update() error {
 	}
 	sort.StringSlice(caches).Sort()
 
+	log.Biz.Println("oncekv meta:", dbs, caches)
+
 	c.RLock()
 	if reflect.DeepEqual(c.dbs, dbs) &&
 		reflect.DeepEqual(c.caches, caches) {

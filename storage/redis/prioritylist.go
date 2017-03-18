@@ -108,7 +108,7 @@ func (pl *PriorityList) pop() (models.Consumer, error) {
 
 	key, err := json.Marshal(consumer)
 	if err != nil {
-		return nil, errors.NewInternalErr(err.Error())
+		return nil, errors.NewInternalErrorf(err.Error())
 	}
 
 	if res := pl.db.ZRem(pl.plKey, string(key)); res.Val() > 0 {
@@ -126,7 +126,7 @@ func (pl *PriorityList) Remove(c models.Consumer) error {
 func (pl *PriorityList) ZAdd(c models.Consumer) error {
 	b, err := json.Marshal(c)
 	if err != nil {
-		return errors.NewInternalErr(err.Error())
+		return errors.NewInternalErrorf(err.Error())
 	}
 
 	res := pl.db.ZAdd(pl.plKey, redis.Z{Member: string(b), Score: float64(c.Priority())})

@@ -3,6 +3,8 @@ package storage
 import (
 	"encoding/json"
 
+	"time"
+
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
@@ -18,9 +20,13 @@ type Message struct {
 // All returns all messages index list
 func (s *Message) All(userID int64, queueName string, gorupID int64, filters ...interface{}) ([]int64, error) {
 	key := models.MessageListKey(userID, queueName, gorupID)
-	all, ok := s.db.Get(key)
-	if !ok {
+	all, getErr := s.db.Get(key)
+	if getErr == errors.DBNotFound {
 		all = "[]"
+	}
+
+	if getErr != nil {
+		return nil, getErr
 	}
 
 	list := []int64{}
@@ -32,8 +38,9 @@ func (s *Message) All(userID int64, queueName string, gorupID int64, filters ...
 }
 
 // One returns a message string
-func (s *Message) One(userID int64, queueName string, index int64) (string, bool) {
+func (s *Message) One(userID int64, queueName string, index int64) (string, error) {
 	key := models.MessageKey(userID, queueName, index)
+
 	return s.db.Get(key)
 }
 
@@ -45,18 +52,24 @@ func (s *Message) Next(userID int64, queueName string, index int64, maxIdx int64
 	var message string
 
 	for nextIdx <= upperIdx {
-		mVal, ok := s.One(userID, queueName, nextIdx)
-		log.Biz.Infoln("mVal", mVal, ok)
+		mVal, getErr := s.One(userID, queueName, nextIdx)
+		log.Biz.Infoln("mVal", mVal, getErr)
 
-		if ok {
-			if mVal == "" {
-				return nil, errors.DataLost(models.MessageKey(userID, queueName, index))
-			}
-			message = mVal
-			break
+		if getErr == errors.DBNotFound {
+			nextIdx++
+			continue
 		}
 
-		nextIdx++
+		if getErr != nil {
+			return nil, getErr
+		}
+
+		if mVal == "" {
+			return nil, errors.DataLost(models.MessageKey(userID, queueName, index))
+		}
+
+		message = mVal
+		break
 	}
 
 	// next is nil
@@ -74,14 +87,21 @@ func (s *Message) Next(userID int64, queueName string, index int64, maxIdx int64
 
 // Add adds a message
 func (s *Message) Add(m *models.Message) error {
-	if _, ok := s.One(m.UserID, m.QueueName, m.Index); ok {
-		return errors.DuplicateMessage
+	_, getErr := s.One(m.UserID, m.QueueName, m.Index)
+	log.Biz.Printf("Get Error: %v, time: %v\n", getErr, time.Now())
+
+	if getErr == errors.DBNotFound {
+		err := s.db.Put(models.MessageKey(m.UserID, m.QueueName, m.Index), m.Content)
+		if err != nil {
+			return errors.NewInternalErrorf(err.Error())
+		}
+
+		return nil
 	}
 
-	err := s.db.Put(models.MessageKey(m.UserID, m.QueueName, m.Index), m.Content)
-	if err != nil {
-		return errors.NewInternalErr(err.Error())
+	if getErr != nil {
+		return getErr
 	}
 
-	return nil
+	return errors.DuplicateMessage
 }

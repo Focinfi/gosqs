@@ -17,13 +17,13 @@ type Client struct {
 // One returns a client
 func (s *Client) One(userID int64, clientID int64, queueName string) (*models.Client, error) {
 	key := models.ClientKey(userID, clientID, queueName)
-	value, ok := s.db.Get(key)
-	if !ok {
+	value, err := s.db.Get(key)
+	if err == errors.DBNotFound {
 		return nil, errors.ClientNotFound
 	}
 
 	client := &models.Client{}
-	err := json.Unmarshal([]byte(value), client)
+	err = json.Unmarshal([]byte(value), client)
 	if err != nil {
 		return nil, errors.DataBroken(key, err)
 	}
@@ -36,12 +36,12 @@ func (s *Client) Add(c *models.Client) error {
 	key := models.ClientKey(c.UserID, c.ID, c.QueueName)
 	data, err := json.Marshal(c)
 	if err != nil {
-		return errors.NewInternalErr(err.Error())
+		return errors.NewInternalErrorf(err.Error())
 	}
 
 	err = s.db.Put(key, string(data))
 	if err != nil {
-		return errors.NewInternalErr(err.Error())
+		return errors.NewInternalErrorf(err.Error())
 	}
 
 	return nil
@@ -58,12 +58,12 @@ func (s *Client) Update(c *models.Client) error {
 	key := models.ClientKey(c.UserID, c.ID, c.QueueName)
 	data, err := json.Marshal(c)
 	if err != nil {
-		return errors.NewInternalErr(err.Error())
+		return errors.NewInternalErrorf(err.Error())
 	}
 
 	err = s.db.Put(key, string(data))
 	if err != nil {
-		return errors.NewInternalErr(err.Error())
+		return errors.NewInternalErrorf(err.Error())
 	}
 
 	return nil

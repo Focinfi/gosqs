@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Focinfi/sqs/config"
@@ -25,6 +26,7 @@ func (d *database) ReceiveMessage(userID int64, queueName, content string, index
 	}
 
 	if err := d.Message.Add(msg); err != nil {
+		fmt.Println("Added Message, err: ", err)
 		return err
 	}
 

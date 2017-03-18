@@ -1,6 +1,7 @@
 package oncekv
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,9 +13,10 @@ import (
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
+	"github.com/Focinfi/sqs/util/urlutil"
 )
 
-const requestTimeout = time.Second * 2
+const requestTimeout = time.Millisecond * 300
 
 // KV for kv storage
 type KV struct {
@@ -22,68 +24,91 @@ type KV struct {
 }
 
 type kvParams struct {
-	Key     string `json:"key"`
-	Value   string `json:"value"`
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Key     string `json:"key,omitempty"`
+	Value   string `json:"value,omitempty"`
+	Code    int    `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 // Get get the value of the key
-func (kv *KV) Get(key string) (string, bool) {
+func (kv *KV) Get(key string) (string, error) {
 	val, err := kv.getFromCache(key)
+	fmt.Println("getFromCache: ", val, err)
 	if err == nil {
-		return val, true
+		return val, nil
 	}
+
+	if err == errors.DBNotFound {
+		return "", err
+	}
+
 	log.DB.Error(err)
 
 	val, err = kv.getFromDB(key)
 	if err != nil {
-		return "", false
+		return "", err
 	}
 
-	return val, true
+	return val, nil
 }
 
 // Put put key/value pair
 func (kv *KV) Put(key string, value string) error {
-	dbs := []string{}
+	dbs := make([]string, len(kv.cli.dbs))
 	copy(dbs, kv.cli.dbs)
-	var done bool
+	log.Biz.Println("Start fetchFromDBs:", time.Now(), dbs)
+	if len(dbs) == 0 {
+		return errors.NewInternalErrorf("db unavailable")
+	}
+
+	var fetched bool
 	var mux sync.Mutex
+	var pushed = make(chan bool)
+	var completeCount int
+	var completed = make(chan bool)
+	var fastURL string
+	var err error
 
-	err := errors.New("failed to set")
-	success := make(chan bool)
-
-	for _, db := range dbs {
-		go func(url string) {
+	for i, db := range dbs {
+		go func(index int, url string) {
 			err = kv.setValue(key, value, url)
 
 			if err != nil {
-				err = errors.DataLost(err.Error())
-				return
+				log.DB.Error(err)
 			}
 
 			mux.Lock()
-			if !done {
-				done = true
-				go kv.cli.setFastDB(url)
-				mux.Unlock()
-			} else {
-				mux.Unlock()
-				return
+			defer mux.Unlock()
+
+			if err == nil && !fetched {
+				fetched = true
+				fastURL = url
+				go func() { pushed <- true }()
 			}
 
-			success <- true
-		}(db)
+			completeCount++
+			if completeCount >= len(dbs) {
+				go func() { completed <- true }()
+			}
+		}(i, db)
 	}
+
+	if fastURL != "" {
+		go kv.cli.setFastDB(fastURL)
+	}
+
+	waitTime := config.Config().IdealKVResponseDuration * 6
 
 	select {
-	case <-time.After(requestTimeout):
-	case <-success:
+	case <-time.After(waitTime):
+		log.Biz.Println("End fetchFromDB:", time.Now())
+		return errors.NewInternalErrorf("db slow")
+	case <-completed:
+		return err
+	case <-pushed:
+		log.Biz.Println("End fetchFromDB:", time.Now())
 		return nil
 	}
-
-	return err
 }
 
 // Delete delete the key
@@ -93,7 +118,22 @@ func (kv *KV) Delete(key string) error {
 }
 
 func (kv *KV) setValue(key string, value string, url string) error {
-	// http.Post(fmt.Sprintf("http://%s/key", url), "application-type/json", bytes.NewReader(b))
+	log.Biz.Println("ToSetMessage: ", key, value, url)
+	b, err := json.Marshal(&kvParams{Key: key, Value: value})
+	if err != nil {
+		return err
+	}
+
+	res, err := http.Post(fmt.Sprintf("%s/key", urlutil.MakeURL(url)), "application-type/json", bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return errors.NewInternalErrorf(fmt.Sprintf("failed to set kv, key: %s, value: %v", key, value))
+	}
+
 	return nil
 }
 
@@ -110,7 +150,7 @@ func (kv *KV) getFromCache(key string) (string, error) {
 	}
 
 	if val == "" {
-		return "", errors.DataLost(key)
+		return "", errors.DBNotFound
 	}
 
 	// for update kv.cli.fastCache
@@ -126,47 +166,59 @@ func (kv *KV) getFromCache(key string) (string, error) {
 }
 
 func (kv *KV) getFromDB(key string) (string, error) {
-	dbs := []string{}
+	dbs := make([]string, len(kv.cli.dbs))
 	copy(dbs, kv.cli.dbs)
-	var done bool
+	log.Biz.Println("Start fetchFromDBs:", time.Now(), dbs)
+	if len(dbs) == 0 {
+		return "", errors.NewInternalErrorf("db unavailable")
+	}
+
+	var fetched bool
 	var mux sync.Mutex
+	var data = make(chan string)
+	var completeCount int
+	var completed = make(chan bool)
+	var fastURL string
 
-	err := errors.DataLost(key)
-	data := make(chan string)
-
-	for _, db := range dbs {
-		go func(url string) {
+	for i, db := range dbs {
+		go func(index int, url string) {
 			val, _, err := kv.fetchValue(key, requestTimeout, url)
 			if err != nil {
-				return
-			}
-
-			if val == "" {
-				err = errors.DataLost(key)
-				return
+				log.DB.Error(err)
 			}
 
 			mux.Lock()
-			if !done {
-				done = true
-				go kv.cli.setFastDB(url)
-				mux.Unlock()
-			} else {
-				mux.Unlock()
-				return
+			defer mux.Unlock()
+
+			if val != "" && !fetched {
+				fetched = true
+				fastURL = url
+				go func() { data <- val }()
 			}
 
-			data <- val
-		}(db)
+			completeCount++
+			if completeCount >= len(dbs) {
+				go func() { completed <- true }()
+			}
+		}(i, db)
 	}
+
+	if fastURL != "" {
+		go kv.cli.setFastDB(fastURL)
+	}
+
+	waitTime := config.Config().IdealKVResponseDuration * 6
 
 	select {
-	case <-time.After(requestTimeout):
+	case <-time.After(waitTime):
+		log.Biz.Println("End fetchFromDB:", time.Now())
+		return "", errors.NewInternalErrorf("db slow")
+	case <-completed:
+		return "", errors.DBNotFound
 	case value := <-data:
+		log.Biz.Println("End fetchFromDB:", time.Now())
 		return value, nil
 	}
-
-	return "", err
 }
 
 func (kv *KV) tryParseResponse(readCloser io.ReadCloser, key string) (string, error) {
@@ -176,6 +228,8 @@ func (kv *KV) tryParseResponse(readCloser io.ReadCloser, key string) (string, er
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Println("Message Resp:", string(b))
 
 	param := &kvParams{}
 	if err := json.Unmarshal(b, param); err != nil {
@@ -199,21 +253,28 @@ func (kv *KV) fetchValue(key string, timeout time.Duration, url string) (value s
 	errChan := make(chan error)
 
 	go func() {
-		res, err := http.Get(fmt.Sprintf("%s/sqs/message/%s", url, key))
+		res, err := http.Get(fmt.Sprintf("%s/sqs/message/%s", urlutil.MakeURL(url), key))
+		if err != nil {
+			errChan <- err
+			return
+		}
+
 		resChan <- res
-		errChan <- err
 	}()
 
 	select {
 	case <-time.After(config.Config().IdealKVResponseDuration):
+		fmt.Println("fetchValue timeout")
 		return "", -1, errors.DBQueryTimeout(url, key)
 	case err := <-errChan:
-		log.DB.Error(err)
-		return "", -1, errors.NewInternalErr(err.Error())
+		log.DB.Error("fetchValue:", err)
+		return "", -1, errors.NewInternalErrorf(err.Error())
 	case res := <-resChan:
 		if res.StatusCode == http.StatusOK {
-			if val, err := kv.tryParseResponse(res.Body, key); err != nil {
-				return val, time.Now().Sub(begin), err
+			val, err := kv.tryParseResponse(res.Body, key)
+			log.Biz.Println("fetchValue: ", val, err)
+			if err == nil {
+				return val, time.Now().Sub(begin), nil
 			}
 		}
 	}
@@ -223,61 +284,67 @@ func (kv *KV) fetchValue(key string, timeout time.Duration, url string) (value s
 
 // try all caching urls, set the fastCache
 func (kv *KV) fetchFromCache(key string) (string, error) {
-	caches := []string{}
+	caches := make([]string, len(kv.cli.caches))
 	copy(caches, kv.cli.caches)
-	durations := make([]time.Duration, len(caches))
+	log.Biz.Println("Start fetchFromCache:", time.Now(), caches)
+	if len(caches) == 0 {
+		return "", errors.NewInternalErrorf("cache unavailable")
+	}
+
 	var fetched bool
-	var value string
 	var mux sync.Mutex
-	var err error
-	var wg sync.WaitGroup
+	var data = make(chan string)
+	var completeCount int
+	var fastURL string
 
 	for i, cache := range caches {
 		go func(index int, url string) {
-			wg.Add(1)
-			defer wg.Done()
 			val, duration, err := kv.fetchValue(key, requestTimeout, url)
 			if err != nil {
 				log.DB.Error(err)
-				durations[index] = requestTimeout
-				return
 			}
-
-			if val != "" {
-				err = errors.DataLost(key)
-				log.DB.Error(err)
-				durations[index] = requestTimeout
-				return
-			}
-
-			durations[index] = duration
 
 			mux.Lock()
-			if !fetched {
-				fetched = true
-				value = val
+			defer mux.Unlock()
+
+			completeCount++
+			if completeCount >= len(caches) {
+				if val != "" {
+					go func() { data <- val }()
+					return
+				}
+
+				go func() { data <- "" }()
 			}
-			mux.Unlock()
+
+			if val != "" && !fetched {
+				fetched = true
+				if duration < requestTimeout {
+					fastURL = url
+				}
+				go func() { data <- val }()
+			}
 		}(i, cache)
 	}
 
-	wg.Wait()
+	if fastURL != "" {
+		go kv.cli.setFastCache(fastURL)
+	}
 
-	go func() {
-		var min = requestTimeout
-		index := -1
-		for i, duration := range durations {
-			if duration <= min {
-				min = duration
-				index = i
-			}
-		}
-		if index >= 0 {
-			kv.cli.setFastCache(caches[index])
-		}
-	}()
+	waitTime := config.Config().IdealKVResponseDuration * 2
 
-	return value, err
+	select {
+	case <-time.After(waitTime):
+		log.Biz.Println("End fetchFromCache:", time.Now())
+		return "", errors.NewInternalErrorf("cache slow")
+	case value := <-data:
+		log.Biz.Println("End fetchFromCache:", time.Now())
+		if value != "" {
+			return value, nil
+		}
+
+		return "", errors.DBNotFound
+	}
 }
 
 // NewKV returns a new KV

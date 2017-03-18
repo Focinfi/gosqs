@@ -3,6 +3,7 @@ package etcd
 import (
 	"context"
 
+	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/coreos/etcd/clientv3"
 )
@@ -18,20 +19,19 @@ func (kv *KV) Close() {
 }
 
 // Get gets the value for the key
-func (kv *KV) Get(key string) (string, bool) {
-
+func (kv *KV) Get(key string) (string, error) {
 	res, err := kv.db.Get(context.Background(), key)
 
 	if err != nil {
 		log.DB.Error(err)
-		return "", false
+		return "", err
 	}
 
 	if len(res.Kvs) > 0 {
-		return string(res.Kvs[0].Value), true
+		return string(res.Kvs[0].Value), nil
 	}
 
-	return "", false
+	return "", errors.DBNotFound
 }
 
 // Put puts key/value

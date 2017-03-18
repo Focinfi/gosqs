@@ -21,9 +21,13 @@ func (s *Queue) All(userID int64) ([]models.Queue, error) {
 	all := []models.Queue{}
 	key := models.QueueListKey(userID)
 
-	val, ok := s.db.Get(key)
-	if !ok {
+	val, findErr := s.db.Get(key)
+	if findErr == errors.DBNotFound {
 		return nil, errors.UserNotFound
+	}
+
+	if findErr != nil {
+		return nil, findErr
 	}
 
 	if val == "" {
@@ -74,12 +78,12 @@ func (s *Queue) Add(q *models.Queue) error {
 	newAll := append(all, *q)
 	data, err := json.Marshal(newAll)
 	if err != nil {
-		return errors.NewInternalErr(err.Error())
+		return errors.NewInternalErrorf(err.Error())
 	}
 
 	err = s.db.Put(models.QueueListKey(q.UserID), string(data))
 	if err != nil {
-		return errors.NewInternalErr(err.Error())
+		return errors.NewInternalErrorf(err.Error())
 	}
 
 	return nil
@@ -90,9 +94,13 @@ func (s *Queue) UpdateRecentMessageID(userID int64, queueName string, newID int6
 	k := models.QueueRecentMessageIDKey(userID, queueName)
 	newIDVal := strconvutil.Int64toa(newID)
 
-	curIDVal, ok := s.db.Get(k)
-	if !ok {
+	curIDVal, getErr := s.db.Get(k)
+	if getErr == errors.DBNotFound {
 		return s.db.Put(k, newIDVal)
+	}
+
+	if getErr != nil {
+		return getErr
 	}
 
 	curID, err := strconvutil.ParseInt64(curIDVal)
@@ -130,12 +138,12 @@ func (s *Queue) Remove(userID int64, queueName string) error {
 	all = append(all[:index], all[index+1:]...)
 	data, err := json.Marshal(all)
 	if err != nil {
-		return errors.NewInternalErr(err.Error())
+		return errors.NewInternalErrorf(err.Error())
 	}
 
 	err = s.db.Put(models.QueueListKey(userID), string(data))
 	if err != nil {
-		return errors.NewInternalErr(err.Error())
+		return errors.NewInternalErrorf(err.Error())
 	}
 
 	return nil
@@ -150,9 +158,13 @@ func (s *Queue) ApplyMessageIDRange(userID int64, queueName string, size int) (i
 // MessageMaxID get the max id for the queue
 func (s *Queue) MessageMaxID(userID int64, queueName string) (int64, error) {
 	key := models.QueueMaxIDKey(userID, queueName)
-	val, ok := s.db.Get(key)
-	if !ok {
+	val, getErr := s.db.Get(key)
+	if getErr == errors.DBNotFound {
 		return -1, errors.DataLost(key)
+	}
+
+	if getErr != nil {
+		return -1, getErr
 	}
 
 	maxID, err := strconvutil.ParseInt64(val)

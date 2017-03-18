@@ -18,7 +18,7 @@ type PriorityList interface {
 
 // KV defines underlying key/value database
 type KV interface {
-	Get(key string) (string, bool)
+	Get(key string) (string, error)
 	Put(key string, value string) error
 	Delete(key string) error
 }
