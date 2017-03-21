@@ -36,12 +36,12 @@ func (kv *KV) Put(key, value string) error {
 
 // Delete deletes the key
 func (kv *KV) Delete(key string) error {
-	return kv.db.Delete(key)
+	return nil
 }
 
 // NewKV returns a new kv
 func NewKV() (*KV, error) {
-	db, err := client.NewKV()
+	db, err := client.DefaultKV()
 	if err != nil {
 		return nil, err
 	}
