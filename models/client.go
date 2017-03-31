@@ -15,12 +15,12 @@ type Client struct {
 	RecentReceivedAt int64
 }
 
-// ClientKeyPerfix for prefix storage key
-const ClientKeyPerfix = "sqs.client"
+// ClientKeyPrefix for prefix storage key
+const ClientKeyPrefix = "sqs.client"
 
 // ClientKey for client key
 func ClientKey(userID, clientID int64, queueName string) string {
-	return fmt.Sprintf("%s.%d.%d.%s", ClientKeyPerfix, userID, clientID, queueName)
+	return fmt.Sprintf("%s.%d.%d.%s", ClientKeyPrefix, userID, clientID, queueName)
 }
 
 // Key return key for the c

@@ -7,7 +7,7 @@ import (
 
 var mux sync.RWMutex
 
-// Item for item a prioritylist
+// Item for item a PriorityList
 type Item struct {
 	index    int
 	Priority int
@@ -16,7 +16,7 @@ type Item struct {
 
 type list []*Item
 
-// PriorityList act as a prioritylist
+// PriorityList act as a PriorityList
 type PriorityList struct {
 	list *list
 }
@@ -26,7 +26,7 @@ func (pl PriorityList) Len() int {
 	return pl.Len()
 }
 
-// Pop pops the item with the heighest priority
+// Pop pops the item with the highest priority
 func (pl *PriorityList) Pop() *Item {
 	return heap.Pop(pl.list).(*Item)
 }
@@ -44,14 +44,14 @@ func NewItem(value interface{}, priority int) *Item {
 	}
 }
 
-// Len returns the length oflist
+// Len returns the length of the list
 func (l list) Len() int {
 	mux.RLock()
 	defer mux.RUnlock()
 	return len(l)
 }
 
-// Less returns less resoult based on priority
+// Less returns the less result based on priority
 func (l list) Less(i, j int) bool {
 	// We want Pop to give us the highest, not lowest, priority so we use greater than here.
 	mux.RLock()

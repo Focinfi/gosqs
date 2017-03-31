@@ -15,7 +15,7 @@ import (
 
 var index = 0
 
-// PriorityList for priority consumers useing redis
+// PriorityList for priority consumers using redis
 type PriorityList struct {
 	plKey         string
 	setKey        string
@@ -101,7 +101,7 @@ func (pl *PriorityList) Pop() (models.Consumer, error) {
 }
 
 func (pl *PriorityList) pop() (models.Consumer, error) {
-	consumer, err := pl.ZHeighest()
+	consumer, err := pl.ZHighest()
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +138,8 @@ func (pl *PriorityList) ZAdd(c models.Consumer) error {
 	return nil
 }
 
-// ZHeighest returns the heighest-score consmuer
-func (pl *PriorityList) ZHeighest() (models.Consumer, error) {
+// ZHighest returns the highest-score consumer
+func (pl *PriorityList) ZHighest() (models.Consumer, error) {
 	return pl.zTop(-1)
 }
 

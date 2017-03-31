@@ -18,7 +18,7 @@ var onceKV *oncekv.KV
 var redisPriorityList *redis.PriorityList
 
 func init() {
-	// gomap
+	// map
 	defaultKV = gomap.New()
 
 	// etcd kv

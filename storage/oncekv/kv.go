@@ -1,13 +1,9 @@
 package oncekv
 
 import (
-	"time"
-
 	"github.com/Focinfi/oncekv/client"
 	"github.com/Focinfi/sqs/errors"
 )
-
-const requestTimeout = time.Millisecond * 300
 
 // KV for kv storage
 type KV struct {

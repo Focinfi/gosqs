@@ -75,7 +75,7 @@ func AddQueue(q *models.Queue) error {
 	return nil
 }
 
-// AddClient adds cleint
+// AddClient adds client
 func AddClient(client *models.Client) error {
 	maxID, err := db.Queue.MessageMaxID(client.UserID, client.QueueName)
 	if err != nil {

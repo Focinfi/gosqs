@@ -32,7 +32,7 @@ type Incrementer interface {
 	Increment(key string, number int) (result int64, err error)
 }
 
-// Watcher defines a wacther
+// Watcher defines a watcher
 type Watcher interface {
 	Watch(key string) (value <-chan string)
 	Close() error

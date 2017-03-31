@@ -22,7 +22,7 @@ func trackf(fn func(), format string, a ...interface{}) {
 	log.Biz.Printf(endFormat, fmt.Sprintf(format, a...))
 }
 
-// JSONIndentFormat returns JOSN format with indent
+// JSONIndentFormat returns JSON format with indent
 func JSONIndentFormat(value interface{}) string {
 	b, _ := json.MarshalIndent(value, "", "  ")
 	return string(b)
