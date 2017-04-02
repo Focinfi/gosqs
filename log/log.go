@@ -31,8 +31,8 @@ var DB = logrus.New()
 // Biz for logic logger
 var Biz = logrus.New()
 
-// ThirdPartyServiceLogger for service error logger
-var ThirdPartyServiceLogger = logrus.New()
+// Service for service error logger
+var Service = logrus.New()
 
 // InternalError for logic error
 func InternalError(funcName string, message interface{}) {

@@ -21,28 +21,28 @@ const (
 	production = "production"
 )
 
-// Envroinment for application envroinment
-type Envroinment string
+// Environment for application environment
+type Environment string
 
 // IsProduction returns if the env equals to production
-func (e Envroinment) IsProduction() bool {
+func (e Environment) IsProduction() bool {
 	return e == production
 }
 
 // IsDevelop returns if the env equals to develop
-func (e Envroinment) IsDevelop() bool {
+func (e Environment) IsDevelop() bool {
 	return e == develop
 }
 
 // IsTest returns if the env equals to develop
-func (e Envroinment) IsTest() bool {
+func (e Environment) IsTest() bool {
 	return e == develop
 }
 
-var env = Envroinment(develop)
+var env = Environment(develop)
 
 // Env returns the env
-func Env() Envroinment {
+func Env() Environment {
 	return env
 }
 
@@ -109,7 +109,7 @@ func Config() Configuration {
 
 func init() {
 	if e := os.Getenv("SQS_ENV"); e != "" {
-		env = Envroinment(e)
+		env = Environment(e)
 	}
 
 	if Env().IsProduction() {

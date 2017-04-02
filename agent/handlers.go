@@ -7,11 +7,17 @@ import (
 	"github.com/gin-gonic/gin/binding"
 )
 
+// TODO: to delegate to service
+func (a *Agent) getMessages(ctx *gin.Context) {}
+
+// TODO: to delegate to service
+func (a *Agent) reportMessageID(ctx *gin.Context) {}
+
 // ReceiveMessage serve message pushing via http
 func (a *Agent) ReceiveMessage(ctx *gin.Context) {
 	type messageParam struct {
-		UserID    int64  `json:"userID"`
-		QueueName string `json:"queueName"`
+		UserID    int64  `json:"user_id"`
+		QueueName string `json:"queue_name"`
 		Content   string `json:"content"`
 		Index     int64  `josn:"index"`
 	}
@@ -29,9 +35,9 @@ func (a *Agent) ReceiveMessage(ctx *gin.Context) {
 // RegisterClient registers so can get the message
 func (a *Agent) RegisterClient(ctx *gin.Context) {
 	type registerParam struct {
-		UserID    int64    `json:"userID"`
-		ClientID  int64    `json:"clientID"`
-		QueueName string   `json:"queueName"`
+		UserID    int64    `json:"user_id"`
+		ClientID  int64    `json:"client_id"`
+		QueueName string   `json:"queue_name"`
 		Addresses []string `json:"addresses"`
 	}
 
@@ -56,8 +62,8 @@ func (a *Agent) RegisterClient(ctx *gin.Context) {
 // ApplyMessageIDRange try to apply the message id range for a queue
 func (a *Agent) ApplyMessageIDRange(ctx *gin.Context) {
 	var params = struct {
-		UserID    int64  `json:"userID"`
-		QueueName string `json:"queueName"`
+		UserID    int64  `json:"user_id"`
+		QueueName string `json:"queue_name"`
 		Size      int    `json:"size"`
 	}{}
 
@@ -74,8 +80,8 @@ func (a *Agent) ApplyMessageIDRange(ctx *gin.Context) {
 	}
 
 	var res = struct {
-		MessageIDBegin int64 `json:"messageIDBegin"`
-		MessageIDEnd   int64 `json:"messageIDEnd"`
+		MessageIDBegin int64 `json:"message_id_begin"`
+		MessageIDEnd   int64 `json:"message_id_end"`
 	}{
 		MessageIDBegin: maxID - int64(params.Size-1),
 		MessageIDEnd:   maxID,

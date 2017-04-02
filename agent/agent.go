@@ -34,8 +34,10 @@ func New(admin QueueService, address string) *Agent {
 func (agent *Agent) routing() {
 	s := gin.Default()
 	group := s.Group("/")
+	group.GET("/messages", agent.getMessages)
 	group.POST("/message", agent.ReceiveMessage)
 	group.POST("/register", agent.RegisterClient)
 	group.PUT("/messageID", agent.ApplyMessageIDRange)
+	group.PUT("/receivedMessageID", agent.reportMessageID)
 	agent.Handler = s
 }
