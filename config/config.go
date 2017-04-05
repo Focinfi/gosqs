@@ -36,7 +36,7 @@ func (e Environment) IsDevelop() bool {
 
 // IsTest returns if the env equals to develop
 func (e Environment) IsTest() bool {
-	return e == develop
+	return e == test
 }
 
 var env = Environment(develop)

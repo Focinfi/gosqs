@@ -16,6 +16,7 @@ import (
 const (
 	jsonHTTPHeader = "application/json"
 
+	registerURLFormat                = "%s/register"
 	applyMessageIDURLFormat          = "%s/messageID"
 	pushMessageURLFormat             = "%s/message"
 	pullMessageURLFormat             = "%s/messages"
@@ -38,7 +39,7 @@ type Client struct {
 
 // QueueClient for one query client
 type QueueClient struct {
-	endPoint string
+	endpoint string
 	serving  string
 	BaseInfo
 }
@@ -79,13 +80,29 @@ type Message struct {
 // Queue returns a new QueueClient with the given name
 func (cli *Client) Queue(name string) *QueueClient {
 	return &QueueClient{
-		endPoint: cli.opt.Endpoint,
+		endpoint: cli.opt.Endpoint,
 		BaseInfo: BaseInfo{
 			AccessKey: cli.opt.AccessKey,
 			SecretKey: cli.opt.SecretKey,
 			QueueName: name,
 		},
 	}
+}
+
+func (cli *QueueClient) Register() error {
+	b, err := json.Marshal(cli.BaseInfo)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf(registerURLFormat, urlutil.MakeURL(cli.endpoint))
+	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }
 
 // PushMessage pushes a message
@@ -106,7 +123,7 @@ func (cli *QueueClient) PushMessage(content string) error {
 		return err
 	}
 
-	url := fmt.Sprintf(pushMessageURLFormat, urlutil.MakeURL(cli.endPoint))
+	url := fmt.Sprintf(pushMessageURLFormat, urlutil.MakeURL(cli.serving))
 	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(b))
 	if err != nil {
 		return err
@@ -122,7 +139,7 @@ func (cli *QueueClient) PushMessage(content string) error {
 
 // PullMessage for pull message request
 func (cli *QueueClient) PullMessage() ([]Message, error) {
-	url := fmt.Sprintf(pullMessageURLFormat, urlutil.MakeURL(cli.endPoint))
+	url := fmt.Sprintf(pullMessageURLFormat, urlutil.MakeURL(cli.serving))
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -145,7 +162,7 @@ func (cli *QueueClient) PullMessage() ([]Message, error) {
 
 // reportReceived reports the last received message id
 func (cli *QueueClient) reportReceived(messageID int64) error {
-	url := fmt.Sprintf(reportReceivedMessageIDURLFormat, cli.endPoint)
+	url := fmt.Sprintf(reportReceivedMessageIDURLFormat, cli.serving)
 	param := &reportReceivedParam{
 		BaseInfo:  cli.BaseInfo,
 		MessageID: messageID,
@@ -186,7 +203,7 @@ func (cli *QueueClient) applyMessageID() (int64, error) {
 		return -1, err
 	}
 
-	url := fmt.Sprintf(applyMessageIDURLFormat, urlutil.MakeURL(cli.endPoint))
+	url := fmt.Sprintf(applyMessageIDURLFormat, urlutil.MakeURL(cli.serving))
 	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(b))
 	if err != nil {
 		return -1, err
