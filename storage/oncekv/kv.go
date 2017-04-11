@@ -15,7 +15,7 @@ func (kv *KV) Get(key string) (string, error) {
 
 	val, err := kv.db.Get(key)
 	if err == client.ErrDataNotFound {
-		return "", errors.DBNotFound
+		return "", errors.DataNotFound
 	}
 
 	if err != nil {

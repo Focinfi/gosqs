@@ -2,19 +2,52 @@ package agent
 
 import (
 	"github.com/Focinfi/sqs/log"
-	"github.com/Focinfi/sqs/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
 
-// TODO: to delegate to service
-func (a *Agent) getMessages(ctx *gin.Context) {}
+type basicParam struct {
+	UserID    int64  `json:"user_id"`
+	QueueName string `json:"queue_name"`
+	SquadName string `json:"squad_name,omitempty"`
+}
 
-// TODO: to delegate to service
-func (a *Agent) reportMessageID(ctx *gin.Context) {}
+// ApplyNode register a consumer which is ready to pull messages for a squad of a queue
+func (agt *MasterAgent) ApplyNode(ctx *gin.Context) {
+	params := &basicParam{}
+	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
+		responseErr(ctx, err)
+		return
+	}
 
-// ReceiveMessage serve message pushing via http
-func (a *Agent) ReceiveMessage(ctx *gin.Context) {
+	node, err := agt.MasterService.AssignNode(params.UserID, params.QueueName, params.SquadName)
+	if err != nil {
+		responseErr(ctx, err)
+		return
+	}
+
+	responseOKData(ctx, gin.H{"node": node})
+}
+
+func (a *QueueAgent) PullMessages(ctx *gin.Context) {
+}
+
+func (a *QueueAgent) ReportMaxReceivedMessageID(ctx *gin.Context) {
+	params := &struct {
+		basicParam
+		MessageID int64 `json:"message_id"`
+	}{}
+	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
+		responseErr(ctx, err)
+		return
+	}
+
+	err := a.QueueService.ReportMaxReceivedMessageID(params.UserID, params.QueueName, params.SquadName, params.MessageID)
+	responseErr(ctx, err)
+}
+
+// PushMessage serve message pushing via http
+func (a *QueueAgent) ReceiveMessage(ctx *gin.Context) {
 	type messageParam struct {
 		UserID    int64  `json:"user_id"`
 		QueueName string `json:"queue_name"`
@@ -28,39 +61,12 @@ func (a *Agent) ReceiveMessage(ctx *gin.Context) {
 		return
 	}
 
-	err := a.QueueService.ReceiveMessage(params.UserID, params.QueueName, params.Content, params.Index)
-	responseErr(ctx, err)
-}
-
-// RegisterClient registers so can get the message
-func (a *Agent) RegisterClient(ctx *gin.Context) {
-	type registerParam struct {
-		UserID    int64    `json:"user_id"`
-		ClientID  int64    `json:"client_id"`
-		QueueName string   `json:"queue_name"`
-		Addresses []string `json:"addresses"`
-	}
-
-	params := &registerParam{}
-	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		responseErr(ctx, err)
-		return
-	}
-
-	client := &models.Client{
-		UserID:    params.UserID,
-		ID:        params.ClientID,
-		QueueName: params.QueueName,
-		Publisher: a.Address,
-		Addresses: params.Addresses,
-	}
-
-	err := a.QueueService.RegisterClient(client)
+	err := a.QueueService.PushMessage(params.UserID, params.QueueName, params.Content, params.Index)
 	responseErr(ctx, err)
 }
 
 // ApplyMessageIDRange try to apply the message id range for a queue
-func (a *Agent) ApplyMessageIDRange(ctx *gin.Context) {
+func (a *QueueAgent) ApplyMessageIDRange(ctx *gin.Context) {
 	var params = struct {
 		UserID    int64  `json:"user_id"`
 		QueueName string `json:"queue_name"`

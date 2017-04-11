@@ -16,11 +16,14 @@ import (
 const (
 	jsonHTTPHeader = "application/json"
 
-	registerURLFormat                = "%s/register"
+	applyNodeURLFormat               = "%s/applyNode"
 	applyMessageIDURLFormat          = "%s/messageID"
 	pushMessageURLFormat             = "%s/message"
 	pullMessageURLFormat             = "%s/messages"
 	reportReceivedMessageIDURLFormat = "%s/receivedMessageID"
+
+	// DefaultSquad is the default squad name
+	DefaultSquad = "default"
 )
 
 type Option struct {
@@ -39,8 +42,8 @@ type Client struct {
 
 // QueueClient for one query client
 type QueueClient struct {
-	endpoint string
-	serving  string
+	endpoint    string
+	servingNode string
 	BaseInfo
 }
 
@@ -49,6 +52,11 @@ type BaseInfo struct {
 	AccessKey string `json:"access_key"`
 	SecretKey string `json:"secret_key"`
 	QueueName string `json:"queue_name"`
+	SquadName string `json:"squad_name,omitempty"`
+}
+
+type registerResponseParam struct {
+	Node string `json:"node"`
 }
 
 type pushMessageParam struct {
@@ -73,35 +81,59 @@ type reportReceivedParam struct {
 }
 
 type Message struct {
-	MessageID int64
-	Content   string
+	MessageID int64  `json:"message_id"`
+	Content   string `json:"content"`
 }
 
 // Queue returns a new QueueClient with the given name
-func (cli *Client) Queue(name string) *QueueClient {
+func (cli *Client) Queue(name string, squad string) (*QueueClient, error) {
+	if name == "" {
+		return nil, errors.New("queue can not be empty")
+	}
+
+	if squad == "" {
+		squad = DefaultSquad
+	}
+
 	return &QueueClient{
 		endpoint: cli.opt.Endpoint,
 		BaseInfo: BaseInfo{
 			AccessKey: cli.opt.AccessKey,
 			SecretKey: cli.opt.SecretKey,
 			QueueName: name,
+			SquadName: squad,
 		},
-	}
+	}, nil
 }
 
-func (cli *QueueClient) Register() error {
+func (cli *QueueClient) ApplyNode() error {
 	b, err := json.Marshal(cli.BaseInfo)
 	if err != nil {
 		return err
 	}
 
-	url := fmt.Sprintf(registerURLFormat, urlutil.MakeURL(cli.endpoint))
+	url := fmt.Sprintf(applyNodeURLFormat, urlutil.MakeURL(cli.endpoint))
 	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	respData := &registerResponseParam{}
+	if err := json.Unmarshal(respBytes, respData); err != nil {
+		return err
+	}
+
+	if respData.Node == "" {
+		return errors.New("failed to register for a server IP")
+	}
+
+	cli.servingNode = respData.Node
 	return nil
 }
 
@@ -123,7 +155,7 @@ func (cli *QueueClient) PushMessage(content string) error {
 		return err
 	}
 
-	url := fmt.Sprintf(pushMessageURLFormat, urlutil.MakeURL(cli.serving))
+	url := fmt.Sprintf(pushMessageURLFormat, urlutil.MakeURL(cli.servingNode))
 	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(b))
 	if err != nil {
 		return err
@@ -139,17 +171,20 @@ func (cli *QueueClient) PushMessage(content string) error {
 
 // PullMessage for pull message request
 func (cli *QueueClient) PullMessage() ([]Message, error) {
-	url := fmt.Sprintf(pullMessageURLFormat, urlutil.MakeURL(cli.serving))
-	resp, err := http.Get(url)
+	url := fmt.Sprintf(pullMessageURLFormat, urlutil.MakeURL(cli.servingNode))
+	paramBytes, err := json.Marshal(cli.BaseInfo)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(paramBytes))
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	b, err := ioutil.ReadAll(resp.Body)
-
+	respBytes, err := ioutil.ReadAll(resp.Body)
 	messages := []Message{}
-	if err := json.Unmarshal(b, messages); err != nil {
+	if err := json.Unmarshal(respBytes, messages); err != nil {
 		return nil, err
 	}
 
@@ -162,7 +197,7 @@ func (cli *QueueClient) PullMessage() ([]Message, error) {
 
 // reportReceived reports the last received message id
 func (cli *QueueClient) reportReceived(messageID int64) error {
-	url := fmt.Sprintf(reportReceivedMessageIDURLFormat, cli.serving)
+	url := fmt.Sprintf(reportReceivedMessageIDURLFormat, cli.servingNode)
 	param := &reportReceivedParam{
 		BaseInfo:  cli.BaseInfo,
 		MessageID: messageID,
@@ -203,7 +238,7 @@ func (cli *QueueClient) applyMessageID() (int64, error) {
 		return -1, err
 	}
 
-	url := fmt.Sprintf(applyMessageIDURLFormat, urlutil.MakeURL(cli.serving))
+	url := fmt.Sprintf(applyMessageIDURLFormat, urlutil.MakeURL(cli.servingNode))
 	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(b))
 	if err != nil {
 		return -1, err

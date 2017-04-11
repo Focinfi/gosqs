@@ -22,7 +22,7 @@ func (s *Queue) All(userID int64) ([]models.Queue, error) {
 	key := models.QueueListKey(userID)
 
 	val, findErr := s.db.Get(key)
-	if findErr == errors.DBNotFound {
+	if findErr == errors.DataNotFound {
 		return nil, errors.UserNotFound
 	}
 
@@ -95,7 +95,7 @@ func (s *Queue) UpdateRecentMessageID(userID int64, queueName string, newID int6
 	newIDVal := strconvutil.Int64toa(newID)
 
 	curIDVal, getErr := s.db.Get(k)
-	if getErr == errors.DBNotFound {
+	if getErr == errors.DataNotFound {
 		return s.db.Put(k, newIDVal)
 	}
 
@@ -159,7 +159,7 @@ func (s *Queue) ApplyMessageIDRange(userID int64, queueName string, size int) (i
 func (s *Queue) MessageMaxID(userID int64, queueName string) (int64, error) {
 	key := models.QueueMaxIDKey(userID, queueName)
 	val, getErr := s.db.Get(key)
-	if getErr == errors.DBNotFound {
+	if getErr == errors.DataNotFound {
 		return -1, errors.DataLost(key)
 	}
 

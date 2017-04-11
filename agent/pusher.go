@@ -9,7 +9,7 @@ import (
 )
 
 // PushMessage push message to all clients
-func (Agent) PushMessage(addresses []string, message string) chan bool {
+func (QueueAgent) PushMessage(addresses []string, message string) chan bool {
 	if len(addresses) == 0 || message == "" {
 		return nil
 	}

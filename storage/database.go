@@ -21,7 +21,7 @@ func init() {
 	// map
 	defaultKV = gomap.New()
 
-	// etcd kv
+	// etcd db
 	if kv, err := etcd.NewKV(); err != nil {
 		panic(err)
 	} else {

@@ -62,6 +62,7 @@ type Configuration struct {
 	MaxTryMessageCount         int
 	OncekvMetaRefreshPeroid    time.Duration
 	IdealKVResponseDuration    time.Duration
+	PullMessageCount           int
 }
 
 func newDefaultConfig() Configuration {
@@ -80,6 +81,7 @@ func newDefaultConfig() Configuration {
 		MaxTryMessageCount:         3,
 		OncekvMetaRefreshPeroid:    time.Second,
 		IdealKVResponseDuration:    time.Millisecond * 50,
+		PullMessageCount:           5,
 	}
 }
 
@@ -99,6 +101,7 @@ func Config() Configuration {
 			MaxTryMessageCount:         10,
 			OncekvMetaRefreshPeroid:    time.Second,
 			IdealKVResponseDuration:    time.Millisecond * 50,
+			PullMessageCount:           10,
 		}
 	case developEnv:
 		return newDefaultConfig()

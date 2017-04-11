@@ -6,12 +6,12 @@ import (
 	"github.com/Focinfi/sqs/example"
 	"github.com/Focinfi/sqs/external"
 	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/service"
+	"github.com/Focinfi/sqs/node"
 )
 
 func main() {
 	queue := models.NewQueue(external.Root.ID(), example.Greeting)
-	if err := service.AddQueue(queue); err != nil {
+	if err := node.AddQueue(queue); err != nil {
 		panic(err)
 	}
 
@@ -45,9 +45,9 @@ func main() {
 	}
 
 	for _, client := range clients {
-		if err := service.AddClient(client); err != nil {
+		if err := node.AddClient(client); err != nil {
 			panic(err)
 		}
 	}
-	service.Start(":5546")
+	node.Start(":5546")
 }
