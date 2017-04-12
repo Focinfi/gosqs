@@ -11,10 +11,6 @@ type database struct {
 
 var db = &database{Storage: storage.DefaultStorage}
 
-func (d *database) RegisterClient(c *models.Client) (err error) {
-	return nil
-}
-
 // AddQueue adds a queue into root queues
 func AddQueue(q *models.Queue) error {
 	if err := db.Queue.Add(q); err != nil {
@@ -27,4 +23,8 @@ func AddQueue(q *models.Queue) error {
 // Queues returns all queues
 func Queues(userID int64) ([]models.Queue, error) {
 	return db.Queue.All(userID)
+}
+
+func AllNodes() ([]string, error) {
+	return nil, nil
 }

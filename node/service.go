@@ -16,9 +16,11 @@ var (
 
 // Service for one user info
 type Service struct {
+	addr       string
 	masterAddr string
 	*database
 	*agent.QueueAgent
+	info *Info
 }
 
 func (s *Service) PullMessage(userID int64, queueName, squadName string, length int) ([]models.Message, error) {
@@ -68,10 +70,22 @@ func (s *Service) ApplyMessageIDRange(userID int64, queueName string, size int) 
 	return s.Queue.ApplyMessageIDRange(userID, queueName, size)
 }
 
-// Start starts services
-func Start(address string) {
-	var defaultService = &Service{database: db}
-	defaultService.QueueAgent = agent.NewQueueAgent(defaultService, address)
+func (s *Service) Info() Info {
+	return *s.info
+}
 
-	log.Biz.Fatal(http.ListenAndServe(address, defaultService.QueueAgent))
+func (s *Service) join() error {
+	return nil
+}
+
+// Start starts services
+func Start(addr string, masterAddr string) {
+	var defaultService = &Service{database: db, masterAddr: masterAddr, info: &Info{Node: addr}}
+	defaultService.QueueAgent = agent.NewQueueAgent(defaultService, addr)
+
+	if err := defaultService.join(); err != nil {
+		panic(err)
+	}
+
+	log.Biz.Fatal(http.ListenAndServe(defaultService.addr, defaultService.QueueAgent))
 }

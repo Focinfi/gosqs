@@ -11,7 +11,7 @@ import (
 var defaultKV models.KV
 var defaultIncrementer models.Incrementer
 var etcdIncrementer *etcd.Incrementer
-var etcdKV *etcd.KV
+var EtcdKV *etcd.KV
 var etcdWatcher *etcd.Watcher
 var mapKV *gomap.KV
 var onceKV *oncekv.KV
@@ -25,14 +25,14 @@ func init() {
 	if kv, err := etcd.NewKV(); err != nil {
 		panic(err)
 	} else {
-		etcdKV = kv
+		EtcdKV = kv
 	}
 
 	// etcd watcher
-	etcdWatcher = etcd.NewWatcher(etcdKV)
+	etcdWatcher = etcd.NewWatcher(EtcdKV)
 
 	// etcd incrementer
-	etcdIncrementer = etcd.NewIncrementer(etcdKV)
+	etcdIncrementer = etcd.NewIncrementer(EtcdKV)
 	defaultIncrementer = etcdIncrementer
 
 	// mapkv
