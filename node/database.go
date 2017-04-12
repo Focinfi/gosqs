@@ -2,9 +2,7 @@ package node
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage"
 )
@@ -28,19 +26,19 @@ func (d *database) PushMessage(userID int64, queueName, content string, index in
 		return err
 	}
 
-	// try to update recent message index in background
-	time.AfterFunc(time.Second, func() {
-		err := d.Queue.UpdateRecentMessageID(userID, queueName, index)
-		if err != nil {
-			log.DB.Error(err)
-		}
-	})
-
 	return nil
 }
 
-func (d *database) updateSquadReceivedMessageID(userID int64, queueName, squadName string, index int64) error {
-	//key := models.SquadKey(userID, queueName, squadName)
+func (d *database) updateSquadReceivedMessageID(userID int64, queueName, squadName string, messageID int64) error {
+	squad, err := d.Squad.One(userID, queueName, squadName)
+	if err != nil {
+		return err
+	}
 
-	return nil
+	if squad.ReceivedMessageID >= messageID {
+		return nil
+	}
+
+	squad.ReceivedMessageID = messageID
+	return d.Squad.Update(squad)
 }

@@ -2,6 +2,7 @@ package agent
 
 import (
 	"github.com/Focinfi/sqs/log"
+	"github.com/Focinfi/sqs/node"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
@@ -12,15 +13,26 @@ type basicParam struct {
 	SquadName string `json:"squad_name,omitempty"`
 }
 
+// JoinNode for joining a new node
+func (a *MasterAgent) JoinNode(ctx *gin.Context) {
+	params := node.Info{}
+	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
+		responseErr(ctx, err)
+		return
+	}
+
+	a.MasterService.Join(params)
+}
+
 // ApplyNode register a consumer which is ready to pull messages for a squad of a queue
-func (agt *MasterAgent) ApplyNode(ctx *gin.Context) {
+func (a *MasterAgent) ApplyNode(ctx *gin.Context) {
 	params := &basicParam{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
 		responseErr(ctx, err)
 		return
 	}
 
-	node, err := agt.MasterService.AssignNode(params.UserID, params.QueueName, params.SquadName)
+	node, err := a.MasterService.AssignNode(params.UserID, params.QueueName, params.SquadName)
 	if err != nil {
 		responseErr(ctx, err)
 		return
@@ -94,4 +106,8 @@ func (a *QueueAgent) ApplyMessageIDRange(ctx *gin.Context) {
 	}
 
 	responseOKData(ctx, res)
+}
+
+func (a *QueueAgent) Info(ctx *gin.Context) {
+	responseOKData(ctx, a.QueueService.Info())
 }

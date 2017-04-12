@@ -3,11 +3,22 @@ package node
 import (
 	"net/http"
 
+	"encoding/json"
+	"fmt"
+
+	"bytes"
+
+	"github.com/Focinfi/oncekv/utils/urlutil"
 	"github.com/Focinfi/sqs/agent"
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+)
+
+const (
+	joinURLFormat  = "%s/join"
+	jsonHTTPHeader = "application/json"
 )
 
 var (
@@ -71,10 +82,26 @@ func (s *Service) ApplyMessageIDRange(userID int64, queueName string, size int) 
 }
 
 func (s *Service) Info() Info {
+	// TODO: fetch current node info
 	return *s.info
 }
 
 func (s *Service) join() error {
+	infoBytes, err := json.Marshal(s.info)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf(joinURLFormat, urlutil.MakeURL(s.masterAddr))
+	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(infoBytes))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("can not join into master")
+	}
 	return nil
 }
 

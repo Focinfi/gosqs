@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Status contains info of a failed request
+// Status contains Info of a failed request
 type Status struct {
 	Code    int         `json:"code,string"`
 	Message string      `json:"message"`
