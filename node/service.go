@@ -30,18 +30,46 @@ type Service struct {
 	addr       string
 	masterAddr string
 	*database
-	*agent.QueueAgent
-	info *Info
+	agent *agent.QueueAgent
+	info  *models.NodeInfo
 }
 
 func (s *Service) PullMessage(userID int64, queueName, squadName string, length int) ([]models.Message, error) {
 	squad, err := s.Squad.One(userID, queueName, squadName)
+
+	log.Biz.Infoln("[PullMessage]", squad, err)
+
+	if err == errors.DataNotFound {
+		maxMessageID, err := s.database.Storage.Queue.MessageMaxID(userID, queueName)
+		if err != nil {
+			return nil, err
+		}
+
+		squad = &models.Squad{
+			Name:              squadName,
+			UserID:            userID,
+			QueueName:         queueName,
+			ReceivedMessageID: maxMessageID,
+		}
+
+		if err := s.Storage.Squad.Add(*squad); err != nil {
+			return nil, err
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
+	log.Internal.Infoln("squad:", squad)
+
 	// TODO: to confirm the concurrent requests result
-	return s.Message.Nextn(userID, queueName, squad.ReceivedMessageID, defaultPullMessageCount)
+	maxMessageID, err := s.database.Queue.MessageMaxID(userID, queueName)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.Message.Nextn(userID, queueName, squad.ReceivedMessageID, maxMessageID, defaultPullMessageCount)
 }
 
 func (s *Service) ReportMaxReceivedMessageID(userID int64, queueName, squadName string, messageID int64) error {
@@ -61,6 +89,7 @@ func (s *Service) ReportMaxReceivedMessageID(userID int64, queueName, squadName 
 // PushMessage receives message
 func (s *Service) PushMessage(userID int64, queueName, content string, index int64) error {
 	maxID, err := s.Queue.MessageMaxID(userID, queueName)
+	log.Internal.Infoln("service [PushMessage]", index, maxID)
 	if err != nil {
 		return err
 	}
@@ -81,8 +110,9 @@ func (s *Service) ApplyMessageIDRange(userID int64, queueName string, size int) 
 	return s.Queue.ApplyMessageIDRange(userID, queueName, size)
 }
 
-func (s *Service) Info() Info {
+func (s *Service) Info() models.NodeInfo {
 	// TODO: fetch current node info
+	log.Biz.Info(s.info)
 	return *s.info
 }
 
@@ -105,14 +135,24 @@ func (s *Service) join() error {
 	return nil
 }
 
-// Start starts services
-func Start(addr string, masterAddr string) {
-	var defaultService = &Service{database: db, masterAddr: masterAddr, info: &Info{Node: addr}}
-	defaultService.QueueAgent = agent.NewQueueAgent(defaultService, addr)
+func New(addr string, masterAddr string) *Service {
+	service := &Service{
+		addr:       addr,
+		database:   db,
+		masterAddr: masterAddr,
+		info:       &models.NodeInfo{Addr: addr},
+	}
 
-	if err := defaultService.join(); err != nil {
+	service.agent = agent.NewQueueAgent(service, addr)
+
+	return service
+}
+
+// Start starts services
+func (s *Service) Start() {
+	if err := s.join(); err != nil {
 		panic(err)
 	}
 
-	log.Biz.Fatal(http.ListenAndServe(defaultService.addr, defaultService.QueueAgent))
+	log.Biz.Fatal(http.ListenAndServe(s.addr, s.agent))
 }

@@ -1,22 +1,24 @@
 package agent
 
 import (
+	"github.com/Focinfi/sqs/external"
 	"github.com/Focinfi/sqs/log"
-	"github.com/Focinfi/sqs/node"
+	"github.com/Focinfi/sqs/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
 
 type basicParam struct {
-	UserID    int64  `json:"user_id"`
+	Token     string `json:"token"`
 	QueueName string `json:"queue_name"`
 	SquadName string `json:"squad_name,omitempty"`
 }
 
 // JoinNode for joining a new node
 func (a *MasterAgent) JoinNode(ctx *gin.Context) {
-	params := node.Info{}
-	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
+	params := models.NodeInfo{}
+	if err := binding.JSON.Bind(ctx.Request, &params); err != nil {
+		log.Biz.Error(err)
 		responseErr(ctx, err)
 		return
 	}
@@ -26,24 +28,63 @@ func (a *MasterAgent) JoinNode(ctx *gin.Context) {
 
 // ApplyNode register a consumer which is ready to pull messages for a squad of a queue
 func (a *MasterAgent) ApplyNode(ctx *gin.Context) {
-	params := &basicParam{}
+	params := &struct {
+		models.UserAuth
+		basicParam
+	}{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
 		responseErr(ctx, err)
 		return
 	}
 
-	node, err := a.MasterService.AssignNode(params.UserID, params.QueueName, params.SquadName)
+	userID, err := external.GetUserWithKey(params.AccessKey, params.SecretKey)
+	if err != nil {
+		responseErr(ctx, err)
+	}
+
+	node, err := a.MasterService.AssignNode(userID, params.QueueName, params.SquadName)
 	if err != nil {
 		responseErr(ctx, err)
 		return
 	}
 
-	responseOKData(ctx, gin.H{"node": node})
+	log.Internal.Println("AssignNode:", node)
+	tokenCode, err := makeToekn(userID)
+	if err != nil {
+		responseErr(ctx, err)
+		return
+	}
+
+	responseOKData(ctx, gin.H{"node": node, "token": tokenCode})
 }
 
+// PullMessages for pulling message
 func (a *QueueAgent) PullMessages(ctx *gin.Context) {
+	params := &basicParam{}
+	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
+		log.Internal.Error(err)
+		responseErr(ctx, err)
+		return
+	}
+
+	userID, err := getUserID(params.Token)
+	if err != nil {
+		log.Internal.Error(err)
+		responseErr(ctx, err)
+		return
+	}
+
+	log.Internal.Infoln("[PullMessage] userID:", userID)
+	messages, err := a.QueueService.PullMessage(userID, params.QueueName, params.SquadName, 10)
+	if err != nil {
+		responseErr(ctx, err)
+		return
+	}
+
+	responseOKData(ctx, gin.H{"messages": messages})
 }
 
+// ReportMaxReceivedMessageID handles the request for reporting the max id of received messages
 func (a *QueueAgent) ReportMaxReceivedMessageID(ctx *gin.Context) {
 	params := &struct {
 		basicParam
@@ -53,45 +94,59 @@ func (a *QueueAgent) ReportMaxReceivedMessageID(ctx *gin.Context) {
 		responseErr(ctx, err)
 		return
 	}
+	userID, err := getUserID(params.Token)
+	if err != nil {
+		responseErr(ctx, err)
+		return
+	}
 
-	err := a.QueueService.ReportMaxReceivedMessageID(params.UserID, params.QueueName, params.SquadName, params.MessageID)
+	err = a.QueueService.ReportMaxReceivedMessageID(userID, params.QueueName, params.SquadName, params.MessageID)
 	responseErr(ctx, err)
 }
 
-// PushMessage serve message pushing via http
+// ReceiveMessage serve message pushing via http
 func (a *QueueAgent) ReceiveMessage(ctx *gin.Context) {
 	type messageParam struct {
-		UserID    int64  `json:"user_id"`
-		QueueName string `json:"queue_name"`
+		basicParam
 		Content   string `json:"content"`
-		Index     int64  `josn:"index"`
+		MessageID int64  `json:"message_id"`
 	}
-
 	params := &messageParam{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
 		responseErr(ctx, err)
 		return
 	}
+	log.Internal.Infoln("[ReceiveMessage]", params)
 
-	err := a.QueueService.PushMessage(params.UserID, params.QueueName, params.Content, params.Index)
+	userID, err := getUserID(params.Token)
+	if err != nil {
+		responseErr(ctx, err)
+		return
+	}
+
+	err = a.QueueService.PushMessage(userID, params.QueueName, params.Content, params.MessageID)
 	responseErr(ctx, err)
 }
 
 // ApplyMessageIDRange try to apply the message id range for a queue
 func (a *QueueAgent) ApplyMessageIDRange(ctx *gin.Context) {
 	var params = struct {
-		UserID    int64  `json:"user_id"`
-		QueueName string `json:"queue_name"`
-		Size      int    `json:"size"`
+		basicParam
+		Size int `json:"size"`
 	}{}
-
 	if err := binding.JSON.Bind(ctx.Request, &params); err != nil {
 		log.Biz.Infoln(err)
 		responseErr(ctx, err)
 		return
 	}
 
-	maxID, err := a.QueueService.ApplyMessageIDRange(params.UserID, params.QueueName, params.Size)
+	userID, err := getUserID(params.Token)
+	if err != nil {
+		responseErr(ctx, err)
+		return
+	}
+
+	maxID, err := a.QueueService.ApplyMessageIDRange(userID, params.QueueName, params.Size)
 	if err != nil {
 		responseErr(ctx, err)
 		return
@@ -108,6 +163,7 @@ func (a *QueueAgent) ApplyMessageIDRange(ctx *gin.Context) {
 	responseOKData(ctx, res)
 }
 
+// Info response the info of current node
 func (a *QueueAgent) Info(ctx *gin.Context) {
 	responseOKData(ctx, a.QueueService.Info())
 }

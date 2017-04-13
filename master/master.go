@@ -13,7 +13,6 @@ import (
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/node"
 	"github.com/Focinfi/sqs/storage"
 	"github.com/Focinfi/sqs/util/urlutil"
 )
@@ -21,13 +20,14 @@ import (
 const (
 	nodesKey              = "sqs.nodes"
 	getNodeStatsURLFormat = "%s/stats"
+	logPrefix             = "[sqs.master]"
 )
 
 var (
 	heartbeatPeriod = time.Second
 )
 
-type nodes map[string]node.Info
+type nodes map[string]models.NodeInfo
 
 func (m nodes) nodeURLSlice() []string {
 	nodes := make([]string, len(m))
@@ -41,7 +41,7 @@ func (m nodes) nodeURLSlice() []string {
 }
 
 func (m nodes) statsSlice() InfoSlice {
-	slice := make([]node.Info, len(m))
+	slice := make([]models.NodeInfo, len(m))
 	i := 0
 	for node := range m {
 		slice[i] = m[node]
@@ -51,9 +51,9 @@ func (m nodes) statsSlice() InfoSlice {
 }
 
 func nodeURLSliceToNodes(nodes []string) nodes {
-	m := make(map[string]node.Info, len(nodes))
+	m := make(map[string]models.NodeInfo, len(nodes))
 	for _, node := range nodes {
-		m[node] = node.Info{}
+		m[node] = models.NodeInfo{}
 	}
 
 	return m
@@ -81,11 +81,13 @@ func NewService(address string) *Service {
 		panic(err)
 	}
 	service.nodes = nodeURLSliceToNodes(urlSlice)
+	log.DB.Infoln(logPrefix, "init nodes:", service.nodes)
 
 	return service
 }
 
 func (s *Service) Start() {
+	go s.heartbeat()
 	http.ListenAndServe(s.address, s.agent)
 }
 
@@ -99,28 +101,46 @@ func (s *Service) AssignNode(userID int64, queueName string, squadName string) (
 	}
 
 	sort.Sort(nodeStatsSlice)
-	return nodeStatsSlice[0].Node, nil
+	log.DB.Infoln(logPrefix, "nodes:", s.nodes)
+	return nodeStatsSlice[0].Addr, nil
 }
 
-func (s *Service) Join(stats node.Info) {
+func (s *Service) Join(info models.NodeInfo) {
 	s.Lock()
 	defer s.Unlock()
 
-	s.nodes[stats.Node] = stats
+	log.Biz.Infoln(logPrefix, "to join:", info.Addr)
+	s.nodes[info.Addr] = info
+	if err := s.updateNodes(s.nodes.nodeURLSlice()); err != nil {
+		log.DB.Errorln(logPrefix, "failed to update nodes into db")
+	}
 }
 
 func (s *Service) fetchNodes() ([]string, error) {
 	val, err := s.db.Get(nodesKey)
+	if err == errors.DataNotFound {
+		return []string{}, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
 	nodes := []string{}
-	if err := json.Unmarshal([]byte(val), nodes); err != nil {
+	if err := json.Unmarshal([]byte(val), &nodes); err != nil {
 		return nil, err
 	}
 
 	return nodes, nil
+}
+
+func (s *Service) updateNodes(nodes []string) error {
+	nodesBytes, err := json.Marshal(nodes)
+	if err != nil {
+		return err
+	}
+
+	return s.db.Put(nodesKey, string(nodesBytes))
 }
 
 func (s *Service) heartbeat() {
@@ -132,21 +152,23 @@ func (s *Service) heartbeat() {
 		nodesMap := s.nodes
 		s.RUnlock()
 
+		log.DB.Infof("%s get stats from %d nodes", logPrefix, len(nodesMap))
 		for node := range nodesMap {
 			go func(n string) {
 				stats, err := s.getNodeStat(n)
 				if err != nil {
-					log.Internal.Errorf("node[%s] can not connect\n", n)
+					log.Internal.Errorf("node[%s] can not be connected\n", n)
 					s.removeNode(n)
+					return
 				}
 
-				s.updateNode(stats)
+				s.updateNode(*stats)
 			}(node)
 		}
 	}
 }
 
-func (s *Service) getNodeStat(node string) (node.Info, error) {
+func (s *Service) getNodeStat(node string) (*models.NodeInfo, error) {
 	url := fmt.Sprintf(getNodeStatsURLFormat, urlutil.MakeURL(node))
 	resp, err := http.Get(url)
 	if err != nil {
@@ -159,9 +181,12 @@ func (s *Service) getNodeStat(node string) (node.Info, error) {
 		return nil, err
 	}
 
-	stats := node.Info{}
-	err = json.Unmarshal(respBytes, &stats)
-	return stats, err
+	stats := &struct {
+		models.HTTPStatusMeta
+		Data models.NodeInfo
+	}{}
+	err = json.Unmarshal(respBytes, stats)
+	return &stats.Data, err
 }
 
 func (s *Service) removeNode(node string) {
@@ -170,16 +195,18 @@ func (s *Service) removeNode(node string) {
 
 	if _, ok := s.nodes[node]; ok {
 		delete(s.nodes, node)
+		log.DB.Errorf("%s node[%s] removed\n", logPrefix, node)
+		// TODO: alert for handle failed node
 	}
 }
 
-func (s *Service) updateNode(info node.Info) {
+func (s *Service) updateNode(info models.NodeInfo) {
 	s.Lock()
 	defer s.Unlock()
 
-	if old := s.nodes[info.Node]; old == info {
+	if old := s.nodes[info.Addr]; old == info {
 		return
 	}
 
-	s.nodes[info.Node] = info
+	s.nodes[info.Addr] = info
 }

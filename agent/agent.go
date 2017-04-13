@@ -4,14 +4,13 @@ import (
 	"net/http"
 
 	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/node"
 	"github.com/gin-gonic/gin"
 )
 
 // MasterService can distributes a node for a consume
 type MasterService interface {
 	AssignNode(userID int64, queueName string, squadName string) (string, error)
-	Join(info node.Info)
+	Join(info models.NodeInfo)
 }
 
 // QueueService defines what a queue admin should do
@@ -20,7 +19,7 @@ type QueueService interface {
 	PushMessage(userID int64, queueName, content string, index int64) error
 	PullMessage(userID int64, queueName, squadName string, length int) ([]models.Message, error)
 	ReportMaxReceivedMessageID(userID int64, queueName, squadName string, messageID int64) error
-	Info() node.Info
+	Info() models.NodeInfo
 }
 
 type MasterAgent struct {
@@ -67,10 +66,10 @@ func NewQueueAgent(service QueueService, address string) *QueueAgent {
 func (a *QueueAgent) queueAgentRouting() {
 	s := gin.Default()
 	group := s.Group("/")
-	group.GET("/messages", a.PullMessages)
+	group.POST("/messages", a.PullMessages)
 	group.POST("/message", a.ReceiveMessage)
-	group.PUT("/messageID", a.ApplyMessageIDRange)
-	group.PUT("/receivedMessageID", a.ReportMaxReceivedMessageID)
+	group.POST("/messageID", a.ApplyMessageIDRange)
+	group.POST("/receivedMessageID", a.ReportMaxReceivedMessageID)
 	group.GET("/stats", a.Info)
 	a.Handler = s
 }

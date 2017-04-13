@@ -44,10 +44,10 @@ func (s *Message) One(userID int64, queueName string, index int64) (string, erro
 	return s.db.Get(key)
 }
 
-func (s *Message) Nextn(userID int64, queueName string, currentID int64, n int) ([]models.Message, error) {
+func (s *Message) Nextn(userID int64, queueName string, currentID int64, maxMassageID int64, n int) ([]models.Message, error) {
 	nextIdx := currentID + 1
-	upperID := nextIdx + int64(config.Config().MaxTryMessageCount)
-	messages := make([]models.Message, 0, n)
+	upperID := maxMassageID + int64(config.Config().MaxTryMessageCount)
+	messages := []models.Message{}
 
 	for nextIdx <= upperID {
 		if len(messages) >= n {
@@ -55,7 +55,8 @@ func (s *Message) Nextn(userID int64, queueName string, currentID int64, n int) 
 		}
 
 		msgContent, err := s.One(userID, queueName, nextIdx)
-		log.Biz.Infof("message[%d]='%s', err: %v", currentID, msgContent, err)
+		log.Biz.Infof("message nextIdx: %d, upperID: %d\n", nextIdx, upperID)
+		log.Biz.Infof("message[%d]='%s', err: %v, is not found: %v", nextIdx, msgContent, err, err == errors.DataNotFound)
 
 		if err == errors.DataNotFound {
 			nextIdx++
@@ -78,6 +79,7 @@ func (s *Message) Nextn(userID int64, queueName string, currentID int64, n int) 
 		}
 
 		messages = append(messages, message)
+		nextIdx++
 	}
 
 	return messages, nil
@@ -86,7 +88,7 @@ func (s *Message) Nextn(userID int64, queueName string, currentID int64, n int) 
 // Add adds a message
 func (s *Message) Add(m *models.Message) error {
 	_, getErr := s.One(m.UserID, m.QueueName, m.Index)
-	log.Biz.Printf("Get Error: %v, time: %v\n", getErr, time.Now())
+	log.Biz.Printf("Get(%d.%s.%d) Error: %v, time: %v\n", m.UserID, m.QueueName, m.Index, getErr, time.Now())
 
 	if getErr == errors.DataNotFound {
 		err := s.db.Put(models.MessageKey(m.UserID, m.QueueName, m.Index), m.Content)

@@ -18,3 +18,9 @@ var Root = UserFunc(func() int64 { return 1 })
 
 // TestClient for test client
 var TestClient = UserFunc(func() int64 { return 1 })
+
+// GetUserWithKey returns the userID with the params
+func GetUserWithKey(accessKey string, secretKey string) (int64, error) {
+	// TODO: authentication
+	return 1, nil
+}

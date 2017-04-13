@@ -10,11 +10,13 @@ import (
 
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
+	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/util/urlutil"
 )
 
 const (
 	jsonHTTPHeader = "application/json"
+	authCodeKey    = "auth_code"
 
 	applyNodeURLFormat               = "%s/applyNode"
 	applyMessageIDURLFormat          = "%s/messageID"
@@ -26,13 +28,11 @@ const (
 	DefaultSquad = "default"
 )
 
+// Option for Client options
 type Option struct {
 	// Endpoint for main server
 	Endpoint string
-	//AccessKey for sqs basic key
-	AccessKey string
-	// Secret for user auth
-	SecretKey string
+	models.UserAuth
 }
 
 // Client for one sqs client
@@ -40,23 +40,36 @@ type Client struct {
 	opt *Option
 }
 
+// New allocates a new Client
+func New(endpoint string, accessKey string, secretKey string) *Client {
+	return &Client{
+		opt: &Option{
+			Endpoint: endpoint,
+			UserAuth: models.UserAuth{
+				AccessKey: accessKey,
+				SecretKey: secretKey,
+			},
+		},
+	}
+}
+
 // QueueClient for one query client
 type QueueClient struct {
-	endpoint    string
+	*Client
 	servingNode string
 	BaseInfo
 }
 
 // BaseInfo for one client basic info
 type BaseInfo struct {
-	AccessKey string `json:"access_key"`
-	SecretKey string `json:"secret_key"`
+	Token     string `json:"token"`
 	QueueName string `json:"queue_name"`
 	SquadName string `json:"squad_name,omitempty"`
 }
 
 type registerResponseParam struct {
-	Node string `json:"node"`
+	Token string `json:"token,omitempty"`
+	Node  string `json:"node"`
 }
 
 type pushMessageParam struct {
@@ -96,23 +109,30 @@ func (cli *Client) Queue(name string, squad string) (*QueueClient, error) {
 	}
 
 	return &QueueClient{
-		endpoint: cli.opt.Endpoint,
+		Client: cli,
 		BaseInfo: BaseInfo{
-			AccessKey: cli.opt.AccessKey,
-			SecretKey: cli.opt.SecretKey,
 			QueueName: name,
 			SquadName: squad,
 		},
 	}, nil
 }
 
+// ApplyNode applies for a node
 func (cli *QueueClient) ApplyNode() error {
-	b, err := json.Marshal(cli.BaseInfo)
+	aplyParams := &struct {
+		models.UserAuth
+		BaseInfo
+	}{
+		UserAuth: cli.Client.opt.UserAuth,
+		BaseInfo: cli.BaseInfo,
+	}
+
+	b, err := json.Marshal(aplyParams)
 	if err != nil {
 		return err
 	}
 
-	url := fmt.Sprintf(applyNodeURLFormat, urlutil.MakeURL(cli.endpoint))
+	url := fmt.Sprintf(applyNodeURLFormat, urlutil.MakeURL(cli.Client.opt.Endpoint))
 	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(b))
 	if err != nil {
 		return err
@@ -124,16 +144,23 @@ func (cli *QueueClient) ApplyNode() error {
 		return err
 	}
 
-	respData := &registerResponseParam{}
+	type param struct {
+		models.HTTPStatusMeta
+		Data registerResponseParam
+	}
+	respData := &param{}
 	if err := json.Unmarshal(respBytes, respData); err != nil {
 		return err
 	}
 
-	if respData.Node == "" {
+	log.Biz.Infoln(string(respBytes))
+	data := respData.Data
+	if data.Node == "" || data.Token == "" {
 		return errors.New("failed to register for a server IP")
 	}
 
-	cli.servingNode = respData.Node
+	cli.servingNode = data.Node
+	cli.BaseInfo.Token = data.Token
 	return nil
 }
 
@@ -145,8 +172,11 @@ func (cli *QueueClient) PushMessage(content string) error {
 		return err
 	}
 
+	log.Internal.Infoln("applyMessageID:", id)
+
 	param := &pushMessageParam{
 		MessageID: id,
+		Content:   content,
 		BaseInfo:  cli.BaseInfo,
 	}
 
@@ -170,34 +200,49 @@ func (cli *QueueClient) PushMessage(content string) error {
 }
 
 // PullMessage for pull message request
-func (cli *QueueClient) PullMessage() ([]Message, error) {
-	url := fmt.Sprintf(pullMessageURLFormat, urlutil.MakeURL(cli.servingNode))
-	paramBytes, err := json.Marshal(cli.BaseInfo)
+func (cli *QueueClient) PullMessage(handler func([]Message) error) error {
+	reqBytes, err := json.Marshal(cli.BaseInfo)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(paramBytes))
+
+	url := fmt.Sprintf(pullMessageURLFormat, urlutil.MakeURL(cli.servingNode))
+	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(reqBytes))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer resp.Body.Close()
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	messages := []Message{}
-	if err := json.Unmarshal(respBytes, messages); err != nil {
-		return nil, err
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("filed to pull message, status code is %d\n", resp.StatusCode)
 	}
 
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	respParam := &struct {
+		models.HTTPStatusMeta
+		Data struct {
+			Messages []Message `json:"messages"`
+		}
+	}{}
+	if err := json.Unmarshal(respBytes, respParam); err != nil {
+		return err
+	}
+	messages := respParam.Data.Messages
 	if len(messages) > 0 {
+		log.Internal.Infoln(messages)
+		if err := handler(messages); err != nil {
+			return err
+		}
+
 		go cli.reportReceived(messages[len(messages)-1].MessageID)
 	}
 
-	return messages, nil
+	return nil
 }
 
 // reportReceived reports the last received message id
 func (cli *QueueClient) reportReceived(messageID int64) error {
-	url := fmt.Sprintf(reportReceivedMessageIDURLFormat, cli.servingNode)
+	url := fmt.Sprintf(reportReceivedMessageIDURLFormat, urlutil.MakeURL(cli.servingNode))
 	param := &reportReceivedParam{
 		BaseInfo:  cli.BaseInfo,
 		MessageID: messageID,
@@ -250,14 +295,17 @@ func (cli *QueueClient) applyMessageID() (int64, error) {
 		return -1, err
 	}
 
-	messageID := &applyMessageResponseParam{}
-	if err := json.Unmarshal(respBytes, messageID); err != nil {
+	respData := &struct {
+		BaseInfo
+		Data applyMessageResponseParam
+	}{}
+	if err := json.Unmarshal(respBytes, respData); err != nil {
 		return -1, err
 	}
 
-	if messageID.MessageIDEnd < messageID.MessageIDBegin {
+	if respData.Data.MessageIDEnd < respData.Data.MessageIDBegin {
 		return -1, errors.New("GET /appyMessageID response data broken: end < begin")
 	}
 
-	return messageID.MessageIDEnd, nil
+	return respData.Data.MessageIDEnd, nil
 }

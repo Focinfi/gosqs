@@ -1,8 +1,8 @@
 package master
 
-import "github.com/Focinfi/sqs/node"
+import "github.com/Focinfi/sqs/models"
 
-type InfoSlice []node.Info
+type InfoSlice []models.NodeInfo
 
 func (ss InfoSlice) Len() int {
 	return len(ss)

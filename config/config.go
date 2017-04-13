@@ -63,6 +63,7 @@ type Configuration struct {
 	OncekvMetaRefreshPeroid    time.Duration
 	IdealKVResponseDuration    time.Duration
 	PullMessageCount           int
+	DefaultMasterAddress       string
 }
 
 func newDefaultConfig() Configuration {
@@ -82,6 +83,7 @@ func newDefaultConfig() Configuration {
 		OncekvMetaRefreshPeroid:    time.Second,
 		IdealKVResponseDuration:    time.Millisecond * 50,
 		PullMessageCount:           5,
+		DefaultMasterAddress:       "127.0.0.1:5446",
 	}
 }
 

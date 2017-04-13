@@ -1,4 +1,7 @@
 package example
 
-// Greeting is fot the test queue name
+// Greeting is for the test queue name
 var Greeting = "greeting"
+
+// Home if for test squad name
+var Home = "home"
