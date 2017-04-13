@@ -21,7 +21,7 @@ type Message struct {
 func (s *Message) All(userID int64, queueName string, gorupID int64, filters ...interface{}) ([]int64, error) {
 	key := models.MessageListKey(userID, queueName, gorupID)
 	all, getErr := s.db.Get(key)
-	if getErr == errors.DBNotFound {
+	if getErr == errors.DataNotFound {
 		all = "[]"
 	}
 
@@ -44,53 +44,53 @@ func (s *Message) One(userID int64, queueName string, index int64) (string, erro
 	return s.db.Get(key)
 }
 
-// Next for next message of current Message
-func (s *Message) Next(userID int64, queueName string, index int64, maxIdx int64) (*models.Message, error) {
-	log.Biz.Infoln("NEXT: ", userID, queueName, index, maxIdx)
-	nextIdx := index + 1
-	upperIdx := maxIdx + int64(config.Config().MaxTryMessageCount)
-	var message string
+func (s *Message) Nextn(userID int64, queueName string, currentID int64, maxMassageID int64, n int) ([]models.Message, error) {
+	nextIdx := currentID + 1
+	upperID := maxMassageID + int64(config.Config().MaxTryMessageCount)
+	messages := []models.Message{}
 
-	for nextIdx <= upperIdx {
-		mVal, getErr := s.One(userID, queueName, nextIdx)
-		log.Biz.Infoln("mVal", mVal, getErr)
+	for nextIdx <= upperID {
+		if len(messages) >= n {
+			return messages, nil
+		}
 
-		if getErr == errors.DBNotFound {
+		msgContent, err := s.One(userID, queueName, nextIdx)
+		log.Biz.Infof("message nextIdx: %d, upperID: %d\n", nextIdx, upperID)
+		log.Biz.Infof("message[%d]='%s', err: %v, is not found: %v", nextIdx, msgContent, err, err == errors.DataNotFound)
+
+		if err == errors.DataNotFound {
 			nextIdx++
 			continue
 		}
 
-		if getErr != nil {
-			return nil, getErr
+		if err != nil {
+			return nil, err
 		}
 
-		if mVal == "" {
-			return nil, errors.DataLost(models.MessageKey(userID, queueName, index))
+		if msgContent == "" {
+			return nil, errors.DataLost(models.MessageKey(userID, queueName, currentID))
 		}
 
-		message = mVal
-		break
+		message := models.Message{
+			UserID:    userID,
+			QueueName: queueName,
+			Content:   msgContent,
+			Index:     nextIdx,
+		}
+
+		messages = append(messages, message)
+		nextIdx++
 	}
 
-	// next is nil
-	if nextIdx > upperIdx {
-		return nil, nil
-	}
-
-	return &models.Message{
-		UserID:    userID,
-		QueueName: queueName,
-		Index:     nextIdx,
-		Content:   message,
-	}, nil
+	return messages, nil
 }
 
 // Add adds a message
 func (s *Message) Add(m *models.Message) error {
 	_, getErr := s.One(m.UserID, m.QueueName, m.Index)
-	log.Biz.Printf("Get Error: %v, time: %v\n", getErr, time.Now())
+	log.Biz.Printf("Get(%d.%s.%d) Error: %v, time: %v\n", m.UserID, m.QueueName, m.Index, getErr, time.Now())
 
-	if getErr == errors.DBNotFound {
+	if getErr == errors.DataNotFound {
 		err := s.db.Put(models.MessageKey(m.UserID, m.QueueName, m.Index), m.Content)
 		if err != nil {
 			return errors.NewInternalErrorf(err.Error())

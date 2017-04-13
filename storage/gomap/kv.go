@@ -25,7 +25,7 @@ func (k *KV) Get(key string) (string, error) {
 
 	value, ok := k.data[key]
 	if !ok {
-		return "", errors.DBNotFound
+		return "", errors.DataNotFound
 	}
 
 	return value, nil
@@ -72,7 +72,7 @@ func (k *KV) append(key string, value string) error {
 	defer k.Unlock()
 
 	oldVal, err := k.Get(key)
-	if err == errors.DBNotFound {
+	if err == errors.DataNotFound {
 		k.data[key] = oldVal + value
 	}
 

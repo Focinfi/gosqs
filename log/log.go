@@ -31,8 +31,8 @@ var DB = logrus.New()
 // Biz for logic logger
 var Biz = logrus.New()
 
-// ThirdPartyServiceLogger for service error logger
-var ThirdPartyServiceLogger = logrus.New()
+// Service for node error logger
+var Service = logrus.New()
 
 // InternalError for logic error
 func InternalError(funcName string, message interface{}) {
@@ -49,7 +49,7 @@ func LibError(lib string, message interface{}) {
 	DB.WithFields(logrus.Fields{"lib": lib}).Error(message)
 }
 
-// ThirdPartyServiceError for third-party service error
+// ThirdPartyServiceError for third-party node error
 func ThirdPartyServiceError(thirdPartyService string, err error, message interface{}, params ...string) {
 	DB.WithFields(logrus.Fields{"third_party_service": thirdPartyService, "error": err, "params": params}).Info(message)
 }

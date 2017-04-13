@@ -21,28 +21,28 @@ const (
 	production = "production"
 )
 
-// Envroinment for application envroinment
-type Envroinment string
+// Environment for application environment
+type Environment string
 
 // IsProduction returns if the env equals to production
-func (e Envroinment) IsProduction() bool {
+func (e Environment) IsProduction() bool {
 	return e == production
 }
 
 // IsDevelop returns if the env equals to develop
-func (e Envroinment) IsDevelop() bool {
+func (e Environment) IsDevelop() bool {
 	return e == develop
 }
 
 // IsTest returns if the env equals to develop
-func (e Envroinment) IsTest() bool {
-	return e == develop
+func (e Environment) IsTest() bool {
+	return e == test
 }
 
-var env = Envroinment(develop)
+var env = Environment(develop)
 
 // Env returns the env
-func Env() Envroinment {
+func Env() Environment {
 	return env
 }
 
@@ -62,6 +62,8 @@ type Configuration struct {
 	MaxTryMessageCount         int
 	OncekvMetaRefreshPeroid    time.Duration
 	IdealKVResponseDuration    time.Duration
+	PullMessageCount           int
+	DefaultMasterAddress       string
 }
 
 func newDefaultConfig() Configuration {
@@ -80,6 +82,8 @@ func newDefaultConfig() Configuration {
 		MaxTryMessageCount:         3,
 		OncekvMetaRefreshPeroid:    time.Second,
 		IdealKVResponseDuration:    time.Millisecond * 50,
+		PullMessageCount:           5,
+		DefaultMasterAddress:       "127.0.0.1:5446",
 	}
 }
 
@@ -99,6 +103,7 @@ func Config() Configuration {
 			MaxTryMessageCount:         10,
 			OncekvMetaRefreshPeroid:    time.Second,
 			IdealKVResponseDuration:    time.Millisecond * 50,
+			PullMessageCount:           10,
 		}
 	case developEnv:
 		return newDefaultConfig()
@@ -109,7 +114,7 @@ func Config() Configuration {
 
 func init() {
 	if e := os.Getenv("SQS_ENV"); e != "" {
-		env = Envroinment(e)
+		env = Environment(e)
 	}
 
 	if Env().IsProduction() {

@@ -21,7 +21,7 @@ const (
 	queueNotFound               = 1005
 	messageNotFound             = 1006
 	clientNotFound              = 1007
-	duplicateClient             = 1008
+	duplicateSquad              = 1008
 	clientHasAlreadyRegistered  = 1009
 	serviceOverload             = 1010
 	applyMessageIDRangeOversize = 1011
@@ -35,8 +35,8 @@ var DuplicateQueue = NewBizErr("duplicate queue", duplicateMessage)
 // DuplicateMessage error for duplicate message
 var DuplicateMessage = NewBizErr("duplicate message", duplicateMessage)
 
-// DuplicateClient error for duplicate lient
-var DuplicateClient = NewBizErr("duplicate lient", duplicateClient)
+// DuplicateSquad error for duplicate squad
+var DuplicateSquad = NewBizErr("duplicate squad", duplicateSquad)
 
 // MessageOutOfDate error for out-of-date message
 var MessageOutOfDate = NewBizErr("message is out of date", messageOutOfData)
@@ -65,11 +65,11 @@ var NoConsumer = New("cosumer queue is empty")
 // ClientHasAlreadyRegistered error for client has already registered
 var ClientHasAlreadyRegistered = NewBizErr("client has already registered", clientHasAlreadyRegistered)
 
-// ServiceOverload error for service is overload
-var ServiceOverload = NewBizErr("service is overload", serviceOverload)
+// ServiceOverload error for node is overload
+var ServiceOverload = NewBizErr("node is overload", serviceOverload)
 
-// DBNotFound error for data not fouond
-var DBNotFound = NewBizErr("data is not found", dataNotFound)
+// DataNotFound error for data not fouond
+var DataNotFound = NewBizErr("data is not found", dataNotFound)
 
 // DBQueryTimeout returns a Internal for a db query
 func DBQueryTimeout(db, key string) Internal {

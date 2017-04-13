@@ -4,10 +4,10 @@ import "fmt"
 
 // Message contains info
 type Message struct {
-	UserID    int64
-	QueueName string
-	Content   string
-	Index     int64
+	UserID    int64  `json:"-"`
+	QueueName string `json:"-"`
+	Content   string `json:"content"`
+	Index     int64  `json:"message_id"`
 }
 
 const messageKeyPrefix = "sqs.message"

@@ -31,7 +31,7 @@ func (kv *KV) Get(key string) (string, error) {
 		return string(res.Kvs[0].Value), nil
 	}
 
-	return "", errors.DBNotFound
+	return "", errors.DataNotFound
 }
 
 // Put puts key/value

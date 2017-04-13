@@ -7,35 +7,69 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// QueueService defines what a queue admin should do
-type QueueService interface {
-	ReceiveMessage(userID int64, queueName, content string, index int64) error
-	RegisterClient(client *models.Client) error
-	ApplyMessageIDRange(userID int64, queueName string, size int) (maxID int64, err error)
+// MasterService can distributes a node for a consume
+type MasterService interface {
+	AssignNode(userID int64, queueName string, squadName string) (string, error)
+	Join(info models.NodeInfo)
 }
 
-// Agent for receiving message and push them
-type Agent struct {
+// QueueService defines what a queue admin should do
+type QueueService interface {
+	ApplyMessageIDRange(userID int64, queueName string, size int) (maxID int64, err error)
+	PushMessage(userID int64, queueName, content string, index int64) error
+	PullMessage(userID int64, queueName, squadName string, length int) ([]models.Message, error)
+	ReportMaxReceivedMessageID(userID int64, queueName, squadName string, messageID int64) error
+	Info() models.NodeInfo
+}
+
+type MasterAgent struct {
+	Address string
+	http.Handler
+	MasterService
+}
+
+func NewMasterAgent(service MasterService, address string) *MasterAgent {
+	agt := &MasterAgent{
+		Address:       address,
+		MasterService: service,
+	}
+
+	agt.masterAgentRouting()
+	return agt
+}
+
+// QueueAgent x
+type QueueAgent struct {
 	Address string
 	http.Handler
 	QueueService
 }
 
-// New allocates and returns a new Agent
-func New(admin QueueService, address string) *Agent {
-	agent := &Agent{
-		Address:      address,
-		QueueService: admin,
-	}
-	agent.routing()
-	return agent
-}
-
-func (agent *Agent) routing() {
+func (a *MasterAgent) masterAgentRouting() {
 	s := gin.Default()
 	group := s.Group("/")
-	group.POST("/message", agent.ReceiveMessage)
-	group.POST("/register", agent.RegisterClient)
-	group.PUT("/messageID", agent.ApplyMessageIDRange)
-	agent.Handler = s
+	group.POST("/applyNode", a.ApplyNode)
+	group.POST("/join", a.JoinNode)
+	a.Handler = s
+}
+
+// NewQueueAgent allocates and returns a new QueueAgent
+func NewQueueAgent(service QueueService, address string) *QueueAgent {
+	agt := &QueueAgent{
+		Address:      address,
+		QueueService: service,
+	}
+	agt.queueAgentRouting()
+	return agt
+}
+
+func (a *QueueAgent) queueAgentRouting() {
+	s := gin.Default()
+	group := s.Group("/")
+	group.POST("/messages", a.PullMessages)
+	group.POST("/message", a.ReceiveMessage)
+	group.POST("/messageID", a.ApplyMessageIDRange)
+	group.POST("/receivedMessageID", a.ReportMaxReceivedMessageID)
+	group.GET("/stats", a.Info)
+	a.Handler = s
 }

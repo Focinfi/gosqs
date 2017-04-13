@@ -20,7 +20,7 @@ func (inc *Incrementer) Increment(key string, size int) (int64, error) {
 	curIDVal, getErr := inc.kv.Get(key)
 
 	// try set the value to size
-	if getErr == errors.DBNotFound {
+	if getErr == errors.DataNotFound {
 		maxIDVal := fmt.Sprintf("%d", size)
 		_, err := inc.kv.db.Txn(context.TODO()).
 			If(clientv3.CreateRevision(key)).

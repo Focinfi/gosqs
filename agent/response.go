@@ -6,53 +6,43 @@ import (
 	"net/http"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/models"
 	"github.com/gin-gonic/gin"
 )
 
-// Status contains info of a failed request
-type Status struct {
-	Code    int         `json:"code,string"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
-}
-
 // StatusIsBusy for internal error
-func StatusIsBusy(err error) *Status {
+func StatusIsBusy(err error) *models.HTTPStatusMeta {
 	log.Printf("error: %v\n", err)
-	return &Status{
+	return &models.HTTPStatusMeta{
 		Code:    errors.InternalErr,
 		Message: "Service is busy, please try again later.",
 	}
 }
 
 // StatusBadRequest for wrong param format status
-func StatusBadRequest(err error) *Status {
-	return &Status{
+func StatusBadRequest(err error) *models.HTTPStatusMeta {
+	return &models.HTTPStatusMeta{
 		Code:    errors.ParamFormatErr,
 		Message: fmt.Sprintf("Wrong format of parameters, err: %v", err),
 	}
 }
 
 // StatusOK for successful request
-var StatusOK = &Status{Code: errors.NoErr}
+var StatusOK = &models.HTTPStatusMeta{Code: errors.NoErr}
 
-func responseJOSN(ctx *gin.Context, status *Status, isAbort bool) {
-	ctx.JSON(http.StatusOK, status)
+func responseJOSN(ctx *gin.Context, meta *models.HTTPStatusMeta, data interface{}, isAbort bool) {
+	ctx.JSON(http.StatusOK, models.HTTPStatus{HTTPStatusMeta: *meta, Data: data})
 	if isAbort {
 		ctx.Abort()
 	}
 }
 
 func responseOK(ctx *gin.Context) {
-	responseJOSN(ctx, StatusOK, true)
+	responseJOSN(ctx, StatusOK, nil, true)
 }
 
 func responseOKData(ctx *gin.Context, data interface{}) {
-	responseJOSN(ctx, &Status{Code: errors.NoErr, Data: data}, true)
-}
-
-func responseAndAbort(ctx *gin.Context, err *Status) {
-	responseJOSN(ctx, err, true)
+	responseJOSN(ctx, StatusOK, data, true)
 }
 
 func responseErr(ctx *gin.Context, err error) {
@@ -62,15 +52,15 @@ func responseErr(ctx *gin.Context, err error) {
 	}
 
 	if bizErr, ok := err.(errors.Biz); ok {
-		responseJOSN(ctx, &Status{Code: bizErr.BizCode(), Message: bizErr.Error()}, true)
+		responseJOSN(ctx, &models.HTTPStatusMeta{Code: bizErr.BizCode(), Message: bizErr.Error()}, nil, true)
 		return
 	}
 
 	if internalErr, ok := err.(errors.Internal); ok {
-		responseJOSN(ctx, StatusIsBusy(internalErr), true)
+		responseJOSN(ctx, StatusIsBusy(internalErr), nil, true)
 		return
 	}
 
-	responseJOSN(ctx, StatusBadRequest(err), true)
+	responseJOSN(ctx, StatusBadRequest(err), nil, true)
 	return
 }
