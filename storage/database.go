@@ -4,18 +4,16 @@ import (
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage/etcd"
 	"github.com/Focinfi/sqs/storage/gomap"
-	"github.com/Focinfi/sqs/storage/redis"
 )
 
 var defaultKV models.KV
 var defaultIncrementer models.Incrementer
-var etcdIncrementer *etcd.Incrementer
+
+// EtcdKV uses etcd as a key/value storage
 var EtcdKV *etcd.KV
+var etcdIncrementer *etcd.Incrementer
 var etcdWatcher *etcd.Watcher
 var mapKV *gomap.KV
-
-//var onceKV *oncekv.KV
-var redisPriorityList *redis.PriorityList
 
 func init() {
 	// map
@@ -43,11 +41,4 @@ func init() {
 	//} else {
 	//	onceKV = kv
 	//}
-
-	// redis
-	if pl, err := redis.New(); err != nil {
-		panic(err)
-	} else {
-		redisPriorityList = pl
-	}
 }

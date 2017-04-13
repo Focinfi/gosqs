@@ -17,3 +17,9 @@ type UserAuth struct {
 	// Secret for user auth
 	SecretKey string `json:"secret_key"`
 }
+
+type NodeRequestParams struct {
+	Token     string `json:"token"`
+	QueueName string `json:"queue_name"`
+	SquadName string `json:"squad_name,omitempty"`
+}

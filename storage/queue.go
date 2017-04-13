@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/util/strconvutil"
 )
@@ -84,34 +83,6 @@ func (s *Queue) Add(q *models.Queue) error {
 	err = s.db.Put(models.QueueListKey(q.UserID), string(data))
 	if err != nil {
 		return errors.NewInternalErrorf(err.Error())
-	}
-
-	return nil
-}
-
-// UpdateRecentMessageID updates the almost recent message id of one queue
-func (s *Queue) UpdateRecentMessageID(userID int64, queueName string, newID int64) error {
-	k := models.QueueRecentMessageIDKey(userID, queueName)
-	newIDVal := strconvutil.Int64toa(newID)
-
-	curIDVal, getErr := s.db.Get(k)
-	if getErr == errors.DataNotFound {
-		return s.db.Put(k, newIDVal)
-	}
-
-	if getErr != nil {
-		return getErr
-	}
-
-	curID, err := strconvutil.ParseInt64(curIDVal)
-	if err != nil {
-		log.DB.Error(errors.DataBroken(k, err))
-		return s.db.Put(k, newIDVal)
-	}
-
-	log.Biz.Infoln("UpdateMessageID: ", curID, newID)
-	if newID > curID {
-		return s.db.Put(k, newIDVal)
 	}
 
 	return nil

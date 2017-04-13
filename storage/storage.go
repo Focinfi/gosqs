@@ -9,7 +9,6 @@ import (
 type Storage struct {
 	*Queue
 	*Message
-	*Cache
 	*Squad
 }
 
@@ -19,7 +18,6 @@ var DefaultStorage = &Storage{}
 func init() {
 	DefaultStorage.Queue = &Queue{db: EtcdKV, store: DefaultStorage, inc: etcdIncrementer}
 	DefaultStorage.Message = &Message{db: EtcdKV, store: DefaultStorage}
-	DefaultStorage.Cache = &Cache{pl: redisPriorityList, watcher: etcdWatcher, store: DefaultStorage}
 	DefaultStorage.Squad = &Squad{db: EtcdKV, store: DefaultStorage}
 
 	DefaultStorage.Queue.db.Put(models.QueueListKey(external.Root.ID()), "[]")

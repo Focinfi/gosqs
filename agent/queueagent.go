@@ -1,93 +1,46 @@
 package agent
 
 import (
-	"github.com/Focinfi/sqs/external"
+	"net/http"
+
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
 
-type basicParam struct {
-	Token     string `json:"token"`
-	QueueName string `json:"queue_name"`
-	SquadName string `json:"squad_name,omitempty"`
+// QueueAgent x
+type QueueAgent struct {
+	Address string
+	http.Handler
+	QueueService
 }
 
-// JoinNode for joining a new node
-func (a *MasterAgent) JoinNode(ctx *gin.Context) {
-	params := models.NodeInfo{}
-	if err := binding.JSON.Bind(ctx.Request, &params); err != nil {
-		log.Biz.Error(err)
-		responseErr(ctx, err)
-		return
+// NewQueueAgent allocates and returns a new QueueAgent
+func NewQueueAgent(service QueueService, address string) *QueueAgent {
+	agt := &QueueAgent{
+		Address:      address,
+		QueueService: service,
 	}
-
-	a.MasterService.Join(params)
+	agt.queueAgentRouting()
+	return agt
 }
 
-// ApplyNode register a consumer which is ready to pull messages for a squad of a queue
-func (a *MasterAgent) ApplyNode(ctx *gin.Context) {
-	params := &struct {
-		models.UserAuth
-		basicParam
-	}{}
-	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		responseErr(ctx, err)
-		return
-	}
-
-	userID, err := external.GetUserWithKey(params.AccessKey, params.SecretKey)
-	if err != nil {
-		responseErr(ctx, err)
-	}
-
-	node, err := a.MasterService.AssignNode(userID, params.QueueName, params.SquadName)
-	if err != nil {
-		responseErr(ctx, err)
-		return
-	}
-
-	log.Internal.Println("AssignNode:", node)
-	tokenCode, err := makeToekn(userID)
-	if err != nil {
-		responseErr(ctx, err)
-		return
-	}
-
-	responseOKData(ctx, gin.H{"node": node, "token": tokenCode})
-}
-
-// PullMessages for pulling message
-func (a *QueueAgent) PullMessages(ctx *gin.Context) {
-	params := &basicParam{}
-	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		log.Internal.Error(err)
-		responseErr(ctx, err)
-		return
-	}
-
-	userID, err := getUserID(params.Token)
-	if err != nil {
-		log.Internal.Error(err)
-		responseErr(ctx, err)
-		return
-	}
-
-	log.Internal.Infoln("[PullMessage] userID:", userID)
-	messages, err := a.QueueService.PullMessage(userID, params.QueueName, params.SquadName, 10)
-	if err != nil {
-		responseErr(ctx, err)
-		return
-	}
-
-	responseOKData(ctx, gin.H{"messages": messages})
+func (a *QueueAgent) queueAgentRouting() {
+	s := gin.Default()
+	group := s.Group("/")
+	group.POST("/messages", a.PullMessages)
+	group.POST("/message", a.ReceiveMessage)
+	group.POST("/messageID", a.ApplyMessageIDRange)
+	group.POST("/receivedMessageID", a.ReportMaxReceivedMessageID)
+	group.GET("/stats", a.Info)
+	a.Handler = s
 }
 
 // ReportMaxReceivedMessageID handles the request for reporting the max id of received messages
 func (a *QueueAgent) ReportMaxReceivedMessageID(ctx *gin.Context) {
 	params := &struct {
-		basicParam
+		models.NodeRequestParams
 		MessageID int64 `json:"message_id"`
 	}{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
@@ -107,7 +60,7 @@ func (a *QueueAgent) ReportMaxReceivedMessageID(ctx *gin.Context) {
 // ReceiveMessage serve message pushing via http
 func (a *QueueAgent) ReceiveMessage(ctx *gin.Context) {
 	type messageParam struct {
-		basicParam
+		models.NodeRequestParams
 		Content   string `json:"content"`
 		MessageID int64  `json:"message_id"`
 	}
@@ -131,7 +84,7 @@ func (a *QueueAgent) ReceiveMessage(ctx *gin.Context) {
 // ApplyMessageIDRange try to apply the message id range for a queue
 func (a *QueueAgent) ApplyMessageIDRange(ctx *gin.Context) {
 	var params = struct {
-		basicParam
+		models.NodeRequestParams
 		Size int `json:"size"`
 	}{}
 	if err := binding.JSON.Bind(ctx.Request, &params); err != nil {

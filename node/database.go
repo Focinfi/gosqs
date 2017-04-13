@@ -27,15 +27,6 @@ func (d *database) PushMessage(userID int64, queueName, content string, index in
 		fmt.Println("Added Message, err: ", err)
 		return err
 	}
-
-	// try to update recent message index in background
-	// time.AfterFunc(time.Second, func() {
-	// 	err := d.Queue.UpdateRecentMessageID(userID, queueName, index)
-	// 	if err != nil {
-	// 		log.DB.Error(err)
-	// 	}
-	// })
-
 	return nil
 }
 

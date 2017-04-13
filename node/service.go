@@ -1,12 +1,10 @@
 package node
 
 import (
-	"net/http"
-
+	"bytes"
 	"encoding/json"
 	"fmt"
-
-	"bytes"
+	"net/http"
 
 	"github.com/Focinfi/oncekv/utils/urlutil"
 	"github.com/Focinfi/sqs/agent"
@@ -34,6 +32,30 @@ type Service struct {
 	info  *models.NodeInfo
 }
 
+// New allocates a new Service
+func New(addr string, masterAddr string) *Service {
+	service := &Service{
+		addr:       addr,
+		database:   db,
+		masterAddr: masterAddr,
+		info:       &models.NodeInfo{Addr: addr},
+	}
+
+	service.agent = agent.NewQueueAgent(service, addr)
+
+	return service
+}
+
+// Start starts services
+func (s *Service) Start() {
+	if err := s.join(); err != nil {
+		panic(err)
+	}
+
+	log.Biz.Fatal(http.ListenAndServe(s.addr, s.agent))
+}
+
+// PullMessage pulls message from database, create it if the squad is not found
 func (s *Service) PullMessage(userID int64, queueName, squadName string, length int) ([]models.Message, error) {
 	squad, err := s.Squad.One(userID, queueName, squadName)
 
@@ -72,6 +94,7 @@ func (s *Service) PullMessage(userID int64, queueName, squadName string, length 
 	return s.Message.Nextn(userID, queueName, squad.ReceivedMessageID, maxMessageID, defaultPullMessageCount)
 }
 
+// ReportMaxReceivedMessageID reports the max recieved message id to mark forward of the squad process
 func (s *Service) ReportMaxReceivedMessageID(userID int64, queueName, squadName string, messageID int64) error {
 	squad, err := s.database.Squad.One(userID, queueName, squadName)
 	if err != nil {
@@ -110,6 +133,7 @@ func (s *Service) ApplyMessageIDRange(userID int64, queueName string, size int) 
 	return s.Queue.ApplyMessageIDRange(userID, queueName, size)
 }
 
+// Info returns the info of current service
 func (s *Service) Info() models.NodeInfo {
 	// TODO: fetch current node info
 	log.Biz.Info(s.info)
@@ -133,26 +157,4 @@ func (s *Service) join() error {
 		return errors.New("can not join into master")
 	}
 	return nil
-}
-
-func New(addr string, masterAddr string) *Service {
-	service := &Service{
-		addr:       addr,
-		database:   db,
-		masterAddr: masterAddr,
-		info:       &models.NodeInfo{Addr: addr},
-	}
-
-	service.agent = agent.NewQueueAgent(service, addr)
-
-	return service
-}
-
-// Start starts services
-func (s *Service) Start() {
-	if err := s.join(); err != nil {
-		panic(err)
-	}
-
-	log.Biz.Fatal(http.ListenAndServe(s.addr, s.agent))
 }

@@ -2,7 +2,6 @@ package storage
 
 import (
 	"encoding/json"
-
 	"time"
 
 	"github.com/Focinfi/sqs/config"
@@ -44,6 +43,7 @@ func (s *Message) One(userID int64, queueName string, index int64) (string, erro
 	return s.db.Get(key)
 }
 
+// Nextn returns the next n messages after the given currentID, try MaxTryMessageCount entries after maxMassageID
 func (s *Message) Nextn(userID int64, queueName string, currentID int64, maxMassageID int64, n int) ([]models.Message, error) {
 	nextIdx := currentID + 1
 	upperID := maxMassageID + int64(config.Config().MaxTryMessageCount)

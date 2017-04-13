@@ -57,14 +57,7 @@ func New(endpoint string, accessKey string, secretKey string) *Client {
 type QueueClient struct {
 	*Client
 	servingNode string
-	BaseInfo
-}
-
-// BaseInfo for one client basic info
-type BaseInfo struct {
-	Token     string `json:"token"`
-	QueueName string `json:"queue_name"`
-	SquadName string `json:"squad_name,omitempty"`
+	BaseInfo    models.NodeRequestParams
 }
 
 type registerResponseParam struct {
@@ -73,13 +66,13 @@ type registerResponseParam struct {
 }
 
 type pushMessageParam struct {
-	BaseInfo
+	models.NodeRequestParams
 	MessageID int64  `json:"message_id"`
 	Content   string `json:"content"`
 }
 
 type applyMessageIDParam struct {
-	BaseInfo
+	models.NodeRequestParams
 	Size int `json:"size"`
 }
 
@@ -89,10 +82,11 @@ type applyMessageResponseParam struct {
 }
 
 type reportReceivedParam struct {
-	BaseInfo
+	models.NodeRequestParams
 	MessageID int64 `json:"message_id"`
 }
 
+// Message for a message entry
 type Message struct {
 	MessageID int64  `json:"message_id"`
 	Content   string `json:"content"`
@@ -110,18 +104,18 @@ func (cli *Client) Queue(name string, squad string) (*QueueClient, error) {
 
 	return &QueueClient{
 		Client: cli,
-		BaseInfo: BaseInfo{
+		BaseInfo: models.NodeRequestParams{
 			QueueName: name,
 			SquadName: squad,
 		},
 	}, nil
 }
 
-// ApplyNode applies for a node
+// ApplyNode applies for a available node
 func (cli *QueueClient) ApplyNode() error {
 	aplyParams := &struct {
 		models.UserAuth
-		BaseInfo
+		BaseInfo models.NodeRequestParams
 	}{
 		UserAuth: cli.Client.opt.UserAuth,
 		BaseInfo: cli.BaseInfo,
@@ -175,9 +169,9 @@ func (cli *QueueClient) PushMessage(content string) error {
 	log.Internal.Infoln("applyMessageID:", id)
 
 	param := &pushMessageParam{
-		MessageID: id,
-		Content:   content,
-		BaseInfo:  cli.BaseInfo,
+		MessageID:         id,
+		Content:           content,
+		NodeRequestParams: cli.BaseInfo,
 	}
 
 	b, err := json.Marshal(param)
@@ -244,8 +238,8 @@ func (cli *QueueClient) PullMessage(handler func([]Message) error) error {
 func (cli *QueueClient) reportReceived(messageID int64) error {
 	url := fmt.Sprintf(reportReceivedMessageIDURLFormat, urlutil.MakeURL(cli.servingNode))
 	param := &reportReceivedParam{
-		BaseInfo:  cli.BaseInfo,
-		MessageID: messageID,
+		NodeRequestParams: cli.BaseInfo,
+		MessageID:         messageID,
 	}
 
 	b, err := json.Marshal(param)
@@ -276,6 +270,7 @@ func (cli *QueueClient) reportReceived(messageID int64) error {
 	}
 }
 
+// applyMessageID applies a next message id
 func (cli *QueueClient) applyMessageID() (int64, error) {
 	param := &applyMessageIDParam{cli.BaseInfo, 1}
 	b, err := json.Marshal(param)
@@ -296,7 +291,7 @@ func (cli *QueueClient) applyMessageID() (int64, error) {
 	}
 
 	respData := &struct {
-		BaseInfo
+		models.NodeRequestParams
 		Data applyMessageResponseParam
 	}{}
 	if err := json.Unmarshal(respBytes, respData); err != nil {
