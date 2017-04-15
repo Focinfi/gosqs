@@ -4,10 +4,6 @@ import (
 	"time"
 )
 
-// Tokener defines the tokener behavior
-type Tokener interface {
-}
-
 func Make(secret string, params map[string]string, expiration time.Duration) (string, error) {
 	// TODO: to impelement
 	return "mock.token", nil

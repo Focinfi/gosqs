@@ -10,7 +10,7 @@ import (
 // New returns a new etcd client
 func New() (*clientv3.Client, error) {
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   config.Config().EtcdEndpoints,
+		Endpoints:   config.Config.EtcdEndpoints,
 		DialTimeout: 5 * time.Second,
 	})
 

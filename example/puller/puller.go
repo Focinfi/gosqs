@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	cli := client.New(config.Config().DefaultMasterAddress, "", "")
+	cli := client.New(config.Config.DefaultMasterAddress, "", "")
 	queue, err := cli.Queue(example.Greeting, example.Home)
 	if err != nil {
 		panic(err)

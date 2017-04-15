@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	defaultPullMessageCount = config.Config().PullMessageCount
+	defaultPullMessageCount = config.Config.PullMessageCount
 )
 
 // Service for one user info
@@ -126,7 +126,7 @@ func (s *Service) PushMessage(userID int64, queueName, content string, index int
 
 // ApplyMessageIDRange tries to apply a range a free message id
 func (s *Service) ApplyMessageIDRange(userID int64, queueName string, size int) (maxID int64, err error) {
-	if size > config.Config().MaxMessgeIDRangeSize {
+	if size > config.Config.MaxMessageIDRangeSize {
 		return -1, errors.ApplyMessageIDRangeOversize
 	}
 

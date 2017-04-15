@@ -14,5 +14,5 @@ func main() {
 		panic(err)
 	}
 
-	master.NewService(config.Config().DefaultMasterAddress).Start()
+	master.NewService(config.Config.DefaultMasterAddress).Start()
 }
