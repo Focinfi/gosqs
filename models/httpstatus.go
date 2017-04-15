@@ -6,7 +6,7 @@ type HTTPStatusMeta struct {
 	Message string `json:"message"`
 }
 
-// HTTPStatus contains Info of a failed request
+// HTTPStatus contains handleGetStatus of a failed request
 type HTTPStatus struct {
 	HTTPStatusMeta
 	Data interface{} `json:"data"`

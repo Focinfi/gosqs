@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	currentUserIDKey = "currentUserID"
-	userIDKey        = "userID"
+	userIDKey = "userID"
 )
 
 var (
@@ -48,6 +47,6 @@ func getUserID(code string) (int64, error) {
 	return strconvutil.ParseInt64(idStr)
 }
 
-func makeToekn(userID int64) (string, error) {
+func makeToken(userID int64) (string, error) {
 	return token.Make(secret, map[string]string{userIDKey: strconvutil.Int64toa(userID)}, tokenExpiration)
 }

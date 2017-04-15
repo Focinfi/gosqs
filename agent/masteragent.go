@@ -31,13 +31,13 @@ func NewMasterAgent(service MasterService, address string) *MasterAgent {
 func (a *MasterAgent) masterAgentRouting() {
 	s := gin.Default()
 	group := s.Group("/")
-	group.POST("/applyNode", a.ApplyNode)
-	group.POST("/join", a.JoinNode)
+	group.POST("/applyNode", a.handleApplyNode)
+	group.POST("/join", a.handleJoinNode)
 	a.Handler = s
 }
 
-// JoinNode for joining a new node
-func (a *MasterAgent) JoinNode(ctx *gin.Context) {
+// handleJoinNode for joining a new node
+func (a *MasterAgent) handleJoinNode(ctx *gin.Context) {
 	params := models.NodeInfo{}
 	if err := binding.JSON.Bind(ctx.Request, &params); err != nil {
 		log.Biz.Error(err)
@@ -45,11 +45,11 @@ func (a *MasterAgent) JoinNode(ctx *gin.Context) {
 		return
 	}
 
-	a.MasterService.Join(params)
+	a.MasterService.AddNode(params)
 }
 
-// ApplyNode register a consumer which is ready to pull messages for a squad of a queue
-func (a *MasterAgent) ApplyNode(ctx *gin.Context) {
+// handleApplyNode register a consumer which is ready to pull messages for a squad of a queue
+func (a *MasterAgent) handleApplyNode(ctx *gin.Context) {
 	params := &struct {
 		models.UserAuth
 		models.NodeRequestParams
@@ -71,7 +71,7 @@ func (a *MasterAgent) ApplyNode(ctx *gin.Context) {
 	}
 
 	log.Internal.Println("AssignNode:", node)
-	tokenCode, err := makeToekn(userID)
+	tokenCode, err := makeToken(userID)
 	if err != nil {
 		responseErr(ctx, err)
 		return
@@ -80,8 +80,8 @@ func (a *MasterAgent) ApplyNode(ctx *gin.Context) {
 	responseOKData(ctx, gin.H{"node": node, "token": tokenCode})
 }
 
-// PullMessages for pulling message
-func (a *QueueAgent) PullMessages(ctx *gin.Context) {
+// handlePullMessages for pulling message
+func (a *QueueAgent) handlePullMessages(ctx *gin.Context) {
 	params := &models.NodeRequestParams{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
 		log.Internal.Error(err)
@@ -96,8 +96,8 @@ func (a *QueueAgent) PullMessages(ctx *gin.Context) {
 		return
 	}
 
-	log.Internal.Infoln("[PullMessage] userID:", userID)
-	messages, err := a.QueueService.PullMessage(userID, params.QueueName, params.SquadName, 10)
+	log.Internal.Infoln("[handlePullMessages] userID:", userID)
+	messages, err := a.QueueService.PullMessages(userID, params.QueueName, params.SquadName, 10)
 	if err != nil {
 		responseErr(ctx, err)
 		return

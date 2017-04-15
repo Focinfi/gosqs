@@ -39,7 +39,7 @@ func InternalError(funcName string, message interface{}) {
 	Internal.WithFields(logrus.Fields{"function_name": funcName}).Error(message)
 }
 
-// DBError log databse error
+// DBError log database error
 func DBError(sql interface{}, err error, message interface{}) {
 	DB.WithFields(logrus.Fields{"sql": sql, "error": err}).Error(message)
 }

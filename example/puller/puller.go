@@ -23,7 +23,7 @@ func main() {
 	for {
 		<-ticker.C
 
-		err := queue.PullMessage(func(messages []client.Message) error {
+		err := queue.PullMessages(func(messages []client.Message) error {
 			log.Biz.Infoln(messages)
 			return nil
 		})

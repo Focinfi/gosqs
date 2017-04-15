@@ -14,19 +14,15 @@ const (
 	NoErr = 1000
 
 	// biz error code
-	duplicateQueue              = 1001
-	duplicateMessage            = 1002
-	messageOutOfData            = 1003
-	userNotFound                = 1004
-	queueNotFound               = 1005
-	messageNotFound             = 1006
-	clientNotFound              = 1007
-	duplicateSquad              = 1008
-	clientHasAlreadyRegistered  = 1009
-	serviceOverload             = 1010
-	applyMessageIDRangeOversize = 1011
-	messageIndexOutOfRange      = 1012
-	dataNotFound                = 1013
+	duplicateMessage = iota + 1001
+	messageOutOfData
+	userNotFound
+	queueNotFound
+	duplicateSquad
+	serviceOverload
+	applyMessageIDRangeOversize
+	messageIndexOutOfRange
+	dataNotFound
 )
 
 // DuplicateQueue error for duplicate queue
@@ -50,25 +46,13 @@ var UserNotFound = NewBizErr("user not found", userNotFound)
 // QueueNotFound error for unknown queue
 var QueueNotFound = NewBizErr("queue not found", queueNotFound)
 
-// MessageNotFound error for unknown message
-var MessageNotFound = NewBizErr("message not found", messageNotFound)
-
-// ClientNotFound error for unknown client
-var ClientNotFound = NewBizErr("client not found", clientNotFound)
-
 // ApplyMessageIDRangeOversize error for oversize message id range application
 var ApplyMessageIDRangeOversize = NewBizErr("apply message id range oversize", applyMessageIDRangeOversize)
-
-// NoConsumer error for no consumer
-var NoConsumer = New("cosumer queue is empty")
-
-// ClientHasAlreadyRegistered error for client has already registered
-var ClientHasAlreadyRegistered = NewBizErr("client has already registered", clientHasAlreadyRegistered)
 
 // ServiceOverload error for node is overload
 var ServiceOverload = NewBizErr("node is overload", serviceOverload)
 
-// DataNotFound error for data not fouond
+// DataNotFound error for data not found
 var DataNotFound = NewBizErr("data is not found", dataNotFound)
 
 // DBQueryTimeout returns a Internal for a db query

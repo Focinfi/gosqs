@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin/binding"
 )
 
-// QueueAgent x
+// QueueAgent for a queue HTTP agent
 type QueueAgent struct {
 	Address string
 	http.Handler
@@ -29,16 +29,16 @@ func NewQueueAgent(service QueueService, address string) *QueueAgent {
 func (a *QueueAgent) queueAgentRouting() {
 	s := gin.Default()
 	group := s.Group("/")
-	group.POST("/messages", a.PullMessages)
-	group.POST("/message", a.ReceiveMessage)
-	group.POST("/messageID", a.ApplyMessageIDRange)
-	group.POST("/receivedMessageID", a.ReportMaxReceivedMessageID)
-	group.GET("/stats", a.Info)
+	group.POST("/messages", a.handlePullMessages)
+	group.POST("/message", a.handlePushMessage)
+	group.POST("/messageID", a.handleApplyMessageIDRange)
+	group.POST("/receivedMessageID", a.handleReportMaxReceivedMessageID)
+	group.GET("/stats", a.handleGetStatus)
 	a.Handler = s
 }
 
-// ReportMaxReceivedMessageID handles the request for reporting the max id of received messages
-func (a *QueueAgent) ReportMaxReceivedMessageID(ctx *gin.Context) {
+// handleReportMaxReceivedMessageID handles the request for reporting the max id of received messages
+func (a *QueueAgent) handleReportMaxReceivedMessageID(ctx *gin.Context) {
 	params := &struct {
 		models.NodeRequestParams
 		MessageID int64 `json:"message_id"`
@@ -57,8 +57,8 @@ func (a *QueueAgent) ReportMaxReceivedMessageID(ctx *gin.Context) {
 	responseErr(ctx, err)
 }
 
-// ReceiveMessage serve message pushing via http
-func (a *QueueAgent) ReceiveMessage(ctx *gin.Context) {
+// handlePushMessage serve message pushing via http
+func (a *QueueAgent) handlePushMessage(ctx *gin.Context) {
 	type messageParam struct {
 		models.NodeRequestParams
 		Content   string `json:"content"`
@@ -69,7 +69,7 @@ func (a *QueueAgent) ReceiveMessage(ctx *gin.Context) {
 		responseErr(ctx, err)
 		return
 	}
-	log.Internal.Infoln("[ReceiveMessage]", params)
+	log.Internal.Infoln("[handlePushMessage]", params)
 
 	userID, err := getUserID(params.Token)
 	if err != nil {
@@ -81,8 +81,8 @@ func (a *QueueAgent) ReceiveMessage(ctx *gin.Context) {
 	responseErr(ctx, err)
 }
 
-// ApplyMessageIDRange try to apply the message id range for a queue
-func (a *QueueAgent) ApplyMessageIDRange(ctx *gin.Context) {
+// handleApplyMessageIDRange try to apply the message id range for a queue
+func (a *QueueAgent) handleApplyMessageIDRange(ctx *gin.Context) {
 	var params = struct {
 		models.NodeRequestParams
 		Size int `json:"size"`
@@ -116,7 +116,7 @@ func (a *QueueAgent) ApplyMessageIDRange(ctx *gin.Context) {
 	responseOKData(ctx, res)
 }
 
-// Info response the info of current node
-func (a *QueueAgent) Info(ctx *gin.Context) {
+// handleGetStatus response the info of current node
+func (a *QueueAgent) handleGetStatus(ctx *gin.Context) {
 	responseOKData(ctx, a.QueueService.Info())
 }

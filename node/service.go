@@ -55,11 +55,11 @@ func (s *Service) Start() {
 	log.Biz.Fatal(http.ListenAndServe(s.addr, s.agent))
 }
 
-// PullMessage pulls message from database, create it if the squad is not found
-func (s *Service) PullMessage(userID int64, queueName, squadName string, length int) ([]models.Message, error) {
+// PullMessages pulls message from database, create it if the squad is not found
+func (s *Service) PullMessages(userID int64, queueName, squadName string, length int) ([]models.Message, error) {
 	squad, err := s.Squad.One(userID, queueName, squadName)
 
-	log.Biz.Infoln("[PullMessage]", squad, err)
+	log.Biz.Infoln("[handlePullMessages]", squad, err)
 
 	if err == errors.DataNotFound {
 		maxMessageID, err := s.database.Storage.Queue.MessageMaxID(userID, queueName)

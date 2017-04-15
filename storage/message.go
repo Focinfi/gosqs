@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/Focinfi/sqs/config"
@@ -14,26 +13,6 @@ import (
 type Message struct {
 	store *Storage
 	db    models.KV
-}
-
-// All returns all messages index list
-func (s *Message) All(userID int64, queueName string, gorupID int64, filters ...interface{}) ([]int64, error) {
-	key := models.MessageListKey(userID, queueName, gorupID)
-	all, getErr := s.db.Get(key)
-	if getErr == errors.DataNotFound {
-		all = "[]"
-	}
-
-	if getErr != nil {
-		return nil, getErr
-	}
-
-	list := []int64{}
-	if err := json.Unmarshal([]byte(all), &list); err != nil {
-		return nil, errors.DataBroken(key, err)
-	}
-
-	return list, nil
 }
 
 // One returns a message string

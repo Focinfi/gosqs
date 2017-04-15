@@ -42,7 +42,7 @@ func (k *KV) Put(key, value string) (err error) {
 	return
 }
 
-// Append appends sthe value for the key
+// Append appends the value for the key
 func (k *KV) Append(key, value string) (err error) {
 	track(func() {
 		err = k.append(key, value)

@@ -13,12 +13,10 @@ import (
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/storage"
 	"github.com/Focinfi/sqs/util/urlutil"
 )
 
 const (
-	nodesKey              = "sqs.nodes"
 	getNodeStatsURLFormat = "%s/stats"
 	logPrefix             = "[sqs.master]"
 )
@@ -27,43 +25,11 @@ var (
 	heartbeatPeriod = time.Second
 )
 
-type nodes map[string]models.NodeInfo
-
-func (m nodes) nodeURLSlice() []string {
-	nodes := make([]string, len(m))
-	i := 0
-	for node := range m {
-		nodes[i] = node
-		i++
-	}
-
-	return nodes
-}
-
-func (m nodes) statsSlice() models.InfoSlice {
-	slice := make([]models.NodeInfo, len(m))
-	i := 0
-	for node := range m {
-		slice[i] = m[node]
-	}
-
-	return slice
-}
-
-func nodeURLSliceToNodes(nodes []string) nodes {
-	m := make(map[string]models.NodeInfo, len(nodes))
-	for _, node := range nodes {
-		m[node] = models.NodeInfo{}
-	}
-
-	return m
-}
-
 // Service for a master server
 type Service struct {
 	sync.RWMutex
 	address string
-	db      models.KV
+	db      *database
 	nodes   nodes
 	agent   *agent.MasterAgent
 }
@@ -72,12 +38,12 @@ type Service struct {
 func NewService(address string) *Service {
 	service := &Service{
 		address: address,
-		db:      storage.EtcdKV,
+		db:      db,
 	}
 
 	service.agent = agent.NewMasterAgent(service, address)
 
-	urlSlice, err := service.fetchNodes()
+	urlSlice, err := service.db.fetchNodes()
 	if err != nil {
 		panic(err)
 	}
@@ -108,43 +74,16 @@ func (s *Service) AssignNode(userID int64, queueName string, squadName string) (
 	return nodeStatsSlice[0].Addr, nil
 }
 
-// Join joins a node to the ready-to-serve nodes list
-func (s *Service) Join(info models.NodeInfo) {
+// AddNode joins a node to the ready-to-serve nodes list
+func (s *Service) AddNode(info models.NodeInfo) {
 	s.Lock()
 	defer s.Unlock()
 
 	log.Biz.Infoln(logPrefix, "to join:", info.Addr)
 	s.nodes[info.Addr] = info
-	if err := s.updateNodes(s.nodes.nodeURLSlice()); err != nil {
+	if err := s.db.updateNodes(s.nodes.nodeURLSlice()); err != nil {
 		log.DB.Errorln(logPrefix, "failed to update nodes into db")
 	}
-}
-
-func (s *Service) fetchNodes() ([]string, error) {
-	val, err := s.db.Get(nodesKey)
-	if err == errors.DataNotFound {
-		return []string{}, nil
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	nodes := []string{}
-	if err := json.Unmarshal([]byte(val), &nodes); err != nil {
-		return nil, err
-	}
-
-	return nodes, nil
-}
-
-func (s *Service) updateNodes(nodes []string) error {
-	nodesBytes, err := json.Marshal(nodes)
-	if err != nil {
-		return err
-	}
-
-	return s.db.Put(nodesKey, string(nodesBytes))
 }
 
 func (s *Service) heartbeat() {
@@ -201,6 +140,7 @@ func (s *Service) removeNode(node string) {
 		delete(s.nodes, node)
 		log.DB.Errorf("%s node[%s] removed\n", logPrefix, node)
 		// TODO: alert for handle failed node
+		s.db.updateNodes(s.nodes.nodeURLSlice())
 	}
 }
 

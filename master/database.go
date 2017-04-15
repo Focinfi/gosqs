@@ -11,6 +11,14 @@ type database struct {
 
 var db = &database{Storage: storage.DefaultStorage}
 
+func (d *database) fetchNodes() ([]string, error) {
+	return d.Storage.Nodes.All(models.NodesKey)
+}
+
+func (d *database) updateNodes(nodes []string) error {
+	return d.Storage.Nodes.UpdateAll(models.NodesKey, nodes)
+}
+
 // AddQueue adds a queue into root queues
 func AddQueue(q *models.Queue) error {
 	if err := db.Queue.Add(q); err != nil {

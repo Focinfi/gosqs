@@ -16,7 +16,6 @@ import (
 
 const (
 	jsonHTTPHeader = "application/json"
-	authCodeKey    = "auth_code"
 
 	applyNodeURLFormat               = "%s/applyNode"
 	applyMessageIDURLFormat          = "%s/messageID"
@@ -111,7 +110,7 @@ func (cli *Client) Queue(name string, squad string) (*QueueClient, error) {
 	}, nil
 }
 
-// ApplyNode applies for a available node
+// handleApplyNode applies for a available node
 func (cli *QueueClient) ApplyNode() error {
 	aplyParams := &struct {
 		models.UserAuth
@@ -193,8 +192,8 @@ func (cli *QueueClient) PushMessage(content string) error {
 	return nil
 }
 
-// PullMessage for pull message request
-func (cli *QueueClient) PullMessage(handler func([]Message) error) error {
+// PullMessages for pull message request
+func (cli *QueueClient) PullMessages(handler func([]Message) error) error {
 	reqBytes, err := json.Marshal(cli.BaseInfo)
 	if err != nil {
 		return err
@@ -270,7 +269,8 @@ func (cli *QueueClient) reportReceived(messageID int64) error {
 	}
 }
 
-// applyMessageID applies a next message id
+// applyMessageID applies a next message id,
+// currently only apply one message id
 func (cli *QueueClient) applyMessageID() (int64, error) {
 	param := &applyMessageIDParam{cli.BaseInfo, 1}
 	b, err := json.Marshal(param)

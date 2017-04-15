@@ -1,8 +1,7 @@
 package models
 
 const (
-	// AuthCodeKey for key in kv storage
-	AuthCodeKey = "authCode"
+	NodesKey = "sqs.nodes"
 )
 
 // NodeInfo contains the basic stats information of one node
@@ -28,19 +27,19 @@ type NodeRequestParams struct {
 	SquadName string `json:"squad_name,omitempty"`
 }
 
-// InfoSlice contains a slice of nodes
-type InfoSlice []NodeInfo
+// NodeSlice contains a slice of nodes
+type NodeSlice []NodeInfo
 
-func (ss InfoSlice) Len() int {
+func (ss NodeSlice) Len() int {
 	return len(ss)
 }
 
-func (ss InfoSlice) Less(i, j int) bool {
+func (ss NodeSlice) Less(i, j int) bool {
 	pi := ss[i].CPU + ss[i].Memory + ss[i].Resource
 	pj := ss[j].CPU + ss[j].Memory + ss[j].Resource
 	return pi < pj
 }
 
-func (ss InfoSlice) Swap(i, j int) {
+func (ss NodeSlice) Swap(i, j int) {
 	ss[i], ss[j] = ss[j], ss[i]
 }
