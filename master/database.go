@@ -24,7 +24,3 @@ func AddQueue(q *models.Queue) error {
 func Queues(userID int64) ([]models.Queue, error) {
 	return db.Queue.All(userID)
 }
-
-func AllNodes() ([]string, error) {
-	return nil, nil
-}

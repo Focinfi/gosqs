@@ -40,7 +40,7 @@ func (m nodes) nodeURLSlice() []string {
 	return nodes
 }
 
-func (m nodes) statsSlice() InfoSlice {
+func (m nodes) statsSlice() models.InfoSlice {
 	slice := make([]models.NodeInfo, len(m))
 	i := 0
 	for node := range m {
@@ -68,6 +68,7 @@ type Service struct {
 	agent   *agent.MasterAgent
 }
 
+// NewService allocates a new Service
 func NewService(address string) *Service {
 	service := &Service{
 		address: address,
@@ -86,11 +87,13 @@ func NewService(address string) *Service {
 	return service
 }
 
+// Start starts the service
 func (s *Service) Start() {
 	go s.heartbeat()
 	http.ListenAndServe(s.address, s.agent)
 }
 
+// AssignNode assigns a node to serve one client
 func (s *Service) AssignNode(userID int64, queueName string, squadName string) (string, error) {
 	s.RLock()
 	nodeStatsSlice := s.nodes.statsSlice()
@@ -105,6 +108,7 @@ func (s *Service) AssignNode(userID int64, queueName string, squadName string) (
 	return nodeStatsSlice[0].Addr, nil
 }
 
+// Join joins a node to the ready-to-serve nodes list
 func (s *Service) Join(info models.NodeInfo) {
 	s.Lock()
 	defer s.Unlock()

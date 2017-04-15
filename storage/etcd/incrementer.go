@@ -2,7 +2,6 @@ package etcd
 
 import (
 	"context"
-
 	"fmt"
 
 	"github.com/Focinfi/sqs/errors"

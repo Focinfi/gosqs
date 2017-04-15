@@ -10,12 +10,14 @@ import (
 	"github.com/gin-gonic/gin/binding"
 )
 
+// MasterAgent for a agent of master node
 type MasterAgent struct {
 	Address string
 	http.Handler
 	MasterService
 }
 
+// NewMasterAgent allocates a new MasterAgent to handle the HTTP API
 func NewMasterAgent(service MasterService, address string) *MasterAgent {
 	agt := &MasterAgent{
 		Address:       address,

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/util/fmtutil"
 )
 
 // KV use a map as a K/V database
@@ -35,7 +36,7 @@ func (k *KV) Get(key string) (string, error) {
 func (k *KV) Put(key, value string) (err error) {
 	track(func() {
 		err = k.put(key, value)
-		fmt.Println(JSONIndentFormat(k.data))
+		fmt.Println(fmtutil.JSONIndentFormat(k.data))
 	}, "Put")
 
 	return
@@ -45,7 +46,7 @@ func (k *KV) Put(key, value string) (err error) {
 func (k *KV) Append(key, value string) (err error) {
 	track(func() {
 		err = k.append(key, value)
-		fmt.Println(JSONIndentFormat(k.data))
+		fmt.Println(fmtutil.JSONIndentFormat(k.data))
 	}, "Append")
 	return
 }
@@ -54,7 +55,7 @@ func (k *KV) Append(key, value string) (err error) {
 func (k *KV) Delete(key string) (err error) {
 	track(func() {
 		err = k.remove(key)
-		fmt.Println(JSONIndentFormat(k.data))
+		fmt.Println(fmtutil.JSONIndentFormat(k.data))
 	}, "Delete")
 	return
 }
