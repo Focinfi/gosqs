@@ -14,44 +14,67 @@ import (
 var ClusterMetaKV models.KV
 var sqsMetaKV models.KV
 var messageKV models.KV
+var sqsMetaIncrementer models.Incrementer
 
 // different backend
 var mapKV *gomap.KV
+var mapIncrementer *gomap.Incrementer
 var onceKV *oncekv.KV
 var etcdKV *etcd.KV
 var etcdIncrementer *etcd.Incrementer
 
+func getEtcdKV() *etcd.KV {
+	if etcdKV == nil {
+		if kv, err := etcd.NewKV(); err != nil {
+			panic(err)
+		} else {
+			etcdKV = kv
+		}
+	}
+
+	return etcdKV
+}
+
+func newEtcdIncrementer() *etcd.Incrementer {
+	if etcdIncrementer == nil {
+		// incrementer
+		etcdIncrementer = etcd.NewIncrementer(etcdKV)
+	}
+
+	return etcdIncrementer
+}
+
+func getOnceKV() *oncekv.KV {
+	if onceKV == nil {
+		if kv, err := oncekv.NewKV(); err != nil {
+			panic(err)
+		} else {
+			onceKV = kv
+		}
+	}
+
+	return onceKV
+}
+
 func init() {
 	//mapKV
 	mapKV = gomap.New()
-
-	// etcd db
-	if kv, err := etcd.NewKV(); err != nil {
-		panic(err)
-	} else {
-		etcdKV = kv
-	}
-	// incrementer
-	etcdIncrementer = etcd.NewIncrementer(etcdKV)
-
-	// oncekv
-	if kv, err := oncekv.NewKV(); err != nil {
-		panic(err)
-	} else {
-		onceKV = kv
-	}
+	mapIncrementer = gomap.NewIncrementer(mapKV)
 
 	if config.Config.Env.IsProduction() {
-		ClusterMetaKV = etcdKV
-		sqsMetaKV = etcdKV
-		messageKV = onceKV
+		ClusterMetaKV = getEtcdKV()
+		sqsMetaKV = getEtcdKV()
+		sqsMetaIncrementer = newEtcdIncrementer()
+		messageKV = getOnceKV()
 	} else if config.Config.Env.IsDevelop() {
-		ClusterMetaKV = etcdKV
-		sqsMetaKV = etcdKV
+		ClusterMetaKV = getEtcdKV()
+		sqsMetaKV = getEtcdKV()
+		sqsMetaIncrementer = newEtcdIncrementer()
 		messageKV = mapKV
 	} else if config.Config.Env.IsTest() {
 		ClusterMetaKV = mapKV
 		sqsMetaKV = mapKV
+		sqsMetaIncrementer = mapIncrementer
 		messageKV = mapKV
 	} else {
 		panic(fmt.Sprintf("env '%s' is not allowed", config.Config.Env))
