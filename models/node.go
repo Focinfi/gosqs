@@ -1,6 +1,7 @@
 package models
 
 const (
+	// NodesKey for the nodes info storage key
 	NodesKey = "sqs.nodes"
 )
 

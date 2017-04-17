@@ -2,6 +2,8 @@ package models
 
 import "fmt"
 
+const queueKeyPrefix = "sqs.queue"
+
 // Queue contains name-message map
 type Queue struct {
 	UserID int64
@@ -15,8 +17,6 @@ func NewQueue(userID int64, name string) *Queue {
 		Name:   name,
 	}
 }
-
-const queueKeyPrefix = "sqs.queue"
 
 // QueueListKey for queue list storage key
 func QueueListKey(userID int64) string {

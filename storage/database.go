@@ -16,7 +16,7 @@ var sqsMetaKV models.KV
 var messageKV models.KV
 var sqsMetaIncrementer models.Incrementer
 
-// different backend
+// specific backend
 var mapKV *gomap.KV
 var mapIncrementer *gomap.Incrementer
 var onceKV *oncekv.KV
@@ -37,7 +37,6 @@ func getEtcdKV() *etcd.KV {
 
 func newEtcdIncrementer() *etcd.Incrementer {
 	if etcdIncrementer == nil {
-		// incrementer
 		etcdIncrementer = etcd.NewIncrementer(etcdKV)
 	}
 

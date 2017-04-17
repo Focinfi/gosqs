@@ -3,7 +3,6 @@ package agent
 import (
 	"net/http"
 
-	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -69,7 +68,6 @@ func (a *QueueAgent) handlePushMessage(ctx *gin.Context) {
 		responseErr(ctx, err)
 		return
 	}
-	log.Internal.Infoln("[handlePushMessage]", params)
 
 	userID, err := getUserID(params.Token)
 	if err != nil {
@@ -88,7 +86,6 @@ func (a *QueueAgent) handleApplyMessageIDRange(ctx *gin.Context) {
 		Size int `json:"size"`
 	}{}
 	if err := binding.JSON.Bind(ctx.Request, &params); err != nil {
-		log.Biz.Infoln(err)
 		responseErr(ctx, err)
 		return
 	}

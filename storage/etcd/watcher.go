@@ -20,7 +20,7 @@ func (w *Watcher) Watch(key string) <-chan string {
 
 	go func() {
 		res := <-watchChan
-		log.DB.Infof("watchChan: %#v, %#v\n", res, res.Events)
+		log.DB.Infof("etcd watch: %#v, %#v\n", res, res.Events)
 		if res.Canceled {
 			ch <- ""
 			return

@@ -13,6 +13,7 @@ import (
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/util/fmtutil"
 	"github.com/Focinfi/sqs/util/urlutil"
 )
 
@@ -23,6 +24,7 @@ const (
 
 var (
 	heartbeatPeriod = time.Second
+	format          = fmtutil.NewFormat("sqs.master")
 )
 
 // Service for a master server
@@ -48,7 +50,7 @@ func NewService(address string) *Service {
 		panic(err)
 	}
 	service.nodes = nodeURLSliceToNodes(urlSlice)
-	log.DB.Infoln(logPrefix, "init nodes:", service.nodes)
+	log.Internal.Infoln(format.Sprintln("init nodes:", service.nodes))
 
 	return service
 }
@@ -70,7 +72,7 @@ func (s *Service) AssignNode(userID int64, queueName string, squadName string) (
 	}
 
 	sort.Sort(nodeStatsSlice)
-	log.DB.Infoln(logPrefix, "nodes:", s.nodes)
+	log.Internal.Infoln(format.Sprintln("ready to be assigned nodes:", s.nodes))
 	return nodeStatsSlice[0].Addr, nil
 }
 
@@ -79,10 +81,10 @@ func (s *Service) AddNode(info models.NodeInfo) {
 	s.Lock()
 	defer s.Unlock()
 
-	log.Biz.Infoln(logPrefix, "to join:", info.Addr)
+	log.Biz.Infoln(format.Sprintln("node to be joined:", info.Addr))
 	s.nodes[info.Addr] = info
 	if err := s.db.updateNodes(s.nodes.nodeURLSlice()); err != nil {
-		log.DB.Errorln(logPrefix, "failed to update nodes into db")
+		log.DB.Errorln(format.Sprintln("failed to update nodes into db"))
 	}
 }
 
@@ -95,12 +97,12 @@ func (s *Service) heartbeat() {
 		nodesMap := s.nodes
 		s.RUnlock()
 
-		log.DB.Infof("%s get stats from %d nodes", logPrefix, len(nodesMap))
+		log.Cluster.Infof(format.Sprintf("get stats from [%d] nodes", len(nodesMap)))
 		for node := range nodesMap {
 			go func(n string) {
 				stats, err := s.getNodeStat(n)
 				if err != nil {
-					log.Internal.Errorf("node[%s] can not be connected\n", n)
+					log.Cluster.Errorln(format.Sprintf("node[%s] can not be connected\n", n))
 					s.removeNode(n)
 					return
 				}
@@ -138,7 +140,7 @@ func (s *Service) removeNode(node string) {
 
 	if _, ok := s.nodes[node]; ok {
 		delete(s.nodes, node)
-		log.DB.Errorf("%s node[%s] removed\n", logPrefix, node)
+		log.Cluster.Infoln(format.Sprintf("%s node[%s] removed\n", logPrefix, node))
 		// TODO: alert for handle failed node
 		s.db.updateNodes(s.nodes.nodeURLSlice())
 	}

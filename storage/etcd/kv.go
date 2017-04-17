@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/log"
 	"github.com/coreos/etcd/clientv3"
 )
 
@@ -23,7 +22,6 @@ func (kv *KV) Get(key string) (string, error) {
 	res, err := kv.db.Get(context.Background(), key)
 
 	if err != nil {
-		log.DB.Error(err)
 		return "", err
 	}
 

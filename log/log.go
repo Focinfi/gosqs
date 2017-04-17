@@ -28,11 +28,14 @@ var Internal = logrus.New()
 // DB for database error logger
 var DB = logrus.New()
 
-// Biz for logic logger
+// Biz for user face logic logger
 var Biz = logrus.New()
 
-// Service for node error logger
+// Service for cluster error logger
 var Service = logrus.New()
+
+// Service for cluster error logger
+var Cluster = logrus.New()
 
 // InternalError for logic error
 func InternalError(funcName string, message interface{}) {

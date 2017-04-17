@@ -70,7 +70,6 @@ func (a *MasterAgent) handleApplyNode(ctx *gin.Context) {
 		return
 	}
 
-	log.Internal.Println("AssignNode:", node)
 	tokenCode, err := makeToken(userID)
 	if err != nil {
 		responseErr(ctx, err)
@@ -84,19 +83,18 @@ func (a *MasterAgent) handleApplyNode(ctx *gin.Context) {
 func (a *QueueAgent) handlePullMessages(ctx *gin.Context) {
 	params := &models.NodeRequestParams{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		log.Internal.Error(err)
+		log.Biz.Error(err)
 		responseErr(ctx, err)
 		return
 	}
 
 	userID, err := getUserID(params.Token)
 	if err != nil {
-		log.Internal.Error(err)
+		log.Biz.Error(err)
 		responseErr(ctx, err)
 		return
 	}
 
-	log.Internal.Infoln("[handlePullMessages] userID:", userID)
 	messages, err := a.QueueService.PullMessages(userID, params.QueueName, params.SquadName, 10)
 	if err != nil {
 		responseErr(ctx, err)

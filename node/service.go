@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
 	"time"
 
 	"github.com/Focinfi/oncekv/utils/urlutil"
@@ -14,6 +13,7 @@ import (
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/util/fmtutil"
 	"github.com/Focinfi/sqs/util/psutil"
 )
 
@@ -24,6 +24,7 @@ const (
 
 var (
 	defaultPullMessageCount = config.Config.PullMessageCount
+	format                  = fmtutil.NewFormat("sqs.node")
 )
 
 // Service for one user info
@@ -63,7 +64,7 @@ func (s *Service) Start() {
 func (s *Service) PullMessages(userID int64, queueName, squadName string, length int) ([]models.Message, error) {
 	squad, err := s.Squad.One(userID, queueName, squadName)
 
-	log.Biz.Infoln("[handlePullMessages]", squad, err)
+	log.Biz.Infoln(format.Sprintln("[PullMessages]", squad, err))
 
 	if err == errors.DataNotFound {
 		maxMessageID, err := s.database.Storage.Queue.MessageMaxID(userID, queueName)
@@ -86,8 +87,6 @@ func (s *Service) PullMessages(userID int64, queueName, squadName string, length
 	if err != nil {
 		return nil, err
 	}
-
-	log.Internal.Infoln("squad:", squad)
 
 	maxMessageID, err := s.database.Queue.MessageMaxID(userID, queueName)
 	if err != nil {
@@ -115,7 +114,7 @@ func (s *Service) ReportMaxReceivedMessageID(userID int64, queueName, squadName 
 // PushMessage receives message
 func (s *Service) PushMessage(userID int64, queueName, content string, index int64) error {
 	maxID, err := s.Queue.MessageMaxID(userID, queueName)
-	log.Internal.Infoln("service [PushMessage]", index, maxID)
+	log.Biz.Infoln(format.Sprintln("[PushMessage]", index, maxID))
 	if err != nil {
 		return err
 	}
@@ -148,7 +147,7 @@ func (s *Service) updateInfo() {
 
 		cpuPercent, err := psutil.CPUUsedPercent()
 		if err != nil {
-			log.Internal.Error("failed to get the CPU used percent")
+			log.Biz.Error(format.Sprintln("failed to get the CPU used percent"))
 		} else {
 			s.info.CPU = cpuPercent
 		}
@@ -171,7 +170,7 @@ func (s *Service) join() error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return errors.New("can not join into master")
+		return errors.New(format.Sprintln("can not join into master"))
 	}
 	return nil
 }

@@ -34,9 +34,6 @@ func (s *Message) Nextn(userID int64, queueName string, currentID int64, maxMass
 		}
 
 		msgContent, err := s.One(userID, queueName, nextIdx)
-		log.Biz.Infof("message nextIdx: %d, upperID: %d\n", nextIdx, upperID)
-		log.Biz.Infof("message[%d]='%s', err: %v, is not found: %v", nextIdx, msgContent, err, err == errors.DataNotFound)
-
 		if err == errors.DataNotFound {
 			nextIdx++
 			continue
@@ -67,7 +64,7 @@ func (s *Message) Nextn(userID int64, queueName string, currentID int64, maxMass
 // Add adds a message
 func (s *Message) Add(m *models.Message) error {
 	_, getErr := s.One(m.UserID, m.QueueName, m.Index)
-	log.Biz.Printf("Get(%d.%s.%d) Error: %v, time: %v\n", m.UserID, m.QueueName, m.Index, getErr, time.Now())
+	log.DB.Infof("Get(%d.%s.%d) Error: %v, time: %v\n", m.UserID, m.QueueName, m.Index, getErr, time.Now())
 
 	if getErr == errors.DataNotFound {
 		err := s.db.Put(models.MessageKey(m.UserID, m.QueueName, m.Index), m.Content)

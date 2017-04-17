@@ -1,9 +1,6 @@
 package node
 
 import (
-	"fmt"
-
-	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/storage"
 )
@@ -15,7 +12,6 @@ type database struct {
 var db = &database{Storage: storage.DefaultStorage}
 
 func (d *database) PushMessage(userID int64, queueName, content string, index int64) error {
-	log.Internal.Infoln("[PushMessage]", index)
 	msg := &models.Message{
 		UserID:    userID,
 		QueueName: queueName,
@@ -24,7 +20,6 @@ func (d *database) PushMessage(userID int64, queueName, content string, index in
 	}
 
 	if err := d.Message.Add(msg); err != nil {
-		fmt.Println("Added Message, err: ", err)
 		return err
 	}
 	return nil

@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/util/fmtutil"
 	"github.com/Focinfi/sqs/util/urlutil"
 )
 
@@ -26,6 +27,8 @@ const (
 	// DefaultSquad is the default squad name
 	DefaultSquad = "default"
 )
+
+var format = fmtutil.NewFormat("sqs.client")
 
 // Option for Client options
 type Option struct {
@@ -94,7 +97,7 @@ type Message struct {
 // Queue returns a new QueueClient with the given name
 func (cli *Client) Queue(name string, squad string) (*QueueClient, error) {
 	if name == "" {
-		return nil, errors.New("queue can not be empty")
+		return nil, errors.New(format.Sprintln("queue can not be empty"))
 	}
 
 	if squad == "" {
@@ -146,10 +149,9 @@ func (cli *QueueClient) ApplyNode() error {
 		return err
 	}
 
-	log.Biz.Infoln(string(respBytes))
 	data := respData.Data
 	if data.Node == "" || data.Token == "" {
-		return errors.New("failed to register for a server IP")
+		return errors.New(format.Sprintln("failed to apply a available server"))
 	}
 
 	cli.servingNode = data.Node
@@ -165,7 +167,7 @@ func (cli *QueueClient) PushMessage(content string) error {
 		return err
 	}
 
-	log.Internal.Infoln("applyMessageID:", id)
+	//log("applyMessageID:", id)
 
 	param := &pushMessageParam{
 		MessageID:         id,
@@ -186,7 +188,7 @@ func (cli *QueueClient) PushMessage(content string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to push message, resonse status code: %d\n", resp.StatusCode)
+		return fmt.Errorf(format.Sprintf("failed to push message, resonse status code: %d\n", resp.StatusCode))
 	}
 
 	return nil
@@ -207,7 +209,7 @@ func (cli *QueueClient) PullMessages(handler func([]Message) error) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("filed to pull message, status code is %d\n", resp.StatusCode)
+		return fmt.Errorf(format.Sprintf("filed to pull message, status code is %d\n", resp.StatusCode))
 	}
 
 	respBytes, err := ioutil.ReadAll(resp.Body)
@@ -222,7 +224,6 @@ func (cli *QueueClient) PullMessages(handler func([]Message) error) error {
 	}
 	messages := respParam.Data.Messages
 	if len(messages) > 0 {
-		log.Internal.Infoln(messages)
 		if err := handler(messages); err != nil {
 			return err
 		}
@@ -253,14 +254,14 @@ func (cli *QueueClient) reportReceived(messageID int64) error {
 		case <-time.After(delay):
 			resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(b))
 			if err != nil {
-				log.Service.Errorf("can not report received message id, err: %v\n", err)
+				log.Printf(format.Sprintf("can not report received message id, err: %v\n", err))
 				delay = (delay + 1) * time.Millisecond * 500
 				continue
 			}
 			resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				log.Service.Errorf("can not report received message id, status code: %d\n", resp.StatusCode)
+				//log.Service.Errorf("can not report received message id, status code: %d\n", resp.StatusCode)
 				continue
 			}
 
@@ -299,7 +300,7 @@ func (cli *QueueClient) applyMessageID() (int64, error) {
 	}
 
 	if respData.Data.MessageIDEnd < respData.Data.MessageIDBegin {
-		return -1, errors.New("GET /appyMessageID response data broken: end < begin")
+		return -1, errors.New(format.Sprintln("GET /appyMessageID response data broken: end < begin"))
 	}
 
 	return respData.Data.MessageIDEnd, nil
