@@ -89,7 +89,6 @@ func (s *Service) PullMessages(userID int64, queueName, squadName string, length
 
 	log.Internal.Infoln("squad:", squad)
 
-	// TODO: to confirm the concurrent requests result
 	maxMessageID, err := s.database.Queue.MessageMaxID(userID, queueName)
 	if err != nil {
 		return nil, err

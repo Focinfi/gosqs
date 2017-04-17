@@ -39,6 +39,8 @@ var Config = struct {
 	Env  Env `default:"develop" env:"SQS_ENV"`
 	Root string
 
+	BaseSecret string `default:"aslMep28nkvfiYTuWuF7OIp2A5sMb5ewOu2UwO/1PEI=" env:"BASE_SECRET"`
+
 	// etcd addrs and the the meta data key
 	EtcdEndpoints []string `default:"['127.0.0.1:2379']" env:"SQS_ETCD_ADDRS"`
 

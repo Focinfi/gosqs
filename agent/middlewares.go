@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/util/strconvutil"
 	"github.com/Focinfi/sqs/util/token"
 	"github.com/gin-gonic/gin"
@@ -14,16 +15,16 @@ const (
 )
 
 var (
-	// TODO: move into config
-	secret          = "sqs.secret"
 	tokenExpiration = time.Hour
+	tokener         = token.Default
+	baseSecret      = config.Config.BaseSecret
 )
 
 // throttling protects our server from overload
 func throttling(ctx *gin.Context) {
 }
 
-// parsing parses params in the req for the following middlewares
+// parsing parses params in the req for the following middleware
 func parsing(ctx *gin.Context) {
 
 }
@@ -33,7 +34,7 @@ func auth(ctx *gin.Context) {
 }
 
 func getUserID(code string) (int64, error) {
-	data, err := token.Verify(code)
+	data, err := tokener.Verify(code, baseSecret)
 	if err != nil {
 		return -1, err
 	}
@@ -43,9 +44,9 @@ func getUserID(code string) (int64, error) {
 		return -1, errors.New("broken code")
 	}
 
-	return strconvutil.ParseInt64(idStr)
+	return strconvutil.ParseInt64(idStr.(string))
 }
 
 func makeToken(userID int64) (string, error) {
-	return token.Make(secret, map[string]string{userIDKey: strconvutil.Int64toa(userID)}, tokenExpiration)
+	return tokener.Make(baseSecret, map[string]interface{}{userIDKey: strconvutil.Int64toa(userID)}, tokenExpiration)
 }
