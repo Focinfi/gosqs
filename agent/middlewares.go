@@ -2,7 +2,6 @@ package agent
 
 import (
 	"errors"
-
 	"time"
 
 	"github.com/Focinfi/sqs/util/strconvutil"

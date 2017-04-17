@@ -6,12 +6,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"time"
+
 	"github.com/Focinfi/oncekv/utils/urlutil"
 	"github.com/Focinfi/sqs/agent"
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/util/psutil"
 )
 
 const (
@@ -52,6 +55,7 @@ func (s *Service) Start() {
 		panic(err)
 	}
 
+	go s.updateInfo()
 	log.Biz.Fatal(http.ListenAndServe(s.addr, s.agent))
 }
 
@@ -135,9 +139,23 @@ func (s *Service) ApplyMessageIDRange(userID int64, queueName string, size int) 
 
 // Info returns the info of current service
 func (s *Service) Info() models.NodeInfo {
-	// TODO: fetch current node info
-	log.Biz.Info(s.info)
 	return *s.info
+}
+
+func (s *Service) updateInfo() {
+	ticker := time.NewTicker(time.Millisecond * 500)
+	for {
+		<-ticker.C
+
+		cpuPercent, err := psutil.CPUUsedPercent()
+		if err != nil {
+			log.Internal.Error("failed to get the CPU used percent")
+		} else {
+			s.info.CPU = cpuPercent
+		}
+
+		s.info.Memory = psutil.MemoryUsedPercent()
+	}
 }
 
 func (s *Service) join() error {

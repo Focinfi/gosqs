@@ -6,10 +6,9 @@ const (
 
 // NodeInfo contains the basic stats information of one node
 type NodeInfo struct {
-	Addr     string `json:"addr"`
-	CPU      int    `json:"cpu"`
-	Memory   int    `json:"memory"`
-	Resource int    `json:"resource"`
+	Addr   string `json:"addr"`
+	CPU    int    `json:"cpu"`
+	Memory int    `json:"memory"`
 }
 
 // UserAuth for one user auth info
@@ -35,8 +34,8 @@ func (ss NodeSlice) Len() int {
 }
 
 func (ss NodeSlice) Less(i, j int) bool {
-	pi := ss[i].CPU + ss[i].Memory + ss[i].Resource
-	pj := ss[j].CPU + ss[j].Memory + ss[j].Resource
+	pi := ss[i].CPU + ss[i].Memory
+	pj := ss[j].CPU + ss[j].Memory
 	return pi < pj
 }
 

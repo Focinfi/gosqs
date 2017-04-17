@@ -2,7 +2,6 @@ package sqs
 
 import (
 	"testing"
-
 	"time"
 
 	"github.com/Focinfi/sqs/client"
