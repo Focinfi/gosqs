@@ -24,3 +24,7 @@ func GetUserWithKey(accessKey string, secretKey string) (int64, error) {
 	// TODO: authentication
 	return 1, nil
 }
+
+func GetUserIDByUniqueID(uniqueID string) (int64, error) {
+	return 1, nil
+}

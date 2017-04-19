@@ -17,6 +17,7 @@ const (
 	duplicateMessage = iota + 1001
 	messageOutOfData
 	userNotFound
+	userAuthError
 	queueNotFound
 	duplicateSquad
 	serviceOverload
@@ -54,6 +55,10 @@ var ServiceOverload = NewBizErr("node is overload", serviceOverload)
 
 // DataNotFound error for data not found
 var DataNotFound = NewBizErr("data is not found", dataNotFound)
+
+func UserAuthError(message string) Biz {
+	return NewBizErr(message, userAuthError)
+}
 
 // DBQueryTimeout returns a Internal for a db query
 func DBQueryTimeout(db, key string) Internal {
