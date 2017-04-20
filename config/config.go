@@ -59,6 +59,16 @@ var Config = struct {
 
 	// TODO: choose log collector
 	LogOut io.Writer
+
+	SQLDB struct {
+		Adapter  string `default:"mysql"`
+		Name     string `default:"sqs" env:"MYSQL_INSTANCE_NAME"`
+		Host     string `default:"127.0.0.1" env:"MYSQL_PORT_3306_TCP_ADDR"`
+		Port     string `default:"3306" env:"MYSQL_PORT_3306_TCP_PORT"`
+		User     string `default:"sqs" env:"MYSQL_USERNAME"`
+		Password string `default:"" env:"MYSQL_PASSWORD"`
+		Protocl  string `default:"tcp" env:"MYSQL_PORT_3306_TCP_PROTO"`
+	}
 }{}
 
 func init() {

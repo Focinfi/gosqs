@@ -1,9 +1,6 @@
 package storage
 
-import (
-	"github.com/Focinfi/sqs/external"
-	"github.com/Focinfi/sqs/models"
-)
+import "github.com/Focinfi/sqs/models"
 
 // Storage defines storage
 type Storage struct {
@@ -23,5 +20,5 @@ func init() {
 	DefaultStorage.Nodes = &Nodes{db: ClusterMetaKV, store: DefaultStorage}
 
 	// TODO: move into db/seeds
-	DefaultStorage.Queue.db.Put(models.QueueListKey(external.Root.ID()), "[]")
+	DefaultStorage.Queue.db.Put(models.QueueListKey(1), "[]")
 }

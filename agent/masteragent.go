@@ -3,6 +3,7 @@ package agent
 import (
 	"net/http"
 
+	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/external"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
@@ -59,9 +60,25 @@ func (a *MasterAgent) handleApplyNode(ctx *gin.Context) {
 		return
 	}
 
-	userID, err := external.GetUserWithKey(params.AccessKey, params.SecretKey)
+	err := defaultAuth.Authenticate(params.AccessKey, params.SecretKey)
 	if err != nil {
 		responseErr(ctx, err)
+		return
+	}
+
+	userID, getUserIDErr := external.DefaultUserStore.GetUserIDByUniqueID(params.AccessKey)
+	if getUserIDErr == errors.DataNotFound {
+		id, err := external.DefaultUserStore.CreateUserByUniqueID(params.AccessKey)
+		if err != nil {
+			responseErr(ctx, err)
+			return
+		}
+
+		userID = id
+	}
+	if getUserIDErr != nil {
+		responseErr(ctx, err)
+		return
 	}
 
 	node, err := a.MasterService.AssignNode(userID, params.QueueName, params.SquadName)

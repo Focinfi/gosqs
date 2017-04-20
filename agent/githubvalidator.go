@@ -1,23 +1,19 @@
-package admin
+package agent
 
 import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/external"
-	"github.com/Focinfi/sqs/util/token"
 )
 
 const (
 	userGithubLoginKey = "userGithubLogin"
-	apiURL             = "https://api.github.com/repos/Focinfi/sqs/stargazerSlice"
+	apiURL             = "https://api.github.com/repos/Focinfi/sqs/stargazers"
 	updatePeriod       = time.Second * 10
 )
 
@@ -36,46 +32,43 @@ func (s stargazers) toSlice() []string {
 	return slice
 }
 
-// GithubAuther auth by github stargazers
-type GithubAuther struct {
+// GithubValidator auth by github stargazers
+type GithubValidator struct {
 	sync.Mutex
 	stargazerSlice []string
 }
 
-// NewGithubAuther allocates and return a new GithubAuther
-func NewGithubAuther() *GithubAuther {
-	return &GithubAuther{
+// NewGithubValidator allocates and return a new GithubValidator
+func NewGithubValidator() *GithubValidator {
+	return &GithubValidator{
 		stargazerSlice: []string{},
 	}
 }
 
+var githubValidator = NewGithubValidator()
+
 // Start start the background services
-func (auther *GithubAuther) Start() {
-	go auther.updateStargazerSlice()
+func (auther *GithubValidator) Start() {
+	if err := auther.updateStargazerSlice(); err != nil {
+		panic(err)
+	}
+	go auther.updateRegularly()
 }
 
-// Auth auth use accessKey as a the github login,
+// Validate validates use accessKey as a the github login,
 // secretKey encrypted the data of accessKey.
-func (auther *GithubAuther) Auth(accessKey string, secretKey string) (int64, error) {
+func (auther *GithubValidator) Validate(accessKey string, secretKey string) error {
+
 	idx := sort.SearchStrings(auther.stargazerSlice, accessKey)
 	if idx > len(auther.stargazerSlice) || auther.stargazerSlice[idx] != accessKey {
-		return -1, errors.UserNotFound
+		return errors.UserNotFound
 	}
 
-	params, err := token.Default.Verify(secretKey, config.Config.BaseSecret)
-	if err != nil {
-		return -1, errors.UserAuthError(err.Error())
-	}
-
-	if !reflect.DeepEqual(secretKey, params[userGithubLoginKey]) {
-		return -1, errors.UserAuthError("broken secrect_key")
-	}
-
-	return external.GetUserIDByUniqueID(accessKey)
+	return nil
 }
 
 // update stargazerSlice regularly
-func (auther *GithubAuther) updateRegularly() {
+func (auther *GithubValidator) updateRegularly() {
 	ticker := time.NewTicker(updatePeriod)
 	for {
 		<-ticker.C
@@ -83,7 +76,7 @@ func (auther *GithubAuther) updateRegularly() {
 	}
 }
 
-func (auther *GithubAuther) updateStargazerSlice() error {
+func (auther *GithubValidator) updateStargazerSlice() error {
 	resp, err := http.Get(apiURL)
 	if err != nil {
 		return err
@@ -95,12 +88,12 @@ func (auther *GithubAuther) updateStargazerSlice() error {
 		return err
 	}
 
-	respParam := stargazers{}
-	if err := json.Unmarshal(respBytes, respParam); err != nil {
+	respParam := []stargazer{}
+	if err := json.Unmarshal(respBytes, &respParam); err != nil {
 		return err
 	}
 
-	stargazersSlice := respParam.toSlice()
+	stargazersSlice := stargazers(respParam).toSlice()
 	sort.StringSlice(stargazersSlice).Sort()
 	auther.Lock()
 	auther.stargazerSlice = stargazersSlice

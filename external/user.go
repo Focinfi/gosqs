@@ -2,29 +2,29 @@ package external
 
 // User represents a user of sqs
 type User interface {
-	ID() int64
+	ID(args ...interface{}) (int64, error)
 }
 
 // UserFunc user function
-type UserFunc func() int64
+type UserFunc func(args ...interface{}) (int64, error)
 
 // ID implement User interface
-func (f UserFunc) ID() int64 {
-	return f()
+func (f UserFunc) ID(args ...interface{}) (int64, error) {
+	return f(args...)
 }
 
 // Root for root user
-var Root = UserFunc(func() int64 { return 1 })
+var Root = UserFunc(func(args ...interface{}) (int64, error) { return 1, nil })
 
-// TestClient for test client
-var TestClient = UserFunc(func() int64 { return 1 })
-
-// GetUserWithKey returns the userID with the params
-func GetUserWithKey(accessKey string, secretKey string) (int64, error) {
-	// TODO: authentication
-	return 1, nil
+// UserStore for user storage
+type UserStore interface {
+	GetUserIDByUniqueID(uniqueID string) (int64, error)
+	CreateUserByUniqueID(uniqueID string) (int64, error)
 }
 
-func GetUserIDByUniqueID(uniqueID string) (int64, error) {
-	return 1, nil
+// DefaultUserStore default store for user
+var DefaultUserStore UserStore
+
+func init() {
+	DefaultUserStore = NewMySQL()
 }
