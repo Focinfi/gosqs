@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/log"
 )
 
 const (
-	userGithubLoginKey = "userGithubLogin"
-	apiURL             = "https://api.github.com/repos/Focinfi/sqs/stargazers"
-	updatePeriod       = time.Second * 10
+	apiURL       = "https://api.github.com/repos/Focinfi/sqs/stargazers"
+	updatePeriod = time.Second * 10
 )
 
 type stargazer struct {
@@ -58,9 +58,9 @@ func (auther *GithubValidator) Start() {
 // Validate validates use accessKey as a the github login,
 // secretKey encrypted the data of accessKey.
 func (auther *GithubValidator) Validate(accessKey string, secretKey string) error {
-
+	log.Internal.Infoln(auther.stargazerSlice)
 	idx := sort.SearchStrings(auther.stargazerSlice, accessKey)
-	if idx > len(auther.stargazerSlice) || auther.stargazerSlice[idx] != accessKey {
+	if idx >= len(auther.stargazerSlice) || auther.stargazerSlice[idx] != accessKey {
 		return errors.UserNotFound
 	}
 

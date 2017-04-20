@@ -7,14 +7,14 @@ import (
 	"github.com/Focinfi/sqs/client"
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/example"
-	"github.com/Focinfi/sqs/external"
 	"github.com/Focinfi/sqs/master"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/node"
+	"github.com/Focinfi/sqs/util/token"
 )
 
 func Test(t *testing.T) {
-	queue := models.NewQueue(external.Root.ID(), example.Greeting)
+	queue := models.NewQueue(1, example.Greeting)
 	if err := master.AddQueue(queue); err != nil {
 		panic(err)
 	}
@@ -25,7 +25,10 @@ func Test(t *testing.T) {
 	go node.New(":54461", ":5446").Start()
 
 	time.Sleep(time.Second)
-	cli := client.New(config.Config.DefaultMasterAddress, "", "")
+	accessKey := "Focinfi"
+	paramsKey := config.Config.UserGithubLoginKey
+	secretKey, err := token.Default.Make(config.Config.BaseSecret, map[string]interface{}{paramsKey: accessKey}, time.Hour)
+	cli := client.New(config.Config.DefaultMasterAddress, accessKey, secretKey)
 	queueCli, err := cli.Queue(example.Greeting, example.Home)
 	if err != nil {
 		t.Fatal("failed to create a queue, err:", err)

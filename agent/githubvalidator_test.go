@@ -13,7 +13,8 @@ func Test(t *testing.T) {
 	validator.Start()
 
 	accessKey := "Focinfi"
-	secretKey, err := token.Default.Make(config.Config.BaseSecret, map[string]interface{}{userGithubLoginKey: accessKey}, time.Hour)
+	paramsKey := config.Config.UserGithubLoginKey
+	secretKey, err := token.Default.Make(config.Config.BaseSecret, map[string]interface{}{paramsKey: accessKey}, time.Hour)
 	if err != nil {
 		t.Fatal(err)
 	}

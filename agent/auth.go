@@ -25,7 +25,7 @@ func (a Auth) Authenticate(accessKey string, secretKey string) (err error) {
 	if err != nil {
 		return errors.UserAuthError(err.Error())
 	}
-	if !reflect.DeepEqual(accessKey, params[userGithubLoginKey]) {
+	if !reflect.DeepEqual(accessKey, params[config.Config.UserGithubLoginKey]) {
 		return errors.UserAuthError("broken secrect_key")
 	}
 
@@ -41,6 +41,8 @@ func (a Auth) Authenticate(accessKey string, secretKey string) (err error) {
 var defaultAuth *Auth
 
 func init() {
+	githubValidator.Start()
+	
 	defaultAuth = &Auth{
 		Validators: []Validator{githubValidator},
 	}

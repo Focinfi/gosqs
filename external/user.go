@@ -1,5 +1,7 @@
 package external
 
+import "github.com/Focinfi/sqs/config"
+
 // User represents a user of sqs
 type User interface {
 	ID(args ...interface{}) (int64, error)
@@ -26,5 +28,9 @@ type UserStore interface {
 var DefaultUserStore UserStore
 
 func init() {
-	DefaultUserStore = NewMySQL()
+	if config.Config.Env.IsProduction() {
+		DefaultUserStore = NewMySQL()
+	}
+
+	DefaultUserStore = DefaultUserStoreMock
 }
