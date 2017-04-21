@@ -15,7 +15,7 @@ func init() {
 		return
 	}
 	dbCfg := config.Config.SQLDB
-	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@%s(%s:%s)/%s?charset=utf8&parseTime=True&loc=UTC", dbCfg.User, dbCfg.Password, dbCfg.Protocl, dbCfg.Host, dbCfg.Port, dbCfg.Name))
+	db, err := gorm.Open("mysql", fmt.Sprintf("%s:%s@%s(%s:%s)/%s?charset=utf8&parseTime=True&loc=UTC", dbCfg.User, dbCfg.Password, dbCfg.Protocol, dbCfg.Host, dbCfg.Port, dbCfg.Name))
 	if err != nil {
 		panic(db)
 	}

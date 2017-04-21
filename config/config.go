@@ -40,23 +40,23 @@ var Config = struct {
 	Root string
 
 	// secret
-	BaseSecret string `default:"aslMep28nkvfiYTuWuF7OIp2A5sMb5ewOu2UwO/1PEI=" env:"BASE_SECRET"`
+	BaseSecret string `default:"aslMep28nkvfiYTuWuF7OIp2A5sMb5ewOu2UwO/1PEI=" env:"SQS_BASE_SECRET"`
 
 	// auth
-	UserGithubLoginKey string `default: "user_github_login_key"`
+	UserGithubLoginKey string `default: "user_github_login_key" env:"SQS_USER_GITHUB_LOGIN_KEY"`
 
 	// etcd addrs and the the meta data key
 	EtcdEndpoints []string `default:"['127.0.0.1:2379']" env:"SQS_ETCD_ADDRS"`
 
 	// master
-	DefaultMasterAddress string `default:"127.0.0.1:5446" env:"DEFAULT_MESSAGE_ADDRESS"`
+	DefaultMasterAddress string `default:"127.0.0.1:5446" env:"SQS_DEFAULT_MESSAGE_ADDRESS"`
 
 	// node
-	PullMessageCount      int `default:"10" env:"PULL_MESSAGE_COUNT"`
-	MaxMessageIDRangeSize int `default:"10" env:"MAX_MESSAGE_ID_RANGE_SIZE"`
+	PullMessageCount      int `default:"10" env:"SQS_PULL_MESSAGE_COUNT"`
+	MaxMessageIDRangeSize int `default:"10" env:"SQS_MAX_MESSAGE_ID_RANGE_SIZE"`
 
 	// message
-	MaxTryMessageCount int `default:"5" env:"MAX_TRY_MESSAGE_COUNT"`
+	MaxTryMessageCount int `default:"5" env:"SQS_MAX_TRY_MESSAGE_COUNT"`
 
 	// admin
 	AdminAddr string `default:"127.0.0.1:54460" env:"SQS_ADMIN_ADDR"`
@@ -71,7 +71,14 @@ var Config = struct {
 		Port     string `default:"3306" env:"MYSQL_PORT_3306_TCP_PORT"`
 		User     string `default:"sqs" env:"MYSQL_USERNAME"`
 		Password string `default:"" env:"MYSQL_PASSWORD"`
-		Protocl  string `default:"tcp" env:"MYSQL_PORT_3306_TCP_PROTO"`
+		Protocol string `default:"tcp" env:"MYSQL_PORT_3306_TCP_PROTO"`
+	}
+
+	Email struct {
+		SMTP     string `default:"smtp.google.com" env:"SQS_EMAIL_SMTP"`
+		From     string `default:"sqs.noreply@gmail.com" env:"SQS_EMAIL_FROM"`
+		User     string `default:"sqs.noreply" env:"SQS_EMAIL_USER"`
+		Password string `env:"SQS_EMAIL_PASSWORD"`
 	}
 }{}
 

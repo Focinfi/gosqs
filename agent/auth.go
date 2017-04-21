@@ -5,6 +5,7 @@ import (
 
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/util/githubutil"
 	"github.com/Focinfi/sqs/util/token"
 )
 
@@ -18,7 +19,7 @@ type Auth struct {
 	Validators []Validator
 }
 
-// Authenticate authenticates the accessKey and sceretKey.
+// Authenticate authenticates the accessKey and secretKey.
 // Try to find the corresponding userID of the accessKey.
 func (a Auth) Authenticate(accessKey string, secretKey string) (err error) {
 	params, err := token.Default.Verify(secretKey, config.Config.BaseSecret)
@@ -41,9 +42,9 @@ func (a Auth) Authenticate(accessKey string, secretKey string) (err error) {
 var defaultAuth *Auth
 
 func init() {
-	githubValidator.Start()
-	
+	githubutil.DefaultValidator.Start()
+
 	defaultAuth = &Auth{
-		Validators: []Validator{githubValidator},
+		Validators: []Validator{githubutil.DefaultValidator},
 	}
 }

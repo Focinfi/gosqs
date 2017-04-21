@@ -7,6 +7,7 @@ import (
 	"github.com/Focinfi/sqs/external"
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/util/httputil"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
@@ -42,7 +43,7 @@ func (a *MasterAgent) handleJoinNode(ctx *gin.Context) {
 	params := models.NodeInfo{}
 	if err := binding.JSON.Bind(ctx.Request, &params); err != nil {
 		log.Biz.Error(err)
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
@@ -56,13 +57,13 @@ func (a *MasterAgent) handleApplyNode(ctx *gin.Context) {
 		models.NodeRequestParams
 	}{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	err := defaultAuth.Authenticate(params.AccessKey, params.SecretKey)
 	if err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
@@ -70,30 +71,30 @@ func (a *MasterAgent) handleApplyNode(ctx *gin.Context) {
 	if getUserIDErr == errors.DataNotFound {
 		id, err := external.DefaultUserStore.CreateUserByUniqueID(params.AccessKey)
 		if err != nil {
-			responseErr(ctx, err)
+			httputil.ResponseErr(ctx, err)
 			return
 		}
 
 		userID = id
 	}
 	if getUserIDErr != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	node, err := a.MasterService.AssignNode(userID, params.QueueName, params.SquadName)
 	if err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	tokenCode, err := makeToken(userID)
 	if err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
-	responseOKData(ctx, gin.H{"node": node, "token": tokenCode})
+	httputil.ResponseOKData(ctx, gin.H{"node": node, "token": tokenCode})
 }
 
 // handlePullMessages for pulling message
@@ -101,22 +102,22 @@ func (a *QueueAgent) handlePullMessages(ctx *gin.Context) {
 	params := &models.NodeRequestParams{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
 		log.Biz.Error(err)
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	userID, err := getUserID(params.Token)
 	if err != nil {
 		log.Biz.Error(err)
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	messages, err := a.QueueService.PullMessages(userID, params.QueueName, params.SquadName, 10)
 	if err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
-	responseOKData(ctx, gin.H{"messages": messages})
+	httputil.ResponseOKData(ctx, gin.H{"messages": messages})
 }

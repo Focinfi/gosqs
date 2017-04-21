@@ -24,6 +24,7 @@ const (
 	applyMessageIDRangeOversize
 	messageIndexOutOfRange
 	dataNotFound
+	notSQSStargazer
 )
 
 // DuplicateQueue error for duplicate queue
@@ -55,6 +56,9 @@ var ServiceOverload = NewBizErr("node is overload", serviceOverload)
 
 // DataNotFound error for data not found
 var DataNotFound = NewBizErr("data is not found", dataNotFound)
+
+// NotSQSStargazer not a sqs stargazer on github
+var NotSQSStargazer = NewBizErr("not a github.com/Focinfi/sqs stargazer", notSQSStargazer)
 
 func UserAuthError(message string) Biz {
 	return NewBizErr(message, userAuthError)

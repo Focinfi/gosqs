@@ -1,4 +1,4 @@
-package agent
+package httputil
 
 import (
 	"fmt"
@@ -30,37 +30,37 @@ func StatusBadRequest(err error) *models.HTTPStatusMeta {
 // StatusOK for successful request
 var StatusOK = &models.HTTPStatusMeta{Code: errors.NoErr}
 
-func responseJOSN(ctx *gin.Context, meta *models.HTTPStatusMeta, data interface{}, isAbort bool) {
+func ResponseJOSN(ctx *gin.Context, meta *models.HTTPStatusMeta, data interface{}, isAbort bool) {
 	ctx.JSON(http.StatusOK, models.HTTPStatus{HTTPStatusMeta: *meta, Data: data})
 	if isAbort {
 		ctx.Abort()
 	}
 }
 
-func responseOK(ctx *gin.Context) {
-	responseJOSN(ctx, StatusOK, nil, true)
+func ResponseOK(ctx *gin.Context) {
+	ResponseJOSN(ctx, StatusOK, nil, true)
 }
 
-func responseOKData(ctx *gin.Context, data interface{}) {
-	responseJOSN(ctx, StatusOK, data, true)
+func ResponseOKData(ctx *gin.Context, data interface{}) {
+	ResponseJOSN(ctx, StatusOK, data, true)
 }
 
-func responseErr(ctx *gin.Context, err error) {
+func ResponseErr(ctx *gin.Context, err error) {
 	if err == nil {
-		responseOK(ctx)
+		ResponseOK(ctx)
 		return
 	}
 
 	if bizErr, ok := err.(errors.Biz); ok {
-		responseJOSN(ctx, &models.HTTPStatusMeta{Code: bizErr.BizCode(), Message: bizErr.Error()}, nil, true)
+		ResponseJOSN(ctx, &models.HTTPStatusMeta{Code: bizErr.BizCode(), Message: bizErr.Error()}, nil, true)
 		return
 	}
 
 	if internalErr, ok := err.(errors.Internal); ok {
-		responseJOSN(ctx, StatusIsBusy(internalErr), nil, true)
+		ResponseJOSN(ctx, StatusIsBusy(internalErr), nil, true)
 		return
 	}
 
-	responseJOSN(ctx, StatusBadRequest(err), nil, true)
+	ResponseJOSN(ctx, StatusBadRequest(err), nil, true)
 	return
 }

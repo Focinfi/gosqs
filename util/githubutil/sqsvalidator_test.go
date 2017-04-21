@@ -1,4 +1,4 @@
-package agent
+package githubutil
 
 import (
 	"testing"

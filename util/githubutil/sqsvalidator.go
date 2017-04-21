@@ -1,4 +1,4 @@
-package agent
+package githubutil
 
 import (
 	"encoding/json"
@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/log"
 )
 
 const (
@@ -32,35 +31,41 @@ func (s stargazers) toSlice() []string {
 	return slice
 }
 
-// GithubValidator auth by github stargazers
-type GithubValidator struct {
-	sync.Mutex
+// SQSValidator auth by github stargazers
+type SQSValidator struct {
+	sync.RWMutex
 	stargazerSlice []string
 }
 
-// NewGithubValidator allocates and return a new GithubValidator
-func NewGithubValidator() *GithubValidator {
-	return &GithubValidator{
+// NewGithubValidator allocates and return a new SQSValidator
+func NewGithubValidator() *SQSValidator {
+	return &SQSValidator{
 		stargazerSlice: []string{},
 	}
 }
 
-var githubValidator = NewGithubValidator()
+var DefaultValidator = NewGithubValidator()
 
 // Start start the background services
-func (auther *GithubValidator) Start() {
+func (auther *SQSValidator) Start() {
 	if err := auther.updateStargazerSlice(); err != nil {
 		panic(err)
 	}
 	go auther.updateRegularly()
 }
 
+func (auther *SQSValidator) ContainsLogin(login string) bool {
+	auther.RLock()
+	defer auther.RUnlock()
+
+	idx := sort.SearchStrings(auther.stargazerSlice, login)
+	return idx < len(auther.stargazerSlice) && auther.stargazerSlice[idx] == login
+}
+
 // Validate validates use accessKey as a the github login,
 // secretKey encrypted the data of accessKey.
-func (auther *GithubValidator) Validate(accessKey string, secretKey string) error {
-	log.Internal.Infoln(auther.stargazerSlice)
-	idx := sort.SearchStrings(auther.stargazerSlice, accessKey)
-	if idx >= len(auther.stargazerSlice) || auther.stargazerSlice[idx] != accessKey {
+func (auther *SQSValidator) Validate(accessKey string, secretKey string) error {
+	if !auther.ContainsLogin(accessKey) {
 		return errors.UserNotFound
 	}
 
@@ -68,7 +73,7 @@ func (auther *GithubValidator) Validate(accessKey string, secretKey string) erro
 }
 
 // update stargazerSlice regularly
-func (auther *GithubValidator) updateRegularly() {
+func (auther *SQSValidator) updateRegularly() {
 	ticker := time.NewTicker(updatePeriod)
 	for {
 		<-ticker.C
@@ -76,7 +81,7 @@ func (auther *GithubValidator) updateRegularly() {
 	}
 }
 
-func (auther *GithubValidator) updateStargazerSlice() error {
+func (auther *SQSValidator) updateStargazerSlice() error {
 	resp, err := http.Get(apiURL)
 	if err != nil {
 		return err

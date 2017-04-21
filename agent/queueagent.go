@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/sqs/util/httputil"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
@@ -43,17 +44,17 @@ func (a *QueueAgent) handleReportMaxReceivedMessageID(ctx *gin.Context) {
 		MessageID int64 `json:"message_id"`
 	}{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 	userID, err := getUserID(params.Token)
 	if err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	err = a.QueueService.ReportMaxReceivedMessageID(userID, params.QueueName, params.SquadName, params.MessageID)
-	responseErr(ctx, err)
+	httputil.ResponseErr(ctx, err)
 }
 
 // handlePushMessage serve message pushing via http
@@ -65,18 +66,18 @@ func (a *QueueAgent) handlePushMessage(ctx *gin.Context) {
 	}
 	params := &messageParam{}
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	userID, err := getUserID(params.Token)
 	if err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	err = a.QueueService.PushMessage(userID, params.QueueName, params.Content, params.MessageID)
-	responseErr(ctx, err)
+	httputil.ResponseErr(ctx, err)
 }
 
 // handleApplyMessageIDRange try to apply the message id range for a queue
@@ -86,19 +87,19 @@ func (a *QueueAgent) handleApplyMessageIDRange(ctx *gin.Context) {
 		Size int `json:"size"`
 	}{}
 	if err := binding.JSON.Bind(ctx.Request, &params); err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	userID, err := getUserID(params.Token)
 	if err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
 	maxID, err := a.QueueService.ApplyMessageIDRange(userID, params.QueueName, params.Size)
 	if err != nil {
-		responseErr(ctx, err)
+		httputil.ResponseErr(ctx, err)
 		return
 	}
 
@@ -110,10 +111,10 @@ func (a *QueueAgent) handleApplyMessageIDRange(ctx *gin.Context) {
 		MessageIDEnd:   maxID,
 	}
 
-	responseOKData(ctx, res)
+	httputil.ResponseOKData(ctx, res)
 }
 
 // handleGetStatus response the info of current node
 func (a *QueueAgent) handleGetStatus(ctx *gin.Context) {
-	responseOKData(ctx, a.QueueService.Info())
+	httputil.ResponseOKData(ctx, a.QueueService.Info())
 }
