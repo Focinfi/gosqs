@@ -15,6 +15,7 @@ const (
 
 	// biz error code
 	duplicateMessage = iota + 1001
+	duplicateUser
 	messageOutOfData
 	userNotFound
 	userAuthError
@@ -31,7 +32,10 @@ const (
 var DuplicateQueue = NewBizErr("duplicate queue", duplicateMessage)
 
 // DuplicateMessage error for duplicate message
-var DuplicateMessage = NewBizErr("duplicate message", duplicateMessage)
+var DuplicateMessage = NewBizErr("duplicate message", duplicateUser)
+
+// DuplicateUser error for duplicate user
+var DuplicateUser = NewBizErr("duplicate user", duplicateMessage)
 
 // DuplicateSquad error for duplicate squad
 var DuplicateSquad = NewBizErr("duplicate squad", duplicateSquad)
