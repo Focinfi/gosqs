@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Focinfi/oncekv/utils/urlutil"
 	"github.com/Focinfi/sqs/agent"
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
@@ -15,6 +14,7 @@ import (
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/util/fmtutil"
 	"github.com/Focinfi/sqs/util/psutil"
+	"github.com/Focinfi/sqs/util/urlutil"
 )
 
 const (

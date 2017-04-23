@@ -11,7 +11,7 @@ import (
 
 var root string
 
-// Root returns the root path of oncekv
+// Root returns the root path of sqs
 func Root() string {
 	return root
 }
@@ -88,7 +88,7 @@ var Config = struct {
 
 func init() {
 	if r := os.Getenv("GOPATH"); r != "" {
-		root = path.Join(r, "src", "github.com", "Focinfi", "oncekv")
+		root = path.Join(r, "src", "github.com", "Focinfi", "sqs")
 	} else {
 		panic("sqs: envroinment param $GOPATH not set")
 	}
