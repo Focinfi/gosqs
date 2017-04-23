@@ -115,6 +115,13 @@ func (s *Service) ReportMaxReceivedMessageID(userID int64, queueName, squadName 
 func (s *Service) PushMessage(userID int64, queueName, content string, index int64) error {
 	maxID, err := s.Queue.MessageMaxID(userID, queueName)
 	log.Biz.Infoln(format.Sprintln("[PushMessage]", index, maxID))
+	// create it if not found
+	if err == errors.DataNotFound {
+		if err := s.Queue.Add(models.NewQueue(userID, queueName)); err != nil {
+			return err
+		}
+	}
+
 	if err != nil {
 		return err
 	}

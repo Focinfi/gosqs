@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 
+	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/util/strconvutil"
@@ -45,6 +46,10 @@ func (s *Queue) One(userID int64, queueName string) (*models.Queue, error) {
 	all, err := s.All(userID)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(all) > config.Config.MaxQueueCountPerUser {
+		return nil, errors.CanNotCreateMoreQueue
 	}
 
 	var theQueue *models.Queue

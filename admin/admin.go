@@ -10,7 +10,6 @@ import (
 	"github.com/Focinfi/sqs/util/httputil"
 	"github.com/Focinfi/sqs/util/token"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/gomail.v2"
 )
 
 type githubLoginParam struct {

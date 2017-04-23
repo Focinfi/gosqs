@@ -8,17 +8,11 @@ import (
 	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/example"
 	"github.com/Focinfi/sqs/master"
-	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/node"
 	"github.com/Focinfi/sqs/util/token"
 )
 
 func Test(t *testing.T) {
-	queue := models.NewQueue(1, example.Greeting)
-	if err := master.AddQueue(queue); err != nil {
-		panic(err)
-	}
-
 	go master.NewService(config.Config.DefaultMasterAddress).Start()
 	// wait a moment
 	time.Sleep(time.Second)

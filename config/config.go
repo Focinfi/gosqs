@@ -64,6 +64,9 @@ var Config = struct {
 	// TODO: choose log collector
 	LogOut io.Writer
 
+	// queue
+	MaxQueueCountPerUser int `default:"10" env:"SQS_QUEUE_COUNT_PRE_USER"`
+
 	SQLDB struct {
 		Adapter  string `default:"mysql"`
 		Name     string `default:"sqs" env:"MYSQL_INSTANCE_NAME"`

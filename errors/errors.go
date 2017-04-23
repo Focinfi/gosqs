@@ -20,6 +20,7 @@ const (
 	userNotFound
 	userAuthError
 	queueNotFound
+	canNotCreateMoreQueue
 	duplicateSquad
 	serviceOverload
 	applyMessageIDRangeOversize
@@ -51,6 +52,9 @@ var UserNotFound = NewBizErr("user not found", userNotFound)
 
 // QueueNotFound error for unknown queue
 var QueueNotFound = NewBizErr("queue not found", queueNotFound)
+
+// CanNotCreateMoreQueue can not create more queues
+var CanNotCreateMoreQueue = NewBizErr("can not create more queues", canNotCreateMoreQueue)
 
 // ApplyMessageIDRangeOversize error for oversize message id range application
 var ApplyMessageIDRangeOversize = NewBizErr("apply message id range oversize", applyMessageIDRangeOversize)
