@@ -12,7 +12,7 @@ func MakeURL(addr string) string {
 		return fmt.Sprintf("http://127.0.0.1%s", addr)
 	}
 
-	if !strings.HasPrefix(addr, "http://") || !strings.HasPrefix(addr, "https://") {
+	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
 		return fmt.Sprintf("http://%s", addr)
 	}
 
