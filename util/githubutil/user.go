@@ -7,10 +7,11 @@ import (
 	"net/http"
 )
 
-const apiUserURLFormat = "https://api.github.com/users/%s"
+const apiUserURLFormat = "https://api.github.com/users/%s?access_token=%s"
 
+// EmailForUserLogin gets the email of the given login
 func EmailForUserLogin(login string) (string, error) {
-	url := fmt.Sprintf(apiUserURLFormat, login)
+	url := fmt.Sprintf(apiUserURLFormat, login, accessToken)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err

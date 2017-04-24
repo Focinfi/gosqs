@@ -17,11 +17,14 @@ func NewJWT() *JWT {
 	return &JWT{Token: jwt.New(jwt.SigningMethodHS256)}
 }
 
-// Make makes a jwt token string
+// Make makes a jwt token string.
+// if expiration <= 0, no expiration.
 func (j *JWT) Make(secret string, params map[string]interface{}, expiration time.Duration) (string, error) {
-	t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(expiration).Unix(),
-	})
+	claims := jwt.MapClaims{}
+	if expiration > 0 {
+		claims["exp"] = time.Now().Add(expiration).Unix()
+	}
+	t := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	for k, v := range params {
 		t.Claims.(jwt.MapClaims)[k] = v

@@ -2,6 +2,7 @@ package agent
 
 import (
 	"errors"
+
 	"time"
 
 	"github.com/Focinfi/sqs/config"
@@ -15,7 +16,7 @@ const (
 )
 
 var (
-	tokenExpiration = time.Hour
+	tokenExpiration = time.Duration(-1) // no expiration
 	tokener         = token.Default
 	baseSecret      = config.Config.BaseSecret
 )

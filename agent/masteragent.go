@@ -8,6 +8,7 @@ import (
 	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 	"github.com/Focinfi/sqs/util/httputil"
+	"github.com/Focinfi/sqs/util/urlutil"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
@@ -94,7 +95,7 @@ func (a *MasterAgent) handleApplyNode(ctx *gin.Context) {
 		return
 	}
 
-	httputil.ResponseOKData(ctx, gin.H{"node": node, "token": tokenCode})
+	httputil.ResponseOKData(ctx, gin.H{"node": urlutil.MakeURL(node), "token": tokenCode})
 }
 
 // handlePullMessages for pulling message

@@ -2,18 +2,25 @@ package githubutil
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sort"
 	"sync"
 	"time"
 
+	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
 )
 
 const (
 	apiURL       = "https://api.github.com/repos/Focinfi/sqs/stargazers"
 	updatePeriod = time.Second * 10
+)
+
+var (
+	accessToken     = config.Config.GithubAccessToken
+	stargazerAPIURL = fmt.Sprintf("%s?access_token=%s", apiURL, accessToken)
 )
 
 type stargazer struct {
@@ -44,6 +51,7 @@ func NewGithubValidator() *SQSValidator {
 	}
 }
 
+// DefaultValidator for a default export SQSValidator
 var DefaultValidator = NewGithubValidator()
 
 // Start start the background services
@@ -54,6 +62,7 @@ func (auther *SQSValidator) Start() {
 	go auther.updateRegularly()
 }
 
+// ContainsLogin for checking the login
 func (auther *SQSValidator) ContainsLogin(login string) bool {
 	auther.RLock()
 	defer auther.RUnlock()
@@ -82,7 +91,7 @@ func (auther *SQSValidator) updateRegularly() {
 }
 
 func (auther *SQSValidator) updateStargazerSlice() error {
-	resp, err := http.Get(apiURL)
+	resp, err := http.Get(stargazerAPIURL)
 	if err != nil {
 		return err
 	}

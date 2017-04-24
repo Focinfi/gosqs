@@ -59,7 +59,8 @@ var Config = struct {
 	MaxTryMessageCount int `default:"5" env:"SQS_MAX_TRY_MESSAGE_COUNT"`
 
 	// admin
-	AdminAddr string `default:"127.0.0.1:54460" env:"SQS_ADMIN_ADDR"`
+	AdminAddr         string `default:"127.0.0.1:54460" env:"SQS_ADMIN_ADDR"`
+	GithubAccessToken string `default:"a9057cf4d2426e7de4aeb31761988905bfd67bbc" env:"SQS_GITHUB_ACCESS_TOKEN"`
 
 	// TODO: choose log collector
 	LogOut io.Writer
