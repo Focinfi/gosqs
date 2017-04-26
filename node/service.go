@@ -66,8 +66,21 @@ func (s *Service) PullMessages(userID int64, queueName, squadName string, length
 
 	log.Biz.Infoln(format.Sprintln("[PullMessages]", squad, err))
 
+	// add squad
 	if err == errors.DataNotFound {
 		maxMessageID, err := s.database.Storage.Queue.MessageMaxID(userID, queueName)
+		// new queue
+		if err == errors.DataNotFound {
+			if err := s.database.Storage.Queue.InitMessageMaxID(userID, queueName, 0); err != nil {
+				return nil, err
+			}
+
+			// clean the err
+			maxMessageID = 0
+			err = nil
+		}
+		log.Internal.Infof("Reday to new squad, err: %#v\n", err)
+
 		if err != nil {
 			return nil, err
 		}

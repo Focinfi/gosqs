@@ -33,7 +33,8 @@ func NewMasterAgent(service MasterService, address string) *MasterAgent {
 
 func (a *MasterAgent) masterAgentRouting() {
 	s := gin.Default()
-	group := s.Group("/")
+	group := s.Group("/", setAccessControlAllowHeaders)
+	group.OPTIONS("/applyNode")
 	group.POST("/applyNode", a.handleApplyNode)
 	group.POST("/join", a.handleJoinNode)
 	a.Handler = s
@@ -57,6 +58,7 @@ func (a *MasterAgent) handleApplyNode(ctx *gin.Context) {
 		models.UserAuth
 		models.NodeRequestParams
 	}{}
+
 	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
 		httputil.ResponseErr(ctx, err)
 		return

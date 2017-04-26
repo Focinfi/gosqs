@@ -21,6 +21,11 @@ var (
 	baseSecret      = config.Config.BaseSecret
 )
 
+func setAccessControlAllowHeaders(ctx *gin.Context) {
+	ctx.Header("Access-Control-Allow-Origin", "*")
+	ctx.Header("Access-Control-Allow-Headers", "Access-Control-Allow-Origin, Content-Type, Accept")
+}
+
 // throttling protects our server from overload
 func throttling(ctx *gin.Context) {
 }

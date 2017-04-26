@@ -28,7 +28,11 @@ func NewQueueAgent(service QueueService, address string) *QueueAgent {
 
 func (a *QueueAgent) queueAgentRouting() {
 	s := gin.Default()
-	group := s.Group("/")
+	group := s.Group("/", setAccessControlAllowHeaders)
+	group.OPTIONS("/messages")
+	group.OPTIONS("/message")
+	group.OPTIONS("/messageID")
+	group.OPTIONS("/receivedMessageID")
 	group.POST("/messages", a.handlePullMessages)
 	group.POST("/message", a.handlePushMessage)
 	group.POST("/messageID", a.handleApplyMessageIDRange)

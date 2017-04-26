@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/sqs/log"
 	"github.com/Focinfi/sqs/models"
 )
 
@@ -32,6 +33,7 @@ func (s *Squad) One(userID int64, queueName string, squadName string) (*models.S
 // Add adds a squad
 func (s *Squad) Add(squad models.Squad) error {
 	_, err := s.One(squad.UserID, squad.QueueName, squad.Name)
+	log.Internal.Infoln("Ready to put squad:", squad.Key())
 	if err == nil {
 		return errors.DuplicateSquad
 	}

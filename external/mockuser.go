@@ -10,10 +10,14 @@ func (u UserStoreMock) GetUserIDByUniqueID(uniqueID string) (int64, error) {
 
 // CreateUserByUniqueID implements UserStore
 func (u UserStoreMock) CreateUserByUniqueID(uniqueID string) (int64, error) {
+	if id, err := u.GetUserIDByUniqueID(uniqueID); err == nil {
+		return id, nil
+	}
+
 	id := int64(len(u) + 1)
 	u[uniqueID] = id
 	return id, nil
 }
 
 // DefaultUserStoreMock default mock UserStore
-var DefaultUserStoreMock = UserStoreMock{}
+var DefaultUserStoreMock = UserStoreMock{"Focinfi": 1}

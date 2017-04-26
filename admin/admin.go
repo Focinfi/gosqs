@@ -25,12 +25,13 @@ type Admin struct {
 // NewAdmin returns a new Admin
 func NewAdmin() *Admin {
 	engine := gin.Default()
-	engine.GET("/validateGithubLogin", validateGithubLogin)
-	engine.GET("/sendGithubEmailSecretKey", sendGithubEmailSecretKey)
+	engine.GET("/validateGithubLogin", ValidateGithubLogin)
+	engine.GET("/sendGithubEmailSecretKey", SendGithubEmailSecretKey)
 	return &Admin{Engine: engine}
 }
 
-func validateGithubLogin(ctx *gin.Context) {
+// ValidateGithubLogin validates the github login
+func ValidateGithubLogin(ctx *gin.Context) {
 	params := githubLoginParam{}
 	if err := ctx.BindJSON(&params); err != nil {
 		return
@@ -40,7 +41,8 @@ func validateGithubLogin(ctx *gin.Context) {
 	httputil.ResponseOKData(ctx, gin.H{"isStargazer": result})
 }
 
-func sendGithubEmailSecretKey(ctx *gin.Context) {
+// SendGithubEmailSecretKey send the secret key to the email of the given github login
+func SendGithubEmailSecretKey(ctx *gin.Context) {
 	params := githubLoginParam{}
 	if err := ctx.BindJSON(&params); err != nil {
 		return

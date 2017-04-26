@@ -26,6 +26,7 @@ func (s *Message) One(userID int64, queueName string, index int64) (string, erro
 func (s *Message) Nextn(userID int64, queueName string, currentID int64, maxMassageID int64, n int) ([]models.Message, error) {
 	nextIdx := currentID + 1
 	upperID := maxMassageID + int64(config.Config.MaxTryMessageCount)
+	log.Internal.Infoln("Nextn", nextIdx, upperID)
 	messages := []models.Message{}
 
 	for nextIdx <= upperID {
@@ -34,6 +35,7 @@ func (s *Message) Nextn(userID int64, queueName string, currentID int64, maxMass
 		}
 
 		msgContent, err := s.One(userID, queueName, nextIdx)
+		log.DB.Infoln("Nextn", nextIdx, err, msgContent)
 		if err == errors.DataNotFound {
 			nextIdx++
 			continue
@@ -44,7 +46,7 @@ func (s *Message) Nextn(userID int64, queueName string, currentID int64, maxMass
 		}
 
 		if msgContent == "" {
-			return nil, errors.DataLost(models.MessageKey(userID, queueName, currentID))
+			return nil, errors.DataLost(models.MessageKey(userID, queueName, nextIdx))
 		}
 
 		message := models.Message{

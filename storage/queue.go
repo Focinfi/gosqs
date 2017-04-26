@@ -125,20 +125,30 @@ func (s *Queue) Remove(userID int64, queueName string) error {
 	return nil
 }
 
-// handleApplyMessageIDRange try to apply message id range
+// ApplyMessageIDRange try to apply message id range
 func (s *Queue) ApplyMessageIDRange(userID int64, queueName string, size int) (int64, error) {
 	key := models.QueueMaxIDKey(userID, queueName)
 	return s.inc.Increment(key, size)
+}
+
+// InitMessageMaxID set queue max id, only if it havent been set
+func (s *Queue) InitMessageMaxID(userID int64, queueName string, id int64) error {
+	_, err := s.MessageMaxID(userID, queueName)
+	if err == errors.DataNotFound {
+		key := models.QueueMaxIDKey(userID, queueName)
+		return s.db.Put(key, strconvutil.Int64toa(id))
+	}
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // MessageMaxID get the max id for the queue
 func (s *Queue) MessageMaxID(userID int64, queueName string) (int64, error) {
 	key := models.QueueMaxIDKey(userID, queueName)
 	val, getErr := s.db.Get(key)
-	if getErr == errors.DataNotFound {
-		return -1, errors.DataLost(key)
-	}
-
 	if getErr != nil {
 		return -1, getErr
 	}

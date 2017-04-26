@@ -113,14 +113,14 @@ func (cli *Client) Queue(name string, squad string) (*QueueClient, error) {
 	}, nil
 }
 
-// handleApplyNode applies for a available node
+// ApplyNode applies for a available node
 func (cli *QueueClient) ApplyNode() error {
 	aplyParams := &struct {
 		models.UserAuth
-		BaseInfo models.NodeRequestParams
+		models.NodeRequestParams
 	}{
-		UserAuth: cli.Client.opt.UserAuth,
-		BaseInfo: cli.BaseInfo,
+		UserAuth:          cli.Client.opt.UserAuth,
+		NodeRequestParams: cli.BaseInfo,
 	}
 
 	b, err := json.Marshal(aplyParams)
@@ -128,6 +128,7 @@ func (cli *QueueClient) ApplyNode() error {
 		return err
 	}
 
+	log.Println(string(b))
 	url := fmt.Sprintf(applyNodeURLFormat, urlutil.MakeURL(cli.Client.opt.Endpoint))
 	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(b))
 	if err != nil {

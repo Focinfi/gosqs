@@ -1,72 +1,128 @@
 <template>
-  <div class="hello">
+  <div class="try">
     <el-card>
       <div slot="header" class="clearfix messages-header">
-        <span class="header-text">Test Queue</span>
+        <span class="header-text">
+          Test Queue<br>
+          <el-tag>{{testSquad}}</el-tag>
+          <el-tag type="gray">{{servingNode}}</el-tag>
+        </span>
         <el-button style="float: right;" type="primary" @click="pushMessage">Push Message</el-button>
       </div>
       <div v-for="o, i in messageLogs" class="text item">
-        {{'Message-'+ (i + 1) +': ' + o }}
+        {{ o.time }} {{ o.messages }}
       </div>
     </el-card> 
   </div>
 </template>
 
 <script>
-function httpAsync (method, theUrl, callback) {
-  var xmlHttp = new XMLHttpRequest()
-  xmlHttp.onreadystatechange = function () {
-    if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
-      callback(xmlHttp.responseText)
-    }
-  }
-  xmlHttp.open(method, theUrl, true)
-  xmlHttp.send(null)
-}
-// var accessKey = 'login_name'
-// var secretKey = 'secret_key'
+let accessKey = 'Focinfi'
+let secretKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyIiOiJGb2NpbmZpIn0.JRfcSY6_syXNKypblVpdD7oNmHNFDKVPVjkbNTlzEKQ'
 
 export default {
-  name: 'hello',
+  name: 'try',
   data () {
     return {
       testQueue: 'test',
+      testSquad: 'sqsadmin',
       newMessage: '',
       messageLogs: [],
-      masterAddr: 'http://127.0.0.1:5446'
+      masterAddr: process.env.SQS_ADMIN_ADDR,
+      servingNode: '',
+      token: '',
+      nextId: 0
     }
   },
   created () {
-    console.log('created')
-    this.pullMessage()
+    this.applyNode()
+    setInterval(this.pullMessage, 1000)
+  },
+  computed: {
+    apiJSONparams () {
+      return JSON.stringify({
+        'queue_name': this.testQueue,
+        'squad_name': this.testSquad,
+        'token': this.token,
+        'message_id': this.nextId,
+        'content': this.newMessage,
+        'size': 1
+      })
+    }
   },
   methods: {
-    echo () {
-      console.log('hehe')
-      this.newMessage = ''
+    applyNode () {
+      let body = JSON.stringify({
+        'access_key': accessKey,
+        'secret_key': secretKey,
+        'queue_name': this.testQueue,
+        'squad_name': this.testSquad
+      })
+      this.$http.post(this.masterAddr + '/applyNode', body).then(response => {
+        let body = response.body
+        if (body.code !== 1000) {
+          return
+        }
+        let data = body.data
+        this.servingNode = data.node
+        this.token = data.token
+      }, response => {
+      })
     },
     pullMessage () {
-      httpAsync('POST', this.masterAddr + '/applyNode', function (responseText) {
-        console.log(responseText)
+      if (this.servingNode === '') {
+        this.messageLogs = [this.timeFormat(new Date()) + ' Failed to connect the node']
+        return
+      }
+      this.$http.post(this.servingNode + '/messages', this.apiJSONparams).then(response => {
+        let data = response.body.data
+        // console.log(data)
+        let time = this.timeFormat(new Date())
+        let entry = {time: time, messages: ['No More Messages']}
+        if (data.messages.length > 0) {
+          entry.messages = data.messages
+          this.reportReceived()
+        }
+
+        this.messageLogs.push(entry)
+        if (this.messageLogs.length > 6) {
+          this.messageLogs.shift()
+        }
+      }, response => {
+        console.log(response)
       })
     },
     pushMessage () {
+      let _this = this
       this.$prompt('Input Message', 'Ready To Push', {
         confirmButtonText: 'Push it',
         cancelButtonText: 'Cancel',
         inputValidator: function (content) {
-          if (content === null) {
+          if (content === null || content === undefined || content === '') {
             return 'Can not push empty message'
           } else if (content.length > 20) {
             return 'Content is too long'
           }
+          console.log(content)
+          _this.newMessage = content
           return true
         }
       }).then(({ value }) => {
-        this.messageLogs.push(value)
-        this.$message({
-          type: 'success',
-          message: 'Message pushed'
+        // let _this = this
+        this.applyMessageID(function () {
+          _this.$http.post(_this.servingNode + '/message', _this.apiJSONparams).then(response => {
+            _this.newMessage = ''
+            console.log(response.data)
+            _this.$message({
+              type: 'success',
+              message: 'Message pushed'
+            })
+          }, response => {
+            _this.$message({
+              type: 'fail',
+              message: 'Failed to push message'
+            })
+          })
         })
       }).catch(() => {
         this.$message({
@@ -74,6 +130,31 @@ export default {
           message: 'Cancel Push'
         })
       })
+    },
+    applyMessageID (push) {
+      this.$http.post(this.servingNode + '/messageID', this.apiJSONparams).then(response => {
+        console.log(response.data)
+        let data = response.body.data
+        this.nextId = data['message_id_end']
+        console.log('nextID', this.nextId)
+        push()
+      }, response => {
+      })
+    },
+    reportReceived () {
+      this.$http.post(this.servingNode + '/receivedMessageID', this.apiJSONparams).then(response => {
+      }, response => {
+        console.log(response)
+      })
+    },
+    messagesLogsSlice (n) {
+      console.log(this.messageLogs.length)
+    },
+    timeFormat (myDate) {
+      return '[' + myDate.toLocaleTimeString('en-GB') + ']'
+    },
+    messagesEntryFormat (messages) {
+      return '[' + messages.map(function (obj) { return '"' + obj.content + '"' }).join(', ') + ']'
     }
   }
 }
@@ -99,7 +180,7 @@ a {
   color: #42b983;
 }
 
-.hello {
+.try {
   padding: 0 35%;
   margin: 0 auto;
 }
