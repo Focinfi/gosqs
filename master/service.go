@@ -102,7 +102,7 @@ func (s *Service) heartbeat() {
 			go func(n string) {
 				stats, err := s.getNodeStat(n)
 				if err != nil {
-					log.Cluster.Errorln(format.Sprintf("node[%s] can not be connected\n", n))
+					log.Cluster.Errorln(format.Sprintf("node[%s] can not be connected, err: %v\n", n, err))
 					s.removeNode(n)
 					return
 				}
