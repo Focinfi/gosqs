@@ -29,7 +29,7 @@ var (
 
 // Service for one user info
 type Service struct {
-	port       string
+	port       int
 	masterAddr string
 	*database
 	agent *agent.QueueAgent
@@ -37,7 +37,7 @@ type Service struct {
 }
 
 // New allocates a new Service
-func New(addr string, port string, masterAddr string) *Service {
+func New(addr string, port int, masterAddr string) *Service {
 	service := &Service{
 		port:       port,
 		database:   db,
@@ -57,7 +57,8 @@ func (s *Service) Start() {
 	}
 
 	go s.updateInfo()
-	log.Biz.Fatal(http.ListenAndServe(s.addr, s.agent))
+	addr := fmt.Sprintf(":%d", s.port)
+	log.Biz.Fatal(http.ListenAndServe(addr, s.agent))
 }
 
 // PullMessages pulls message from database, create it if the squad is not found

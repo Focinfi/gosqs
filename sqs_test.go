@@ -16,7 +16,7 @@ func Test(t *testing.T) {
 	go master.NewService(config.Config.DefaultMasterAddress).Start()
 	// wait a moment
 	time.Sleep(time.Second)
-	go node.New(":54461", ":5446").Start()
+	go node.New(":54461", 54461, ":5446").Start()
 
 	time.Sleep(time.Second)
 	accessKey := "Focinfi"
