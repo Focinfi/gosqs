@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Try from '@/components/Try'
+import Intro from '@/components/Intro'
 
 Vue.use(Router)
 
@@ -8,8 +8,8 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'Try',
-      component: Try
+      name: 'Intro',
+      component: Intro
     }
   ]
 })

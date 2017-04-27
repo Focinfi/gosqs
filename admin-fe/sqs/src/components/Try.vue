@@ -4,10 +4,10 @@
       <div slot="header" class="clearfix messages-header">
         <span class="header-text">
           Test Queue<br>
-          <el-tag>{{testSquad}}</el-tag>
-          <el-tag type="gray">{{servingNode}}</el-tag>
+          <el-tag type="primary">{{testSquad}}</el-tag>
+          <el-tag :type="testingTagType">{{testingStateString}}</el-tag>
         </span>
-        <el-button style="float: right;" type="primary" @click="pushMessage">Push Message</el-button>
+        <el-button :disabled="testingAvailable" style="float: right;" type="primary" @click="pushMessage">Push Message</el-button>
       </div>
       <div v-for="o, i in messageLogs" class="text item">
         {{ o.time }} {{ o.messages }}
@@ -36,6 +36,9 @@ export default {
   },
   created () {
     this.applyNode()
+  },
+  mounted () {
+    console.log('mounted')
     setInterval(this.pullMessage, 1000)
   },
   computed: {
@@ -48,6 +51,19 @@ export default {
         'content': this.newMessage,
         'size': 1
       })
+    },
+    testingTagType () {
+      return this.servingNode === '' ? 'gray' : 'success'
+    },
+    testingAvailable () {
+      return this.servingNode === ''
+    },
+    testingStateString () {
+      if (this.servingNode === '') {
+        return 'unavailabe'
+      }
+
+      return 'availabe'
     }
   },
   methods: {
@@ -85,7 +101,7 @@ export default {
         }
 
         this.messageLogs.push(entry)
-        if (this.messageLogs.length > 6) {
+        if (this.messageLogs.length > 5) {
           this.messageLogs.shift()
         }
       }, response => {
@@ -181,7 +197,6 @@ a {
 }
 
 .try {
-  padding: 0 35%;
   margin: 0 auto;
 }
 
@@ -191,7 +206,7 @@ a {
 
 .header-text {
   font-size: 1.5em;
-  line-height: 36px;
+  line-height: 34px;
 }
 
 .item {
