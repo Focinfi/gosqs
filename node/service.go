@@ -29,7 +29,7 @@ var (
 
 // Service for one user info
 type Service struct {
-	addr       string
+	port       string
 	masterAddr string
 	*database
 	agent *agent.QueueAgent
@@ -37,9 +37,9 @@ type Service struct {
 }
 
 // New allocates a new Service
-func New(addr string, masterAddr string) *Service {
+func New(addr string, port string, masterAddr string) *Service {
 	service := &Service{
-		addr:       addr,
+		port:       port,
 		database:   db,
 		masterAddr: masterAddr,
 		info:       &models.NodeInfo{Addr: addr},
