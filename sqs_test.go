@@ -13,16 +13,17 @@ import (
 )
 
 func Test(t *testing.T) {
-	go master.NewService(":54661").Start()
+	masterAddr := ":54661"
+	go master.NewService(masterAddr).Start()
 	// wait a moment
 	time.Sleep(time.Second)
-	go node.New(":54662", 54462, ":54661").Start()
+	go node.New(":54462", 54462, masterAddr).Start()
 
 	time.Sleep(time.Second)
 	accessKey := "Focinfi"
 	paramsKey := config.Config.UserGithubLoginKey
 	secretKey, err := token.Default.Make(config.Config.BaseSecret, map[string]interface{}{paramsKey: accessKey}, time.Hour)
-	cli := client.New(config.Config.DefaultMasterAddress, accessKey, secretKey)
+	cli := client.New(masterAddr, accessKey, secretKey)
 	queueCli, err := cli.Queue(example.Greeting, example.Home)
 	if err != nil {
 		t.Fatal("failed to create a queue, err:", err)
