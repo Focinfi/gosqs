@@ -2,7 +2,9 @@ package agent
 
 import (
 	"net/http"
+	"path"
 
+	"github.com/Focinfi/sqs/config"
 	"github.com/Focinfi/sqs/errors"
 	"github.com/Focinfi/sqs/external"
 	"github.com/Focinfi/sqs/log"
@@ -12,6 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )
+
+var root = path.Join(config.Root(), "master")
 
 // MasterAgent for a agent of master node
 type MasterAgent struct {
@@ -33,7 +37,15 @@ func NewMasterAgent(service MasterService, address string) *MasterAgent {
 
 func (a *MasterAgent) masterAgentRouting() {
 	s := gin.Default()
+	s.LoadHTMLFiles(path.Join(root, "index.html"))
 	group := s.Group("/", setAccessControlAllowHeaders)
+	group.StaticFS("/static", http.Dir(path.Join(root, "static")))
+	group.GET("/home", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "index.html", nil)
+	})
+	group.GET("/echo", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "Hehe")
+	})
 	group.OPTIONS("/applyNode")
 	group.POST("/applyNode", a.handleApplyNode)
 	group.POST("/join", a.handleJoinNode)
