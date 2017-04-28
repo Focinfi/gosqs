@@ -2,4 +2,3 @@
 .idea
 admin-fe/sqs/node_modules
 vendor
-*.map

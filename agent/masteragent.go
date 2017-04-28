@@ -37,6 +37,9 @@ func NewMasterAgent(service MasterService, address string) *MasterAgent {
 
 func (a *MasterAgent) masterAgentRouting() {
 	s := gin.Default()
+	s.NoRoute(func(ctx *gin.Context) {
+		ctx.Redirect(http.StatusMovedPermanently, "/home")
+	})
 	s.LoadHTMLFiles(path.Join(root, "index.html"))
 	group := s.Group("/", setAccessControlAllowHeaders)
 	group.StaticFS("/static", http.Dir(path.Join(root, "static")))
