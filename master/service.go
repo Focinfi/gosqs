@@ -20,6 +20,7 @@ import (
 const (
 	getNodeStatsURLFormat = "%s/stats"
 	logPrefix             = "[sqs.master]"
+	maxNodesCount         = 10
 )
 
 var (
@@ -103,7 +104,9 @@ func (s *Service) heartbeat() {
 				stats, err := s.getNodeStat(n)
 				if err != nil {
 					log.Cluster.Errorln(format.Sprintf("node[%s] can not be connected, err: %v\n", n, err))
-					s.removeNode(n)
+					if len(s.nodes) > maxNodesCount {
+						s.removeNode(n)
+					}
 					return
 				}
 

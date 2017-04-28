@@ -52,11 +52,9 @@ func New(addr string, port int, masterAddr string) *Service {
 
 // Start starts services
 func (s *Service) Start() {
-	time.AfterFunc(time.Second*3, func() {
-		if err := s.join(); err != nil {
-			panic(err)
-		}
-	})
+	if err := s.join(); err != nil {
+		panic(err)
+	}
 
 	go s.updateInfo()
 	addr := fmt.Sprintf(":%d", s.port)
