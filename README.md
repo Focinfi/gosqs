@@ -1,7 +1,11 @@
-## SQS
+<p align="center"><a href="http://gosqs.daoapp.io" target="_blank"><img width="100"src="http://on78mzb4g.bkt.clouddn.com/new_500.png"></a></p>
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/Focinfi/sqs)](https://goreportcard.com/report/github.com/Focinfi/sqs)
-[![Build Status](https://travis-ci.org/Focinfi/sqs.png)](https://travis-ci.org/Focinfi/sqs.svg?branch=master)
+<p align="center">
+  <a href="https://goreportcard.com/badge/github.com/Focinfi/sqs"><img src="https://goreportcard.com/badge/github.com/Focinfi/sqs" alt="Go Report"></a>
+  <a href="https://travis-ci.org/Focinfi/sqs.svg?branch=master"><img src="https://travis-ci.org/Focinfi/sqs.png" alt="Coverage Status"></a>
+</p>
+
+## SQS
 
 A simple queue service in golang.
 
