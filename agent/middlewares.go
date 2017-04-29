@@ -5,9 +5,9 @@ import (
 
 	"time"
 
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/util/strconvutil"
-	"github.com/Focinfi/sqs/util/token"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/util/strconvutil"
+	"github.com/Focinfi/gosqs/util/token"
 	"github.com/gin-gonic/gin"
 )
 

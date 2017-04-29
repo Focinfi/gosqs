@@ -3,7 +3,7 @@ package gomap
 import (
 	"sync"
 
-	"github.com/Focinfi/sqs/util/strconvutil"
+	"github.com/Focinfi/gosqs/util/strconvutil"
 )
 
 // Incrementer implements the models.Incrementer interface

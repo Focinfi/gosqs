@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/util/fmtutil"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/util/fmtutil"
 )
 
 // KV use a map as a K/V database

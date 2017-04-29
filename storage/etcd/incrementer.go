@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/util/strconvutil"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/util/strconvutil"
 	"github.com/coreos/etcd/clientv3"
 )
 

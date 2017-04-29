@@ -3,8 +3,8 @@ package storage
 import (
 	"encoding/json"
 
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/models"
 )
 
 type Nodes struct {

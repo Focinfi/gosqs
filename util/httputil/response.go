@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/models"
 	"github.com/gin-gonic/gin"
 )
 

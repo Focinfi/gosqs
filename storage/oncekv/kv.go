@@ -2,7 +2,7 @@ package oncekv
 
 import (
 	"github.com/Focinfi/oncekv/client"
-	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/gosqs/errors"
 )
 
 // KV for kv storage

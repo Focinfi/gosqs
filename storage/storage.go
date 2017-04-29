@@ -1,6 +1,6 @@
 package storage
 
-import "github.com/Focinfi/sqs/models"
+import "github.com/Focinfi/gosqs/models"
 
 // Storage defines storage
 type Storage struct {

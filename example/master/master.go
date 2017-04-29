@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/master"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/master"
 )
 
 func main() {

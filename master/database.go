@@ -1,8 +1,8 @@
 package master
 
 import (
-	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/storage"
+	"github.com/Focinfi/gosqs/models"
+	"github.com/Focinfi/gosqs/storage"
 )
 
 type database struct {

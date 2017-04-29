@@ -1,6 +1,6 @@
 package external
 
-import "github.com/Focinfi/sqs/config"
+import "github.com/Focinfi/gosqs/config"
 
 // User represents a user of sqs
 type User interface {

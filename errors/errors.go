@@ -66,7 +66,7 @@ var ServiceOverload = NewBizErr("node is overload", serviceOverload)
 var DataNotFound = NewBizErr("data is not found", dataNotFound)
 
 // NotSQSStargazer not a sqs stargazer on github
-var NotSQSStargazer = NewBizErr("not a github.com/Focinfi/sqs stargazer", notSQSStargazer)
+var NotSQSStargazer = NewBizErr("not a github.com/Focinfi/gosqs stargazer", notSQSStargazer)
 
 func UserAuthError(message string) Biz {
 	return NewBizErr(message, userAuthError)

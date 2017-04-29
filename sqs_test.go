@@ -1,15 +1,15 @@
-package sqs
+package gosqs
 
 import (
 	"testing"
 	"time"
 
-	"github.com/Focinfi/sqs/client"
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/example"
-	"github.com/Focinfi/sqs/master"
-	"github.com/Focinfi/sqs/node"
-	"github.com/Focinfi/sqs/util/token"
+	"github.com/Focinfi/gosqs/client"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/example"
+	"github.com/Focinfi/gosqs/master"
+	"github.com/Focinfi/gosqs/node"
+	"github.com/Focinfi/gosqs/util/token"
 )
 
 func Test(t *testing.T) {
@@ -22,7 +22,7 @@ func Test(t *testing.T) {
 	time.Sleep(time.Second)
 	accessKey := "test"
 	paramsKey := config.Config.UserGithubLoginKey
-	secretKey, err := token.Default.Make(config.Config.BaseSecret, map[string]interface{}{paramsKey: accessKey}, time.Hour)
+	secretKey, err := token.Default.Make(config.Config.BaseSecret, map[string]interface{}{paramsKey: accessKey}, -1)
 	cli := client.New(masterAddr, accessKey, secretKey)
 	queueCli, err := cli.Queue(example.Greeting, example.Home)
 	if err != nil {

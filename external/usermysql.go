@@ -3,7 +3,7 @@ package external
 import (
 	"fmt"
 
-	"github.com/Focinfi/sqs/config"
+	"github.com/Focinfi/gosqs/config"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )

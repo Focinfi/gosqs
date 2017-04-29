@@ -89,7 +89,7 @@ var Config = struct {
 
 func init() {
 	if r := os.Getenv("GOPATH"); r != "" {
-		root = path.Join(r, "src", "github.com", "Focinfi", "sqs")
+		root = path.Join(r, "src", "github.com", "Focinfi", "gosqs")
 	} else {
 		panic("sqs: envroinment param $GOPATH not set")
 	}

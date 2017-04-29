@@ -3,8 +3,8 @@ package admin
 import (
 	"testing"
 
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/util/token"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/util/token"
 )
 
 func TestSendKeysEmail(t *testing.T) {

@@ -3,7 +3,7 @@ package etcd
 import (
 	"context"
 
-	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/gosqs/errors"
 	"github.com/coreos/etcd/clientv3"
 )
 

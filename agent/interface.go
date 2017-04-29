@@ -1,6 +1,6 @@
 package agent
 
-import "github.com/Focinfi/sqs/models"
+import "github.com/Focinfi/gosqs/models"
 
 // MasterService can distributes a node for a consume
 type MasterService interface {

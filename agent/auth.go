@@ -3,10 +3,10 @@ package agent
 import (
 	"reflect"
 
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/util/githubutil"
-	"github.com/Focinfi/sqs/util/token"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/util/githubutil"
+	"github.com/Focinfi/gosqs/util/token"
 )
 
 // Validator authenticates the given accessKey and secretKey.

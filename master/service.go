@@ -9,12 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Focinfi/sqs/agent"
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/log"
-	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/util/fmtutil"
-	"github.com/Focinfi/sqs/util/urlutil"
+	"github.com/Focinfi/gosqs/agent"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/log"
+	"github.com/Focinfi/gosqs/models"
+	"github.com/Focinfi/gosqs/util/fmtutil"
+	"github.com/Focinfi/gosqs/util/urlutil"
 )
 
 const (

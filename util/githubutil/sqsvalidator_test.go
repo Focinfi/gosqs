@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/util/token"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/util/token"
 )
 
 func Test(t *testing.T) {

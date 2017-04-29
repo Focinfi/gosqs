@@ -3,10 +3,10 @@ package storage
 import (
 	"time"
 
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/log"
-	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/log"
+	"github.com/Focinfi/gosqs/models"
 )
 
 // Message for message storage

@@ -1,6 +1,6 @@
 package master
 
-import "github.com/Focinfi/sqs/models"
+import "github.com/Focinfi/gosqs/models"
 
 type nodes map[string]models.NodeInfo
 

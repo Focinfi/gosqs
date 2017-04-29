@@ -3,7 +3,7 @@ package gomap
 import (
 	"fmt"
 
-	"github.com/Focinfi/sqs/log"
+	"github.com/Focinfi/gosqs/log"
 )
 
 const startFormat = "-Start--%s-------\n"

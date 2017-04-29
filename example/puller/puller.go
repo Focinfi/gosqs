@@ -3,10 +3,10 @@ package main
 import (
 	"time"
 
-	"github.com/Focinfi/sqs/client"
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/example"
-	"github.com/Focinfi/sqs/log"
+	"github.com/Focinfi/gosqs/client"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/example"
+	"github.com/Focinfi/gosqs/log"
 )
 
 func main() {

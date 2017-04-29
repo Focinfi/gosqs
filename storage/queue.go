@@ -3,10 +3,10 @@ package storage
 import (
 	"encoding/json"
 
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/util/strconvutil"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/models"
+	"github.com/Focinfi/gosqs/util/strconvutil"
 )
 
 // Queue stores data

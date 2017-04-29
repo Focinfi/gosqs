@@ -3,11 +3,11 @@ package storage
 import (
 	"fmt"
 
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/storage/etcd"
-	"github.com/Focinfi/sqs/storage/gomap"
-	"github.com/Focinfi/sqs/storage/oncekv"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/models"
+	"github.com/Focinfi/gosqs/storage/etcd"
+	"github.com/Focinfi/gosqs/storage/gomap"
+	"github.com/Focinfi/gosqs/storage/oncekv"
 )
 
 // ClusterMetaKV for nodes cluster

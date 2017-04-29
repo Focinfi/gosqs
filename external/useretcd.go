@@ -3,9 +3,9 @@ package external
 import (
 	"fmt"
 
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/storage/etcd"
-	"github.com/Focinfi/sqs/util/strconvutil"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/storage/etcd"
+	"github.com/Focinfi/gosqs/util/strconvutil"
 )
 
 const (

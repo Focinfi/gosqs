@@ -3,8 +3,8 @@ package agent
 import (
 	"net/http"
 
-	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/util/httputil"
+	"github.com/Focinfi/gosqs/models"
+	"github.com/Focinfi/gosqs/util/httputil"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 )

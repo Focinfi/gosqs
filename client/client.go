@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/models"
-	"github.com/Focinfi/sqs/util/fmtutil"
-	"github.com/Focinfi/sqs/util/urlutil"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/models"
+	"github.com/Focinfi/gosqs/util/fmtutil"
+	"github.com/Focinfi/gosqs/util/urlutil"
 )
 
 const (

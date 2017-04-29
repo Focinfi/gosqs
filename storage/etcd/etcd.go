@@ -3,7 +3,7 @@ package etcd
 import (
 	"time"
 
-	"github.com/Focinfi/sqs/config"
+	"github.com/Focinfi/gosqs/config"
 	"github.com/coreos/etcd/clientv3"
 )
 

@@ -3,7 +3,7 @@ package etcd
 import (
 	"context"
 
-	"github.com/Focinfi/sqs/log"
+	"github.com/Focinfi/gosqs/log"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 )
 

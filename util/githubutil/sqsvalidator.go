@@ -9,12 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Focinfi/sqs/config"
-	"github.com/Focinfi/sqs/errors"
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/errors"
 )
 
 const (
-	apiURL       = "https://api.github.com/repos/Focinfi/sqs/stargazers"
+	apiURL       = "https://api.github.com/repos/Focinfi/gosqs/stargazers"
 	updatePeriod = time.Second * 10
 )
 

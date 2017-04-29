@@ -3,9 +3,9 @@ package storage
 import (
 	"encoding/json"
 
-	"github.com/Focinfi/sqs/errors"
-	"github.com/Focinfi/sqs/log"
-	"github.com/Focinfi/sqs/models"
+	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/log"
+	"github.com/Focinfi/gosqs/models"
 )
 
 // Squad is for squad storage
