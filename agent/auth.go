@@ -14,6 +14,14 @@ type Validator interface {
 	Validate(accessKey string, secretKey string) (err error)
 }
 
+// ValidatorFunc func to interface helper
+type ValidatorFunc func(accessKey string, secretKey string) (err error)
+
+// Validate implements the Validator interface
+func (v ValidatorFunc) Validate(accessKey string, secretKey string) (err error) {
+	return v(accessKey, secretKey)
+}
+
 // Auth authes
 type Auth struct {
 	Validators []Validator
@@ -45,6 +53,6 @@ func init() {
 	githubutil.DefaultValidator.Start()
 
 	defaultAuth = &Auth{
-		Validators: []Validator{githubutil.DefaultValidator},
+		Validators: []Validator{testAuth, githubutil.DefaultValidator},
 	}
 }

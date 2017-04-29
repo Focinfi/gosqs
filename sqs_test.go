@@ -20,7 +20,7 @@ func Test(t *testing.T) {
 	go node.New(":54462", 54462, masterAddr).Start()
 
 	time.Sleep(time.Second)
-	accessKey := "Focinfi"
+	accessKey := "test"
 	paramsKey := config.Config.UserGithubLoginKey
 	secretKey, err := token.Default.Make(config.Config.BaseSecret, map[string]interface{}{paramsKey: accessKey}, time.Hour)
 	cli := client.New(masterAddr, accessKey, secretKey)
