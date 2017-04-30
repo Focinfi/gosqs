@@ -2,10 +2,10 @@ package admin
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Focinfi/gosqs/config"
 	"github.com/Focinfi/gosqs/errors"
+	"github.com/Focinfi/gosqs/log"
 	"github.com/Focinfi/gosqs/util/githubutil"
 	"github.com/Focinfi/gosqs/util/httputil"
 	"github.com/Focinfi/gosqs/util/token"
@@ -32,38 +32,33 @@ func NewAdmin() *Admin {
 
 // ValidateGithubLogin validates the github login
 func ValidateGithubLogin(ctx *gin.Context) {
-	params := githubLoginParam{}
-	if err := ctx.BindJSON(&params); err != nil {
-		return
-	}
+	login := ctx.Param("login")
 
-	result := githubutil.DefaultValidator.ContainsLogin(params.Login)
+	result := githubutil.DefaultValidator.ContainsLogin(login)
 	httputil.ResponseOKData(ctx, gin.H{"isStargazer": result})
 }
 
 // SendGithubEmailSecretKey send the secret key to the email of the given github login
 func SendGithubEmailSecretKey(ctx *gin.Context) {
-	params := githubLoginParam{}
-	if err := ctx.BindJSON(&params); err != nil {
-		return
-	}
-
-	validate := githubutil.DefaultValidator.ContainsLogin(params.Login)
+	login := ctx.Param("login")
+	validate := githubutil.DefaultValidator.ContainsLogin(login)
 	if !validate {
 		httputil.ResponseErr(ctx, errors.NotSQSStargazer)
 		return
 	}
 
-	email, err := githubutil.EmailForUserLogin(params.Login)
+	email, err := githubutil.EmailForUserLogin(login)
 	paramsKey := config.Config.UserGithubLoginKey
-	secretKey, err := token.Default.Make(config.Config.BaseSecret, map[string]interface{}{paramsKey: params.Login}, time.Hour)
+	secretKey, err := token.Default.Make(config.Config.BaseSecret, map[string]interface{}{paramsKey: login}, -1)
 	if err != nil {
+		log.Internal.Error(err)
 		httputil.ResponseErr(ctx, errors.NewInternalWrap(err))
 		return
 	}
 
-	err = sendSecretKeyToEmail(email, params.Login, secretKey)
+	err = sendSecretKeyToEmail(email, login, secretKey)
 	if err != nil {
+		log.Internal.Error(err)
 		httputil.ResponseErr(ctx, errors.NewInternalWrap(err))
 		return
 	}
@@ -75,14 +70,14 @@ func sendSecretKeyToEmail(email string, accessKey string, secretKey string) erro
 	emailConfig := config.Config.Email
 
 	body := fmt.Sprintf(`
-	<h3>These keys are for sqs service testing.</h3>
+	<h3>These keys are for gosqs service testing.</h3>
 	<p>AcessKey: %s </p>
 	<p>SecretKey: %s </p>
 	`, accessKey, secretKey)
 	m := gomail.NewMessage()
 	m.SetHeader("From", emailConfig.From)
 	m.SetHeader("To", email)
-	m.SetHeader("Subject", "SQS Tesing Keys")
+	m.SetHeader("Subject", "gosqs Tesing Keys")
 	m.SetBody("text/html", body)
 
 	d := gomail.NewDialer(emailConfig.SMTP, emailConfig.Port, emailConfig.User, emailConfig.Password)

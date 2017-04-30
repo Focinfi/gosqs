@@ -81,8 +81,8 @@ var Config = struct {
 	Email struct {
 		SMTP     string `default:"smtpdm.aliyun.com" env:"SQS_EMAIL_SMTP"`
 		Port     int    `default:"25" env:"SQS_EMAIL_PORT"`
-		From     string `default:"noreply@sqsadmin.club" env:"SQS_EMAIL_FROM"`
-		User     string `default:"noreply@sqsadmin.club" env:"SQS_EMAIL_USER"`
+		From     string `default:"noreply@mail.gosqs.org" env:"SQS_EMAIL_FROM"`
+		User     string `default:"noreply@mail.gosqs.org" env:"SQS_EMAIL_USER"`
 		Password string `env:"SQS_EMAIL_PASSWORD"`
 	}
 }{}

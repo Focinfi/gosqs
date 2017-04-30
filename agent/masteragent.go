@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/Focinfi/gosqs/admin"
 	"github.com/Focinfi/gosqs/config"
 	"github.com/Focinfi/gosqs/errors"
 	"github.com/Focinfi/gosqs/external"
@@ -40,18 +41,21 @@ func (a *MasterAgent) masterAgentRouting() {
 	s.NoRoute(func(ctx *gin.Context) {
 		ctx.Redirect(http.StatusMovedPermanently, "/home")
 	})
+	// fe
 	s.LoadHTMLFiles(path.Join(root, "index.html"))
 	group := s.Group("/", setAccessControlAllowHeaders)
 	group.StaticFS("/static", http.Dir(path.Join(root, "static")))
 	group.GET("/home", func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "index.html", nil)
 	})
-	group.GET("/echo", func(ctx *gin.Context) {
-		ctx.String(http.StatusOK, "Hehe")
-	})
+
+	// nodes
 	group.OPTIONS("/applyNode")
 	group.POST("/applyNode", a.handleApplyNode)
 	group.POST("/join", a.handleJoinNode)
+
+	// sendKeys
+	group.GET("/sendGithubEmailSecretKey/:login", admin.SendGithubEmailSecretKey)
 	a.Handler = s
 }
 
