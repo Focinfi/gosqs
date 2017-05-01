@@ -45,6 +45,9 @@ func (a *MasterAgent) masterAgentRouting() {
 	s.LoadHTMLFiles(path.Join(root, "index.html"))
 	group := s.Group("/", setAccessControlAllowHeaders)
 	group.StaticFS("/static", http.Dir(path.Join(root, "static")))
+	group.GET("/favicon.ico", func(ctx *gin.Context) {
+		ctx.File(path.Join(root, "favicon.ico"))
+	})
 	group.GET("/home", func(ctx *gin.Context) {
 		ctx.HTML(http.StatusOK, "index.html", nil)
 	})
