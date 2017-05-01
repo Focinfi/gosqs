@@ -21,7 +21,7 @@ const (
 	applyNodeURLFormat               = "%s/applyNode"
 	applyMessageIDURLFormat          = "%s/messageID"
 	pushMessageURLFormat             = "%s/message"
-	pullMessageURLFormat             = "%s/messages"
+	pullMessagesURLFormat            = "%s/messages"
 	reportReceivedMessageIDURLFormat = "%s/receivedMessageID"
 
 	// DefaultSquad is the default squad name
@@ -202,7 +202,7 @@ func (cli *QueueClient) PullMessages(handler func([]Message) error) error {
 		return err
 	}
 
-	url := fmt.Sprintf(pullMessageURLFormat, urlutil.MakeURL(cli.servingNode))
+	url := fmt.Sprintf(pullMessagesURLFormat, urlutil.MakeURL(cli.servingNode))
 	resp, err := http.Post(url, jsonHTTPHeader, bytes.NewReader(reqBytes))
 	if err != nil {
 		return err
@@ -216,14 +216,12 @@ func (cli *QueueClient) PullMessages(handler func([]Message) error) error {
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	respParam := &struct {
 		models.HTTPStatusMeta
-		Data struct {
-			Messages []Message `json:"messages"`
-		}
+		Data []Message `json:"data"`
 	}{}
 	if err := json.Unmarshal(respBytes, respParam); err != nil {
 		return err
 	}
-	messages := respParam.Data.Messages
+	messages := respParam.Data
 	if len(messages) > 0 {
 		if err := handler(messages); err != nil {
 			return err

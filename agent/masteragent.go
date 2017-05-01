@@ -141,5 +141,5 @@ func (a *QueueAgent) handlePullMessages(ctx *gin.Context) {
 		return
 	}
 
-	httputil.ResponseOKData(ctx, gin.H{"messages": messages})
+	httputil.ResponseOKData(ctx, messages)
 }
