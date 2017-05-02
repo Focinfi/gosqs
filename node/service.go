@@ -110,7 +110,7 @@ func (s *Service) PullMessages(userID int64, queueName, squadName string, length
 	return s.Message.Nextn(userID, queueName, squad.ReceivedMessageID, maxMessageID, defaultPullMessageCount)
 }
 
-// ReportMaxReceivedMessageID reports the max recieved message id to mark forward of the squad process
+// ReportMaxReceivedMessageID reports the max received message id to mark forward of the squad process
 func (s *Service) ReportMaxReceivedMessageID(userID int64, queueName, squadName string, messageID int64) error {
 	squad, err := s.database.Squad.One(userID, queueName, squadName)
 	if err != nil {

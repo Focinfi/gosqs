@@ -55,26 +55,26 @@ func NewGithubValidator() *SQSValidator {
 var DefaultValidator = NewGithubValidator()
 
 // Start start the background services
-func (auther *SQSValidator) Start() {
-	if err := auther.updateStargazerSlice(); err != nil {
+func (v *SQSValidator) Start() {
+	if err := v.updateStargazerSlice(); err != nil {
 		panic(err)
 	}
-	go auther.updateRegularly()
+	go v.updateRegularly()
 }
 
 // ContainsLogin for checking the login
-func (auther *SQSValidator) ContainsLogin(login string) bool {
-	auther.RLock()
-	defer auther.RUnlock()
+func (v *SQSValidator) ContainsLogin(login string) bool {
+	v.RLock()
+	defer v.RUnlock()
 
-	idx := sort.SearchStrings(auther.stargazerSlice, login)
-	return idx < len(auther.stargazerSlice) && auther.stargazerSlice[idx] == login
+	idx := sort.SearchStrings(v.stargazerSlice, login)
+	return idx < len(v.stargazerSlice) && v.stargazerSlice[idx] == login
 }
 
 // Validate validates use accessKey as a the github login,
 // secretKey encrypted the data of accessKey.
-func (auther *SQSValidator) Validate(accessKey string, secretKey string) error {
-	if !auther.ContainsLogin(accessKey) {
+func (v *SQSValidator) Validate(accessKey string, secretKey string) error {
+	if !v.ContainsLogin(accessKey) {
 		return errors.UserNotFound
 	}
 
@@ -82,15 +82,15 @@ func (auther *SQSValidator) Validate(accessKey string, secretKey string) error {
 }
 
 // update stargazerSlice regularly
-func (auther *SQSValidator) updateRegularly() {
+func (v *SQSValidator) updateRegularly() {
 	ticker := time.NewTicker(updatePeriod)
 	for {
 		<-ticker.C
-		auther.updateStargazerSlice()
+		v.updateStargazerSlice()
 	}
 }
 
-func (auther *SQSValidator) updateStargazerSlice() error {
+func (v *SQSValidator) updateStargazerSlice() error {
 	resp, err := http.Get(stargazerAPIURL)
 	if err != nil {
 		return err
@@ -109,8 +109,8 @@ func (auther *SQSValidator) updateStargazerSlice() error {
 
 	stargazersSlice := stargazers(respParam).toSlice()
 	sort.StringSlice(stargazersSlice).Sort()
-	auther.Lock()
-	auther.stargazerSlice = stargazersSlice
-	auther.Unlock()
+	v.Lock()
+	v.stargazerSlice = stargazersSlice
+	v.Unlock()
 	return nil
 }

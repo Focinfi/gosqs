@@ -30,6 +30,7 @@ func StatusBadRequest(err error) *models.HTTPStatusMeta {
 // StatusOK for successful request
 var StatusOK = &models.HTTPStatusMeta{Code: errors.NoErr}
 
+// ResponseJOSN put the data as JSON format into the reponse body
 func ResponseJOSN(ctx *gin.Context, meta *models.HTTPStatusMeta, data interface{}, isAbort bool) {
 	ctx.JSON(http.StatusOK, models.HTTPStatus{HTTPStatusMeta: *meta, Data: data})
 	if isAbort {
@@ -37,14 +38,17 @@ func ResponseJOSN(ctx *gin.Context, meta *models.HTTPStatusMeta, data interface{
 	}
 }
 
+// ResponseOK just 200 without body data
 func ResponseOK(ctx *gin.Context) {
 	ResponseJOSN(ctx, StatusOK, nil, true)
 }
 
+// ResponseOKData responses 200 and JSON data
 func ResponseOKData(ctx *gin.Context, data interface{}) {
 	ResponseJOSN(ctx, StatusOK, data, true)
 }
 
+// ResponseErr responses depends on the err type
 func ResponseErr(ctx *gin.Context, err error) {
 	if err == nil {
 		ResponseOK(ctx)

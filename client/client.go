@@ -214,6 +214,9 @@ func (cli *QueueClient) PullMessages(handler func([]Message) error) error {
 	}
 
 	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
 	respParam := &struct {
 		models.HTTPStatusMeta
 		Data []Message `json:"data"`

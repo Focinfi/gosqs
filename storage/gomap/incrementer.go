@@ -12,11 +12,12 @@ type Incrementer struct {
 	kv *KV
 }
 
+// NewIncrementer returns a new Incrementer
 func NewIncrementer(kv *KV) *Incrementer {
 	return &Incrementer{kv: kv}
 }
 
-//	Increment(key string, number int) (result int64, err error)
+// Increment implements the models.Incrementer
 func (i *Incrementer) Increment(key string, size int) (int64, error) {
 	i.Lock()
 	defer i.Unlock()

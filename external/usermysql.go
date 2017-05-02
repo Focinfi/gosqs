@@ -5,6 +5,7 @@ import (
 
 	"github.com/Focinfi/gosqs/config"
 	"github.com/jinzhu/gorm"
+	// mysql driver
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 

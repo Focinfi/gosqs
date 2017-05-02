@@ -7,11 +7,13 @@ import (
 	"github.com/Focinfi/gosqs/models"
 )
 
+// Nodes for the cluster of server node
 type Nodes struct {
 	store *Storage
 	db    models.KV
 }
 
+// All returns the all the joined nodes
 func (n *Nodes) All(key string) ([]string, error) {
 	val, err := n.db.Get(key)
 	if err == errors.DataNotFound {
@@ -30,6 +32,7 @@ func (n *Nodes) All(key string) ([]string, error) {
 	return nodes, nil
 }
 
+// UpdateAll reset with the given nodes
 func (n *Nodes) UpdateAll(key string, nodes []string) error {
 	nodesBytes, err := json.Marshal(nodes)
 	if err != nil {

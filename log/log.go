@@ -34,7 +34,7 @@ var Biz = logrus.New()
 // Service for cluster error logger
 var Service = logrus.New()
 
-// Service for cluster error logger
+// Cluster for cluster error logger
 var Cluster = logrus.New()
 
 // InternalError for logic error

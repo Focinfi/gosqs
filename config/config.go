@@ -43,7 +43,7 @@ var Config = struct {
 	BaseSecret string `default:"aslMep28nkvfiYTuWuF7OIp2A5sMb5ewOu2UwO/1PEI=" env:"SQS_BASE_SECRET"`
 
 	// auth
-	UserGithubLoginKey string `default: "user_github_login_key" env:"SQS_USER_GITHUB_LOGIN_KEY"`
+	UserGithubLoginKey string `default:"user_github_login_key" env:"SQS_USER_GITHUB_LOGIN_KEY"`
 
 	// etcd addrs and the the meta data key
 	EtcdEndpoints []string `default:"['127.0.0.1:2379']" env:"SQS_ETCD_ADDRS"`
