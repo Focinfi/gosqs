@@ -27,7 +27,7 @@ func TestJWT(t *testing.T) {
 	}
 
 	// wait for check the expiration
-	time.Sleep(time.Millisecond * 1001)
+	time.Sleep(time.Millisecond * 1500)
 
 	_, err = tkn.Verify(code, secret)
 	if err == nil {

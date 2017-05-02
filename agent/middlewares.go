@@ -26,19 +26,6 @@ func setAccessControlAllowHeaders(ctx *gin.Context) {
 	ctx.Header("Access-Control-Allow-Headers", "Access-Control-Allow-Origin, Content-Type, Accept")
 }
 
-// throttling protects our server from overload
-func throttling(ctx *gin.Context) {
-}
-
-// parsing parses params in the req for the following middleware
-func parsing(ctx *gin.Context) {
-
-}
-
-// auth authenticates identity for the req
-func auth(ctx *gin.Context) {
-}
-
 func getUserID(code string) (int64, error) {
 	data, err := tokener.Verify(code, baseSecret)
 	if err != nil {

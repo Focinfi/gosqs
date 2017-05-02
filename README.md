@@ -7,12 +7,4 @@
 
 ## SQS
 
-A simple queue service in golang.
-
-### Design
-
-1. Simple
-1. Distributed
-2. Most-at-once Delivery
-3. Ordered Message
-4. Horizontal Scaling
+A simple queue service in golang, more detail go to the http://gosqs.daoapp.io 

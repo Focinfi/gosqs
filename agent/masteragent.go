@@ -138,7 +138,7 @@ func (a *QueueAgent) handlePullMessages(ctx *gin.Context) {
 		return
 	}
 
-	messages, err := a.QueueService.PullMessages(userID, params.QueueName, params.SquadName, 10)
+	messages, err := a.QueueService.PullMessages(userID, params.QueueName, params.SquadName, config.Config.PullMessageCount)
 	if err != nil {
 		httputil.ResponseErr(ctx, err)
 		return

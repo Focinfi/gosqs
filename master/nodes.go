@@ -20,6 +20,7 @@ func (m nodes) statsSlice() models.NodeSlice {
 	i := 0
 	for node := range m {
 		slice[i] = m[node]
+		i++
 	}
 
 	return slice

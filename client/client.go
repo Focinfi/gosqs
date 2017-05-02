@@ -143,7 +143,7 @@ func (cli *QueueClient) ApplyNode() error {
 
 	type param struct {
 		models.HTTPStatusMeta
-		Data registerResponseParam
+		Data registerResponseParam `json:"data"`
 	}
 	respData := &param{}
 	if err := json.Unmarshal(respBytes, respData); err != nil {
@@ -292,7 +292,7 @@ func (cli *QueueClient) applyMessageID() (int64, error) {
 
 	respData := &struct {
 		models.NodeRequestParams
-		Data applyMessageResponseParam
+		Data applyMessageResponseParam `json:"data"`
 	}{}
 	if err := json.Unmarshal(respBytes, respData); err != nil {
 		return -1, err
