@@ -3,6 +3,8 @@ package agent
 import (
 	"net/http"
 
+	"github.com/Focinfi/gosqs/config"
+	"github.com/Focinfi/gosqs/log"
 	"github.com/Focinfi/gosqs/models"
 	"github.com/Focinfi/gosqs/util/httputil"
 	"github.com/gin-gonic/gin"
@@ -59,6 +61,31 @@ func (a *QueueAgent) handleReportMaxReceivedMessageID(ctx *gin.Context) {
 
 	err = a.QueueService.ReportMaxReceivedMessageID(userID, params.QueueName, params.SquadName, params.MessageID)
 	httputil.ResponseErr(ctx, err)
+}
+
+// handlePullMessages for pulling message
+func (a *QueueAgent) handlePullMessages(ctx *gin.Context) {
+	params := &models.NodeRequestParams{}
+	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
+		log.Biz.Error(err)
+		httputil.ResponseErr(ctx, err)
+		return
+	}
+
+	userID, err := getUserID(params.Token)
+	if err != nil {
+		log.Biz.Error(err)
+		httputil.ResponseErr(ctx, err)
+		return
+	}
+
+	messages, err := a.QueueService.PullMessages(userID, params.QueueName, params.SquadName, config.Config.PullMessageCount)
+	if err != nil {
+		httputil.ResponseErr(ctx, err)
+		return
+	}
+
+	httputil.ResponseOKData(ctx, messages)
 }
 
 // handlePushMessage serve message pushing via http

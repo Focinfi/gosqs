@@ -121,28 +121,3 @@ func (a *MasterAgent) handleApplyNode(ctx *gin.Context) {
 
 	httputil.ResponseOKData(ctx, gin.H{"node": urlutil.MakeURL(node), "token": tokenCode})
 }
-
-// handlePullMessages for pulling message
-func (a *QueueAgent) handlePullMessages(ctx *gin.Context) {
-	params := &models.NodeRequestParams{}
-	if err := binding.JSON.Bind(ctx.Request, params); err != nil {
-		log.Biz.Error(err)
-		httputil.ResponseErr(ctx, err)
-		return
-	}
-
-	userID, err := getUserID(params.Token)
-	if err != nil {
-		log.Biz.Error(err)
-		httputil.ResponseErr(ctx, err)
-		return
-	}
-
-	messages, err := a.QueueService.PullMessages(userID, params.QueueName, params.SquadName, config.Config.PullMessageCount)
-	if err != nil {
-		httputil.ResponseErr(ctx, err)
-		return
-	}
-
-	httputil.ResponseOKData(ctx, messages)
-}
