@@ -29,7 +29,7 @@ var DefaultUserStore UserStore
 
 func init() {
 	if config.Config.Env.IsProduction() {
-		DefaultUserStore = NewMySQL()
+		DefaultUserStore = NewSQLite()
 	}
 
 	DefaultUserStore = DefaultUserStoreMock
