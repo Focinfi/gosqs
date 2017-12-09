@@ -7,4 +7,4 @@
 
 ## SQS
 
-A simple queue service in golang, more detail go to the http://gosqs.daoapp.io 
+A simple queue service in golang. 
